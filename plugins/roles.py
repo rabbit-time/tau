@@ -21,7 +21,7 @@ class Roles(commands.Cog):
             return await ctx.send(f'{ctx.author.mention} Role with ID `{id}` not found.')
 
         desc = (f'**{str(role)}\n`{len(role.members)} member{"s" if len(role.members) > 1 else ""}`**')
-        embed = Embed(description=desc, color=0x1f2124)
+        embed = Embed(description=desc)
         embed.set_footer(text=f'ID: {id}')
         
         await ctx.send(embed=embed)

@@ -7,7 +7,7 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 import perms
-from utils import res_member, level, levelxp
+from utils import emoji, res_member, level, levelxp
 
 class Social(commands.Cog):
     def __init__(self, bot):
@@ -31,11 +31,11 @@ class Social(commands.Cog):
         f'**Region:** {str(guild.region)}\n'
         f'**Verification:** {str(guild.verification_level)}\n'
         f'**Members:** {guild.member_count}\n'
-        f'<:online:659931852660015104> {statuses["online"]}\n'
-        f'<:idle:659932829508960256> {statuses["idle"]}\n'
-        f'<:dnd:659932885062516746> {statuses["dnd"]}\n'
-        f'<:offline:659932900405411842> {statuses["offline"]}')
-        embed = Embed(description=desc, color=0x1f2124)
+        f'{emoji["online"]} {statuses["online"]}\n'
+        f'{emoji["idle"]} {statuses["idle"]}\n'
+        f'{emoji["dnd"]} {statuses["dnd"]}\n'
+        f'{emoji["offline"]} {statuses["offline"]}')
+        embed = Embed(description=desc)
         embed.set_footer(text=f'ID: {guild.id}')
         embed.set_thumbnail(url=guild.icon_url)
         if guild.banner_url:
@@ -56,7 +56,7 @@ class Social(commands.Cog):
             user = await self.bot.fetch_user(user_id)
             lb += f'**{i+1}.** {user.name}#{user.discriminator} ー {xp} XP\n'
 
-        embed = Embed(title='Leaderboard', description=lb.strip('\n'), color=0x1f2124)
+        embed = Embed(title='Leaderboard', description=lb.strip('\n'))
 
         await ctx.send(embed=embed)
 
@@ -171,17 +171,10 @@ class Social(commands.Cog):
 
             buffer.seek(0)
 
-        status = {
-            'online': '<:online:659931852660015104>',
-            'idle': '<:idle:659932829508960256>',
-            'dnd': '<:dnd:659932885062516746>',
-            'offline': '<:offline:659932900405411842>'
-        }
-
-        desc = (f'{status[str(member.status)]} **{member.display_name}\n'
+        desc = (f'{emoji[str(member.status)]} **{member.display_name}\n'
         f'`{member.name}#{member.discriminator}`\n\n'
         f'```yml\n{self.bot.users_[member.id]["bio"]}```**')
-        embed = Embed(description=desc, color=0x1f2124)
+        embed = Embed(description=desc)
         embed.set_image(url='attachment://unknown.png')
         embed.set_footer(text=f'ID: {member.id}')
 

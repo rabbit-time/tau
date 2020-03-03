@@ -6,7 +6,7 @@ from discord import Embed, File, PermissionOverwrite
 from discord.ext import commands
 
 import perms
-from utils import autodetain, automute, findrole, res_member
+from utils import autodetain, automute, emoji, findrole, res_member
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
@@ -44,7 +44,7 @@ class Moderation(commands.Cog):
         if self.bot.detains.get((member.id, ctx.guild.id)):
             return await ctx.send(f'**{member.display_name}** has already been detained.', delete_after=5)
 
-        await ctx.send(f'**<:cuffs:678393038095122461> | {member.display_name}** has been detained.')
+        await ctx.send(f'**{emoji["cuffs"]} | {member.display_name}** has been detained.')
 
         overwrites = {
                 ctx.guild.default_role: PermissionOverwrite(read_messages=False),
@@ -187,8 +187,8 @@ class Moderation(commands.Cog):
 
         await member.add_roles(bind)
 
-        embed = Embed(description=desc, color=0x1f2124) if limit else None
-        await ctx.send(f'**<:mute:673362944280494110> | {member.display_name}** has been muted.', embed=embed)
+        embed = Embed(description=desc) if limit else None
+        await ctx.send(f'**{emoji["mute"]} | {member.display_name}** has been muted.', embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <mention>')
     async def unmute(self, ctx):
@@ -214,7 +214,7 @@ class Moderation(commands.Cog):
             task.cancel()
             del self.bot.mute_tasks[member.id, ctx.guild.id]
 
-        await ctx.send(f'**<:sound:673362944280494080> | {member.display_name}** has been unmuted.')
+        await ctx.send(f'**{emoji["sound"]} | {member.display_name}** has been unmuted.')
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

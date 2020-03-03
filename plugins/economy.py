@@ -24,7 +24,7 @@ class Economy(commands.Cog):
             return
 
         bal = self.bot.users_[member.id]['tickets']
-        embed = Embed(description=f'{emoji["tickets"]}**{bal}**', color=0x1f2124)
+        embed = Embed(description=f'{emoji["tickets"]}**{bal}**')
         embed.set_author(name=member.display_name, icon_url=member.avatar_url)
 
         await ctx.send(embed=embed)
@@ -73,7 +73,7 @@ class Economy(commands.Cog):
         await self.bot.users_.update(ctx.author.id, 'tickets', bal+amt)
 
         desc = f'You have collected {amt} tickets for a new balance of {emoji["tickets"]}**{bal+amt}**!'
-        embed = Embed(description=desc, color=0x1f2124)
+        embed = Embed(description=desc)
 
         await ctx.send(ctx.author.mention + ' ' + random.choice(msgs), embed=embed)
 

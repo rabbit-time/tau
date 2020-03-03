@@ -1,4 +1,3 @@
-*.ico
 __pycache__/
 /.vscode
 /config.py

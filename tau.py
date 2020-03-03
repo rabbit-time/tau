@@ -38,11 +38,30 @@ for dir, _, files in os.walk('.'):
             with open(f'{dir}/{file}', encoding='utf8') as py:
                 bot.code += len(py.readlines())
 
-class Cache:
-    def __init__(self, table: str, indexname: str, records: dict, default: dict):
+class aobject(object):
+    '''Inheriting this class allows async class constructors.'''
+    async def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        await instance.__init__(*args, **kwargs)
+        return instance
+
+class Cache(aobject):
+    async def __init__(self, table: str, pk: str, schema: str, default: dict):
+        await bot.con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
+        
+        pknum = len(pk.split(', '))
+        cur = await bot.con.execute(f'SELECT * FROM {table}')
+        cache = {}
+        records = await cur.fetchall()
+        for record in records:
+            index = record[0] if pknum else record[:pknum]
+            cache[index] = {k: record[i+pknum] for i, k in enumerate(default.keys())}
+
+        await bot.con.commit()
+
         self.table = table
-        self.indexname = indexname
-        self.__records = records
+        self.pk = pk
+        self.__records = cache
         self.default = default.copy()
 
     def __getitem__(self, key: any):
@@ -61,10 +80,10 @@ class Cache:
         '''Deletes a record in the database and the cache.'''   
         del self.__records[index]
         if isinstance(index, Iterable):
-            condition = self.indexname.replace(', ', ' = ? AND ')
+            condition = self.pk.replace(', ', ' = ? AND ')
             await bot.con.execute(f'DELETE FROM {self.table} WHERE {condition} = ?', index)
         else:
-            await bot.con.execute(f'DELETE FROM {self.table} WHERE {self.indexname} = ?', (index,))
+            await bot.con.execute(f'DELETE FROM {self.table} WHERE {self.pk} = ?', (index,))
         await bot.con.commit()
 
     async def insert(self, index: any):
@@ -88,89 +107,20 @@ class Cache:
             val = f'\'{val}\''
 
         if isinstance(index, Iterable):
-            condition = self.indexname.replace(', ', ' = ? AND ')
+            condition = self.pk.replace(', ', ' = ? AND ')
             await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {condition} = ?', index)
         else:
-            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.indexname} = ?', (index,))
+            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = ?', (index,))
         await bot.con.commit()
 
 async def init():
     bot.con = await aiosqlite.connect('srv/db.sqlite3')
 
-    _schema = ('guild_id unsigned bigint PRIMARY KEY, '
-               'prefix varchar(255), '
-               'system_channel varchar(255), '
-               'welcome_message varchar(255), '
-               'goodbye_message varchar(255), '
-               'welcome_messages bool, '
-               'goodbye_messages bool, '
-               'levelup_messages bool, '
-               'mod_role unsigned bigint, '
-               'admin_role unsigned bigint, '
-               'bind_role unsigned bigint')
-    await bot.con.execute(f'CREATE TABLE IF NOT EXISTS guilds ({_schema})')
-
-    cur = await bot.con.execute('SELECT * FROM guilds')
-    _guilds = {}
-    records = await cur.fetchall()
-    for record in records:
-        _guilds[record[0]] = {k: record[i+1] for i, k in enumerate(config._def_guild.keys())}
-
-    _schema = ('user_id unsigned bigint PRIMARY KEY, '
-               'tickets bigint, '
-               'xp unsigned bigint, '
-               'accent char(7), '
-               'bio varchar(2000)')
-    await bot.con.execute(f'CREATE TABLE IF NOT EXISTS users ({_schema})')
-
-    cur = await bot.con.execute('SELECT * FROM users')
-    _users = {}
-    records = await cur.fetchall()
-    for record in records:
-        _users[record[0]] = {k: record[i+1] for i, k in enumerate(config._def_user.keys())}
-    
-    _schema = ('user_id unsigned bigint, '
-               'guild_id unsigned bigint, '
-               'muted bigint')
-    await bot.con.execute(f'CREATE TABLE IF NOT EXISTS mutes ({_schema})')
-
-    cur = await bot.con.execute('SELECT * FROM mutes')
-    _mutes = {}
-    records = await cur.fetchall()
-    for record in records:
-        _mutes[record[:2]] = {k: record[i+2] for i, k in enumerate(config._def_mute.keys())}
-
-    _schema = ('user_id unsigned bigint, '
-               'guild_id unsigned bigint, '
-               'channel_id unsigned bigint, '
-               'message_id unsigned bigint, '
-               'detained bigint')
-    await bot.con.execute(f'CREATE TABLE IF NOT EXISTS detains ({_schema})')
-
-    cur = await bot.con.execute('SELECT * FROM detains')
-    _detains = {}
-    records = await cur.fetchall()
-    for record in records:
-        _detains[record[:2]] = {k: record[i+2] for i, k in enumerate(config._def_detain.keys())}
-
-    _schema = ('guild_id unsigned bigint, '
-               'message_id unsigned bigint, '
-               'role_ids varchar(250)')
-    await bot.con.execute(f'CREATE TABLE IF NOT EXISTS role_menus ({_schema})')
-
-    cur = await bot.con.execute('SELECT * FROM role_menus')
-    _role_menus = {}
-    records = await cur.fetchall()
-    for record in records:
-        _role_menus[record[:2]] = {k: record[i+2] for i, k in enumerate(config._def_role_menu.keys())}
-
-    await bot.con.commit()
-
-    bot.guilds_ = Cache('guilds', 'guild_id', _guilds, config._def_guild)
-    bot.users_ = Cache('users', 'user_id', _users, config._def_user)
-    bot.mutes = Cache('mutes', 'user_id, guild_id', _mutes, config._def_mute)
-    bot.detains = Cache('detains', 'user_id, guild_id', _detains, config._def_detain)
-    bot.rmenus = Cache('role_menus', 'guild_id, message_id', _role_menus, config._def_role_menu)
+    bot.guilds_ = await Cache('guilds', 'guild_id', config.guilds_schema, config._def_guild)
+    bot.users_ = await Cache('users', 'user_id', config.users_schema, config._def_user)
+    bot.mutes = await Cache('mutes', 'user_id, guild_id', config.mutes_schema, config._def_mute)
+    bot.detains = await Cache('detains', 'user_id, guild_id', config.detains_schema, config._def_detain)
+    bot.rmenus = await Cache('role_menus', 'guild_id, message_id', config.role_menus_schema, config._def_role_menu)
     
     # Loads plugins and events
     files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file] 

@@ -39,3 +39,35 @@ _def_detain = {
 _def_role_menu = {
     'role_ids': ''
 }
+
+guilds_schema = ('guild_id unsigned bigint PRIMARY KEY, '
+                 'prefix varchar(255), '
+                 'system_channel varchar(255), '
+                 'welcome_message varchar(255), '
+                 'goodbye_message varchar(255), '
+                 'welcome_messages bool, '
+                 'goodbye_messages bool, '
+                 'levelup_messages bool, '
+                 'mod_role unsigned bigint, '
+                 'admin_role unsigned bigint, '
+                 'bind_role unsigned bigint')
+
+users_schema = ('user_id unsigned bigint PRIMARY KEY, '
+                'tickets bigint, '
+                'xp unsigned bigint, '
+                'accent char(7), '
+                'bio varchar(2000)')
+    
+mutes_schema = ('user_id unsigned bigint, '
+                'guild_id unsigned bigint, '
+                'muted bigint')
+
+detains_schema = ('user_id unsigned bigint, '
+                  'guild_id unsigned bigint, '
+                  'channel_id unsigned bigint, '
+                  'message_id unsigned bigint, '
+                  'detained bigint')
+
+role_menus_schema = ('guild_id unsigned bigint, '
+                     'message_id unsigned bigint, '
+                     'role_ids varchar(250)')

@@ -34,8 +34,6 @@ class System(commands.Cog):
         Toggles will be immediately modified on selection.\n
         **Example:```yml\n.config```**
         '''
-        on = '<:toggleon:670082021648891914>'
-        off = '<:toggleoff:670082021405491220>'
         guild_id = ctx.guild.id
         default = self.bot.guilds_.default
         
@@ -64,7 +62,7 @@ class System(commands.Cog):
             klen = len(max(toggles.keys(), key=len))
             conf2 = ''
             for k, v in toggles.items():
-                tog = on if v else off
+                tog = utils.emoji['on'] if v else utils.emoji['off']
                 align = ' ' * (klen-len(k))
                 pad = ' ' * (ilen-len(str(i)))
                 conf2 += f'` {i}.{pad}{k}{align}` {tog}\n'
@@ -73,7 +71,7 @@ class System(commands.Cog):
             return f'**```groovy\n{conf}```{conf2}**'    
 
         desc = build()
-        embed = Embed(description=desc.strip('\n'), color=0x1f2124)
+        embed = Embed(description=desc.strip('\n'))
         embed.set_author(name=ctx.guild.name, icon_url='attachment://unknown.png')
         memo = '📝'
         x = '❌'
@@ -200,35 +198,35 @@ class System(commands.Cog):
         ch = ctx.guild.get_channel(606482360309121024)
         staff = ctx.guild.get_role(546836599141302272)
         desc = f'''**```md
-# Progress
-```**
-{utils.emoji["progress"]} A Discord community for civil discourse about philosophy, politics, and more. Progress is a platform for open dialogue and debate to aid human progress even if it is on a small scale, hence the name.
+            # Progress
+            ```**
+            {utils.emoji["progress"]} A Discord community for civil discourse about philosophy, politics, and more. Progress is a platform for open dialogue and debate to aid human progress even if it is on a small scale, hence the name.
 
-**```diff
-- Rules
-```*`These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed.`***
+            **```diff
+            - Rules
+            ```*`These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed.`***
 
-**1.** Do not harass other users.\n
-**2.** Do not spam.\n
-**3.** Usernames must be mentionable.\n
-**4.** All forms of discrimination are unacceptable.\n
-**5.** Communicate only in English.\n
-**6.** Do not dox another user.\n
-**7.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
-**8.** Post in the right channel; see channel descriptions for details.\n
-**9.** Do not promote other Discord servers without permission from **{staff.mention}**.\n
-**10.** Adhere to the Discord Terms of Service: **https://discordapp.com/terms**
+            **1.** Do not harass other users.\n
+            **2.** Do not spam.\n
+            **3.** Usernames must be mentionable.\n
+            **4.** All forms of discrimination are unacceptable.\n
+            **5.** Communicate only in English.\n
+            **6.** Do not dox another user.\n
+            **7.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
+            **8.** Post in the right channel; see channel descriptions for details.\n
+            **9.** Do not promote other Discord servers without permission from **{staff.mention}**.\n
+            **10.** Adhere to the Discord Terms of Service: **https://discordapp.com/terms**
 
-**```py
-@ Roles
-```**
-Be sure to visit the {ch.mention} menu to assign descriptive, philosophical, and political roles to help you stand out! These roles are completely cosmetic.
+            **```py
+            @ Roles
+            ```**
+            Be sure to visit the {ch.mention} menu to assign descriptive, philosophical, and political roles to help you stand out! These roles are completely cosmetic.
 
-**```yml
-+ Invite
-```**
-Share to help us progress: **{config.invite}**'''
-        embed = Embed(description=desc, color=0x1f2124)
+            **```yml
+            + Invite
+            ```**
+            Share to help us progress: **{config.invite}**'''
+        embed = Embed(description=desc.replace(' '*12, ''))
         await ctx.send(embed=embed)
 
         '''

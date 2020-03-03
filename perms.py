@@ -39,7 +39,7 @@ def perm(ctx):
 async def require(ctx):
     if not ctx.guild and ctx.command.guild_only:
         desc = f'Oops! **`{ctx.command.name}`** is only available within guilds.'
-        embed = Embed(description=desc, color=0x1f2124)
+        embed = Embed(description=desc)
 
         await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
         return False

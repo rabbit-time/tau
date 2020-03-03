@@ -25,7 +25,7 @@ class Info(commands.Cog):
         '''
         member = await res_member(ctx)
 
-        embed = Embed(description=f'**[{member.display_name}]({member.avatar_url})**', color=0x1f2124)
+        embed = Embed(description=f'**[{member.display_name}]({member.avatar_url})**')
         embed.set_image(url=member.avatar_url)
 
         await ctx.send(embed=embed)
@@ -39,7 +39,7 @@ class Info(commands.Cog):
         if not key:
             bio = self.bot.users_[ctx.author.id]['bio']
             keys = ':\n'.join(editable)
-            menu = Embed(title=ctx.author.display_name, description='**Please select one of the below to edit.**', color=0x1f2124)
+            menu = Embed(title=ctx.author.display_name, description='**Please select one of the below to edit.**')
             menu.add_field(name='\u200b', value=f'**{keys}:**')
             menu.add_field(name='\u200b', value=f'{self.bot.users_[ctx.author.id]["accent"]}\n{bio if len(bio) < 64 else bio[:64] + "..."}')
             menu.set_footer(text=f'{self.bot.guilds_[ctx.guild.id]["prefix"]}help edit for more details.')
@@ -78,7 +78,7 @@ class Info(commands.Cog):
                 res += f'**{cog[0]}**\n{cmds}\n\n'
 
             desc = f'Here\'s a list of commands. For further detail, use **`help [command]`**.\n\n{res}'
-            embed = Embed(description=desc, color=0x1f2124)
+            embed = Embed(description=desc)
             embed.set_footer(text='Pro tip! Parameters in angled brackets <> are required while parameters in square brackets [] are optional.', icon_url='attachment://unknown.png')
 
             await ctx.send(file=File('assets/info.png', 'unknown.png'), embed=embed)
@@ -95,7 +95,7 @@ class Info(commands.Cog):
                         desc = f'**```asciidoc\n{prefix}{cmd.usage}```{aliases}**\n{doc}'
                         if cmd.guild_only:
                             desc = '*\\*This command may only be used in guilds* ' + desc
-                        embed = Embed(description=desc, color=0x1f2124)
+                        embed = Embed(description=desc)
                         embed.set_footer(text=f'Perm Level: {cmd.level}')
             
                         return await ctx.send(embed=embed)
@@ -109,7 +109,7 @@ class Info(commands.Cog):
         ctx.author = member = await res_member(ctx)
         lvl = perms.perm(ctx)
 
-        embed = Embed(description=f'**`{lvl}`** *{list(perms.levels.keys())[lvl]}*', color=0x1f2124)
+        embed = Embed(description=f'**`{lvl}`** *{list(perms.levels.keys())[lvl]}*')
         embed.set_author(name=member.display_name, icon_url=member.avatar_url)
 
         await ctx.send(embed=embed)
@@ -127,7 +127,7 @@ class Info(commands.Cog):
         mem = process.memory_info()[0] # Mem usage in bytes
 
         appinfo = await self.bot.application_info()
-        embed = Embed(title='Tau', description=appinfo.description, color=0x1f2124)
+        embed = Embed(title='Tau', description=appinfo.description)
         embed.add_field(name='Info', value=f'**License:** Apache 2.0\n**Version:** {config.version}\n**Python:** {platform.python_version()}\n**discord.py:** {discord.__version__}\n\n')
         embed.add_field(name='\u200b', value=f'**Uptime:** {uptime//60//60//24:02.0f}:{uptime//60//60%24:02.0f}:{uptime//60%60:02.0f}:{uptime%60:05.2f}\n**Memory Usage:** {round(mem/1000/1000, 2)} MB\n**Code:** {self.bot.code} lines')
         embed.add_field(name='\u200b', value=f'**[Invite]({self.bot.url}) | [Donate](https://www.youtube.com/) | [Server]({config.invite}) | [GitHub](https://www.youtube.com/)**', inline=False)

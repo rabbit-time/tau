@@ -21,14 +21,14 @@ class OnCommandError(commands.Cog):
                     f'or a bad argument was given.\n\n'
                     f'If you\'re not sure how to use the command, try:'
                     f'**```yml\n{ctx.prefix}help {ctx.command.name}```**\n')
-            embed = Embed(description=desc, color=0x1f2124)
+            embed = Embed(description=desc)
             return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
 
         if isinstance(error, utils.RoleNotFound):
             desc = (f'One or more roles needed for this command could not be found. '
                     f'Please ensure that all roles set in the guild\'s config are up-to-date.\n\n'
                     f'Use **`.config`** to edit the guild configuration.')
-            embed = Embed(description=desc, color=0x1f2124)
+            embed = Embed(description=desc)
             return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
 
         if isinstance(error, commands.CommandNotFound):

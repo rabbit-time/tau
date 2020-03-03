@@ -19,7 +19,7 @@ class Lock(Command):
         super().__init__(command, **kwargs)
 
 def perm(ctx):
-    if (uid := ctx.author.id) == ctx.bot.owner_id:
+    if (uid := ctx.author.id) == config.owner_id:
         return 5
     elif uid in config.admins:
         return 4

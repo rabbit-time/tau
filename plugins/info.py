@@ -127,11 +127,10 @@ class Info(commands.Cog):
         mem = process.memory_info()[0] # Mem usage in bytes
 
         appinfo = await self.bot.application_info()
-        link = 'https://www.youtube.com/'
         embed = Embed(title='Tau', description=appinfo.description, color=0x1f2124)
         embed.add_field(name='Info', value=f'**License:** Apache 2.0\n**Version:** {config.version}\n**Python:** {platform.python_version()}\n**discord.py:** {discord.__version__}\n\n')
         embed.add_field(name='\u200b', value=f'**Uptime:** {uptime//60//60//24:02.0f}:{uptime//60//60%24:02.0f}:{uptime//60%60:02.0f}:{uptime%60:05.2f}\n**Memory Usage:** {round(mem/1000/1000, 2)} MB\n**Code:** {self.bot.code} lines')
-        embed.add_field(name='\u200b', value=f'**[Invite]({link}) | [Donate]({link}) | [Server]({link}) | [GitHub]({link})**', inline=False)
+        embed.add_field(name='\u200b', value=f'**[Invite]({self.bot.url}) | [Donate](https://www.youtube.com/) | [Server]({config.invite}) | [GitHub](https://www.youtube.com/)**', inline=False)
         embed.set_image(url='attachment://unknown.png')
         embed.set_footer(text=f'Now serving {len(self.bot.users):,} users!')
 

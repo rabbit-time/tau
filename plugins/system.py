@@ -9,6 +9,7 @@ import discord
 from discord import Embed, File
 from discord.ext import commands
 
+import config
 import perms
 import utils
 
@@ -226,7 +227,7 @@ Be sure to visit the {ch.mention} menu to assign descriptive, philosophical, and
 **```yml
 + Invite
 ```**
-Share to help us progress: **https://discord.gg/MsacWYs**'''
+Share to help us progress: **{config.invite}**'''
         embed = Embed(description=desc, color=0x1f2124)
         await ctx.send(embed=embed)
 

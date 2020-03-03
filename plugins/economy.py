@@ -5,7 +5,7 @@ from discord import Embed, File
 from discord.ext import commands
 
 import perms
-from utils import res_member
+from utils import res_member, emoji
 
 class Economy(commands.Cog):
     def __init__(self, bot):
@@ -24,8 +24,7 @@ class Economy(commands.Cog):
             return
 
         bal = self.bot.users_[member.id]['tickets']
-        desc = f'<:tic:669031445628583944>**{bal}**'
-        embed = Embed(description=desc, color=0x1f2124)
+        embed = Embed(description=f'{emoji["tickets"]}**{bal}**', color=0x1f2124)
         embed.set_author(name=member.display_name, icon_url=member.avatar_url)
 
         await ctx.send(embed=embed)
@@ -52,7 +51,7 @@ class Economy(commands.Cog):
         bal = self.bot.users_[member.id]['tickets']
         await self.bot.users_.update(member.id, 'tickets', bal+amt)
 
-        await ctx.send(f'**{ctx.author.display_name}** gave <:tic:669031445628583944>**{amt}** to **{member.display_name}**!')
+        await ctx.send(f'**{ctx.author.display_name}** gave {emoji["tickets"]}**{amt}** to **{member.display_name}**!')
 
     @commands.cooldown(1, 86400.0, type=commands.BucketType.user)
     @commands.command(cls=perms.Lock, name='tickets', aliases=['credits', 'daily', 'tic'], usage='tickets')
@@ -73,7 +72,7 @@ class Economy(commands.Cog):
             amt *= 2
         await self.bot.users_.update(ctx.author.id, 'tickets', bal+amt)
 
-        desc = f'You have collected {amt} tickets for a new balance of <:tic:669031445628583944>**{bal+amt}**!'
+        desc = f'You have collected {amt} tickets for a new balance of {emoji["tickets"]}**{bal+amt}**!'
         embed = Embed(description=desc, color=0x1f2124)
 
         await ctx.send(ctx.author.mention + ' ' + random.choice(msgs), embed=embed)

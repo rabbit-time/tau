@@ -1,4 +1,6 @@
+owner_id = 'your_user_id'
 admins = () # Bot admins (perm level 4)
+invite = 'https://discord.gg/invite' # Invite to server
 token = 'DISCORD API TOKEN'
 version = '1.0.0'
 

@@ -1,6 +1,7 @@
 import asyncio
 import time
 
+import discord
 from discord import Game, Object, Permissions
 from discord.ext import commands
 from discord.utils import oauth_url
@@ -22,10 +23,10 @@ class OnReady(commands.Cog):
 
         prefix = self.bot.guilds_.default['prefix']
         await self.bot.change_presence(activity=Game(name=f'{prefix}help'))
-        url = oauth_url(client_id=self.bot.user.id, permissions=Permissions(permissions=8))
         ccp.ready(f'Logged in as {self.bot.user.name}')
         ccp.ready(f'ID: {self.bot.user.id}')
-        ccp.ready(f'URL: \u001b[1m\u001b[34m{url}\u001b[0m')
+        self.bot.url = oauth_url(client_id=self.bot.user.id, permissions=Permissions(permissions=8))
+        ccp.ready(f'URL: \u001b[1m\u001b[34m{self.bot.url}\u001b[0m')
 
         cur = await self.bot.con.execute('SELECT * FROM mutes WHERE muted != -1')
         records = await cur.fetchall()

@@ -134,11 +134,15 @@ class Info(commands.Cog):
 
             desc[1] = f'**```md\n# {desc[1]}```**\n'
             desc = ''.join(desc).replace('+', '•')
-
+        
+        # \u3000 is an ideographic space. Learn more: https://en.wikipedia.org/wiki/Whitespace_character
+        # f'[Donate](https://www.youtube.com/)' add donations later on next to Invite
+        divider = '\u3000|\u3000'
+        links = [f'**[Invite]({self.bot.url})', f'[Server]({config.invite})', f'[GitHub]({config.repo})**']
         embed = Embed(title='Tau', description=desc)
         embed.add_field(name='Info', value=f'**License:** Apache 2.0\n**Version:** {config.version}\n**Python:** {platform.python_version()}\n**discord.py:** {discord.__version__}\n\n')
         embed.add_field(name='\u200b', value=f'**Uptime:** {uptime//60//60//24:02.0f}:{uptime//60//60%24:02.0f}:{uptime//60%60:02.0f}:{uptime%60:05.2f}\n**Memory Usage:** {round(mem/1000/1000, 2)} MB\n**Code:** {self.bot.code} lines')
-        embed.add_field(name='\u200b', value=f'**[Invite]({self.bot.url}) | [Donate](https://www.youtube.com/) | [Server]({config.invite}) | [GitHub](https://www.youtube.com/)**', inline=False)
+        embed.add_field(name='\u200b', value=divider.join(links), inline=False)
         embed.set_image(url='attachment://unknown.png')
         embed.set_footer(text=f'Now serving {len(self.bot.users):,} users!')
 

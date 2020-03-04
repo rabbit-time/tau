@@ -54,31 +54,31 @@ class Cache(aobject):
         cache = {}
         records = await cur.fetchall()
         for record in records:
-            index = record[0] if pknum else record[:pknum]
+            index = record[0] if pknum == 1 else record[:pknum]
             cache[index] = {k: record[i+pknum] for i, k in enumerate(default.keys())}
 
         await bot.con.commit()
 
         self.table = table
         self.pk = pk
-        self.__records = cache
+        self._records = cache
         self.default = default.copy()
 
     def __getitem__(self, key: any):
-        return self.__records[key]
+        return self._records[key]
 
     def get(self, key: any, default: any = None):
-        return self.__records.get(key, default)
+        return self._records.get(key, default)
 
     def keys(self):
-        return self.__records.keys()
+        return self._records.keys()
 
     def values(self):
-        return self.__records.values()
+        return self._records.values()
 
     async def delete(self, index: any):
         '''Deletes a record in the database and the cache.'''   
-        del self.__records[index]
+        del self._records[index]
         if isinstance(index, Iterable):
             condition = self.pk.replace(', ', ' = ? AND ')
             await bot.con.execute(f'DELETE FROM {self.table} WHERE {condition} = ?', index)
@@ -88,7 +88,7 @@ class Cache(aobject):
 
     async def insert(self, index: any):
         '''Creates a new record in the database and the cache.'''
-        self.__records[index] = self.default.copy()
+        self._records[index] = self.default.copy()
 
         index = (index,) if not isinstance(index, tuple) else index
         val = index + tuple(self.default.values())
@@ -99,10 +99,10 @@ class Cache(aobject):
 
     async def update(self, index: any, key: any, val: any):
         '''Updates both the database and the cache. If the record does not exist, it will be created.'''
-        if not self.__records.get(index):
+        if not self._records.get(index):
             await self.insert(index)
         
-        self.__records[index][key] = val
+        self._records[index][key] = val
         if isinstance(val, str):
             val = f'\'{val}\''
 

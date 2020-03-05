@@ -14,11 +14,12 @@ class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='role', aliases=[], usage='role <name|id>')
-    async def role(self, ctx, content):
+    @commands.command(cls=perms.Lock, level=0, guild_only=True, name='role', aliases=[], usage='role <name|id>')
+    async def role(self, ctx, *content):
         '''Displays role info.\n
         **Example:```yml\n.role Tau\n.role 657766595321528349```**
         '''
+        content = ' '.join(content)
         role = find(lambda r: r.name == content, ctx.guild.roles)
         if not role:
             role_id = int(content) if content.isdigit() else 0
@@ -57,8 +58,8 @@ class Roles(commands.Cog):
             fields[i > half] += f'**`{perm}{align}`** {tog}\n'
 
         plural = 's' if len(role.members) != 1 else ''
-        desc = (f'**{role.mention}\n`{len(role.members)} member{plural}`**')
-        embed = Embed(description=desc)
+        mention = role.mention if not role.is_default() else '@everyone'
+        embed = Embed(description=f'**{mention}\n`{len(role.members)} member{plural}`**')
         embed.add_field(name='Permissions', value=fields[0])
         embed.add_field(name='\u200b', value=fields[1])
         embed.set_image(url='attachment://unknown.png')

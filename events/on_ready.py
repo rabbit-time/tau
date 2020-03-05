@@ -19,7 +19,7 @@ class OnReady(commands.Cog):
             if guild.id not in self.bot.guilds_.keys():
                 await self.bot.guilds_.insert(guild.id)
                 if guild.system_channel:
-                   await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.name)
+                   await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
 
         prefix = self.bot.guilds_.default['prefix']
         await self.bot.change_presence(activity=Game(name=f'{prefix}help'))

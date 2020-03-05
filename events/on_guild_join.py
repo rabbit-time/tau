@@ -12,7 +12,7 @@ class OnGuildJoin(commands.Cog):
 
         await self.bot.guilds_.insert(guild.id)
         if guild.system_channel:
-            await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.name)
+            await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
 
 def setup(bot):
     bot.add_cog(OnGuildJoin(bot))

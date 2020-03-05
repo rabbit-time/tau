@@ -9,12 +9,13 @@ version = '1.0.0'
 
 _def_guild = {
     'prefix': '.',
-    'system_channel': 'general',
-    'welcome_message': 'Welcome @user! Please enjoy your stay in @guild!',
+    'system_channel': 0,
+    'welcome_message': 'Hi @mention, welcome to @guild!',
     'goodbye_message': 'Bye @user!',
     'welcome_messages': False,
     'goodbye_messages': False,
     'levelup_messages': False,
+    'autorole': 0,
     'mod_role': 0,
     'admin_role': 0,
     'bind_role': 0
@@ -43,12 +44,13 @@ _def_role_menu = {
 
 guilds_schema = ('guild_id unsigned bigint PRIMARY KEY, '
                  'prefix varchar(255), '
-                 'system_channel varchar(255), '
+                 'system_channel unsigned bigint, '
                  'welcome_message varchar(255), '
                  'goodbye_message varchar(255), '
                  'welcome_messages bool, '
                  'goodbye_messages bool, '
                  'levelup_messages bool, '
+                 'autorole unsigned bigint, '
                  'mod_role unsigned bigint, '
                  'admin_role unsigned bigint, '
                  'bind_role unsigned bigint')

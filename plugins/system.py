@@ -138,11 +138,8 @@ class System(commands.Cog):
                                     val = default[key]
                                     await self.bot.guilds_.update(ctx.guild.id, key, default[key])
                                 elif 'role' in key:
-                                    for r in ctx.guild.roles:
-                                        if r.name == msg.content:
-                                            role = r
-                                            break
-                                    else:
+                                    role = find(lambda r: r.name == msg.content, ctx.guild.roles)
+                                    if not role:
                                         role_id = int(msg.content) if msg.content.isdigit() else 0
                                         role = ctx.guild.get_role(role_id)
                                     

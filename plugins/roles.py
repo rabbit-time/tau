@@ -1,8 +1,11 @@
 import asyncio
+import io
 
 import discord
 from discord import Embed, File
 from discord.ext import commands
+from discord.utils import find
+from PIL import Image, ImageDraw, ImageFont
 
 import perms
 import utils
@@ -11,20 +14,57 @@ class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='role', aliases=[], usage='role <id>')
-    async def role(self, ctx, id: int):
+    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='role', aliases=[], usage='role <name|id>')
+    async def role(self, ctx, content):
         '''Displays role info.\n
-        **Example:```yml\n .role 657766595321528349```**
+        **Example:```yml\n.role Tau\n.role 657766595321528349```**
         '''
-        role = ctx.guild.get_role(id)
+        role = find(lambda r: r.name == content, ctx.guild.roles)
         if not role:
-            return await ctx.send(f'{ctx.author.mention} Role with ID `{id}` not found.')
+            role_id = int(content) if content.isdigit() else 0
+            role = ctx.guild.get_role(role_id)
 
-        desc = (f'**{str(role)}\n`{len(role.members)} member{"s" if len(role.members) > 1 else ""}`**')
-        embed = Embed(description=desc)
-        embed.set_footer(text=f'ID: {id}')
+        if not role:
+            await ctx.message.delete()
+            return await ctx.send(f'{ctx.author.mention} Sorry! A role named \'{content}\' could not be found.', delete_after=5)
+
+        im = Image.new('RGB', (1200, 400), role.color.to_rgb())
+        draw = ImageDraw.Draw(im)
+
+        font = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 250)
         
-        await ctx.send(embed=embed)
+        x, y = im.width, im.height
+        w, h = font.getsize(str(role.color))
+        # Around 6,000,000 just happened to be the sweet spot for white text
+        fill = 'black' if role.color.value > 6000000 else 'white'
+        draw.text((x//2-w//2, y//2-h//2), str(role.color), font=font, fill=fill)
+
+        buffer = io.BytesIO()
+        im.save(buffer, 'png')
+
+        buffer.seek(0)
+
+        perms = [(perm, value) for perm, value in iter(role.permissions)]
+        perms.sort()
+        plen = len(max(perms, key=lambda p: len(p[0]))[0])
+        
+        half = len(perms)//2
+        fields = ['', '']
+        for i, tup in enumerate(perms):
+            perm, value = tup
+            tog = utils.emoji['on'] if value else utils.emoji['off']
+            align = ' ' * (plen-len(perm))
+            fields[i > half] += f'**`{perm}{align}`** {tog}\n'
+
+        plural = 's' if len(role.members) != 1 else ''
+        desc = (f'**{role.mention}\n`{len(role.members)} member{plural}`**')
+        embed = Embed(description=desc)
+        embed.add_field(name='Permissions', value=fields[0])
+        embed.add_field(name='\u200b', value=fields[1])
+        embed.set_image(url='attachment://unknown.png')
+        embed.set_footer(text=f'ID: {role.id}')
+        
+        await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
 
     @commands.command(cls=perms.Lock, level=2, guild_only=True, name='rolemenu', aliases=['rmenu'], usage='rolemenu <title> | <color> | <*roles>')
     async def rolemenu(self, ctx, *data):

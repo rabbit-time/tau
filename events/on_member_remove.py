@@ -17,8 +17,7 @@ class OnMemberRemove(commands.Cog):
 
         cache = self.bot.guilds_
         guild_id = member.guild.id
-        if cache.get(guild_id):
-            if cache[guild_id]['goodbye_messages'] and (chan := fetch_channel(member.guild, cache[guild_id]['system_channel'])):
+        if cache[guild_id]['goodbye_messages'] and (chan := member.guild.get_channel(cache[guild_id]['system_channel'])):
                 await chan.send(cache[guild_id]['goodbye_message'].replace('@user', member.display_name).replace('@mention', member.mention).replace('@guild', member.guild.name))
 
 def setup(bot):

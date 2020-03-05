@@ -8,6 +8,7 @@ import psutil
 import discord
 from discord import Embed, File
 from discord.ext import commands
+from discord.utils import find
 
 import config
 import perms
@@ -43,9 +44,12 @@ class System(commands.Cog):
             for k, v in self.bot.guilds_[guild_id].items():
                 if isinstance(default[k], bool):
                     toggles[k] = v
-                elif isinstance(default[k], int):
+                elif 'role' in k:
                     role = ctx.guild.get_role(v)
                     fields[k] = f'{str(role)} ({role.id})' if role else None
+                elif 'channel' in k:
+                    ch = ctx.guild.get_channel(v)
+                    fields[k] = f'{str(ch)} ({ch.id})' if ch else None
                 else:
                     fields[k] = v
         
@@ -133,7 +137,7 @@ class System(commands.Cog):
                                 if msg.content == 'reset':
                                     val = default[key]
                                     await self.bot.guilds_.update(ctx.guild.id, key, default[key])
-                                elif isinstance(default[key], int):
+                                elif 'role' in key:
                                     for r in ctx.guild.roles:
                                         if r.name == msg.content:
                                             role = r
@@ -146,6 +150,16 @@ class System(commands.Cog):
                                         await ctx.send(f'{ctx.author.mention} Sorry! A role named \'{msg.content}\' could not be found.', delete_after=5)
                                     else:
                                         await self.bot.guilds_.update(ctx.guild.id, key, role.id)
+                                elif 'channel' in key:
+                                    ch = find(lambda ch: ch.name == msg.content, ctx.guild.text_channels)
+                                    if not ch:
+                                        ch_id = int(msg.content) if msg.content.isdigit() else 0
+                                        ch = ctx.guild.get_channel(ch_id)
+
+                                    if not ch:
+                                        await ctx.send(f'{ctx.author.mention} Sorry! A channel named \'{msg.content}\' could not be found.', delete_after=5)
+                                    else:
+                                        await self.bot.guilds_.update(ctx.guild.id, key, ch.id)
                                 else:
                                     await self.bot.guilds_.update(ctx.guild.id, key, msg.content)
 

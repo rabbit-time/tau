@@ -49,7 +49,7 @@ class Roles(commands.Cog):
         perms.sort()
         plen = len(max(perms, key=lambda p: len(p[0]))[0])
         
-        half = len(perms)//2
+        half = len(perms) // 2
         fields = ['', '']
         for i, tup in enumerate(perms):
             perm, value = tup

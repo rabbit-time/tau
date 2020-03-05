@@ -35,10 +35,6 @@ emoji = {
 class RoleNotFound(Exception):
     '''Exception: Role could not be found'''
 
-def fetch_channel(guild, name):
-    chans = {chan.name: chan for chan in guild.text_channels}
-    return chans.get(name)
-
 async def res_member(ctx):
     msg = ctx.message
     if (uid := msg.content.split()[-1]).isdigit():

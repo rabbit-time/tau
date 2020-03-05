@@ -2,7 +2,6 @@ from discord import Embed
 from discord.ext import commands
 
 import ccp
-from utils import fetch_channel
 
 class OnMemberRemove(commands.Cog):
     def __init__(self, bot):

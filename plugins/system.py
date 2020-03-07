@@ -211,7 +211,7 @@ class System(commands.Cog):
         desc = f'''**```md
             # Progress
             ```**
-            {utils.emoji["progress"]} A Discord community for civil discourse about philosophy, politics, and more. Progress is a platform for open dialogue and debate to aid human progress even if it is on a small scale, hence the name.
+            {utils.emoji["progress"]} A Discord community for civil discourse about philosophy, politics, and more. Progress is a platform for open dialogue and debate to aid human progress even if it is on a small scale.
 
             **```diff
             - Rules

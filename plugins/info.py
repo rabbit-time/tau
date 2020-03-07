@@ -141,6 +141,7 @@ class Info(commands.Cog):
         embed = Embed(title='Tau', description=desc)
         embed.add_field(name='Info', value=f'**License:** Apache 2.0\n**Version:** {config.version}\n**Python:** {platform.python_version()}\n**discord.py:** {discord.__version__}\n\n')
         embed.add_field(name='\u200b', value=f'**Uptime:** {uptime//60//60//24:02.0f}:{uptime//60//60%24:02.0f}:{uptime//60%60:02.0f}:{uptime%60:05.2f}\n**Memory Usage:** {round(mem/1000/1000, 2)} MB\n**Code:** {self.bot.code} lines')
+        embed.add_field(name='\u200b', value=f'To get started, try **`{self.bot.guilds_[ctx.guild.id]["prefix"]}help`** for a list of commands!', inline=False)
         embed.add_field(name='\u200b', value=divider.join(links), inline=False)
         embed.set_image(url='attachment://unknown.png')
         embed.set_footer(text=f'Now serving {len(self.bot.users):,} users!')

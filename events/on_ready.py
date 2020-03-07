@@ -22,7 +22,7 @@ class OnReady(commands.Cog):
                    await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
 
         prefix = self.bot.guilds_.default['prefix']
-        await self.bot.change_presence(activity=Game(name=f'{prefix}help'))
+        await self.bot.change_presence(activity=Game(name=f'{prefix}tau'))
         ccp.ready(f'Logged in as {self.bot.user.name}')
         ccp.ready(f'ID: {self.bot.user.id}')
         self.bot.url = oauth_url(client_id=self.bot.user.id, permissions=Permissions(permissions=8))

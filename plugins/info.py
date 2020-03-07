@@ -17,10 +17,9 @@ class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, name='avatar', aliases=['pfp'], usage='avatar [mention]')
+    @commands.command(cls=perms.Lock, name='avatar', aliases=['pfp'], usage='avatar [mention|id]')
     async def avatar(self, ctx):
         '''Retrieve user avatar.
-        *mention* can be a mention or a user ID.\n
         **Example:```yml\n.avatar\n.pfp @Tau#4272\n .pfp 608367259123187741```**
         '''
         member = await res_member(ctx)
@@ -114,7 +113,7 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=False, name='tau', usage='tau')
+    @commands.command(cls=perms.Lock, name='tau', usage='tau')
     async def tau(self, ctx):
         '''Display app info.
         This is the introduction command.

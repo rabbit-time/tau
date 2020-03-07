@@ -114,6 +114,8 @@ class Cache(aobject):
         await bot.con.commit()
 
 async def init():
+    if not os.path.exists('srv'):
+        os.mkdir('srv')
     bot.con = await aiosqlite.connect('srv/db.sqlite3')
 
     bot.guilds_ = await Cache('guilds', 'guild_id', config.guilds_schema, config._def_guild)

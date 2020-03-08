@@ -261,7 +261,7 @@ class System(commands.Cog):
         await self.bot.con.close()
         os.execv(sys.executable, ['python'] + sys.argv)
 
-    @commands.command(cls=perms.Lock, level=5, name='shutdown', aliases=['exit', 'quit', 'poweroff'], usage='shutdown')
+    @commands.command(cls=perms.Lock, level=5, name='shutdown', aliases=['exit', 'quit', 'kill'], usage='shutdown')
     async def shutdown(self, ctx):
         '''Shut down the bot.\n
         **Example:```yml\n.shutdown\n.exit```**

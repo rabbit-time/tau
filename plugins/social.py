@@ -79,7 +79,6 @@ class Social(commands.Cog):
         res = requests.get(str(member.avatar_url))
         with Image.open('assets/profile.png') as template, \
              Image.open('assets/border.png') as border, \
-             Image.open('assets/avatar_border.png') as avatar_border, \
              Image.open(io.BytesIO(res.content)) as avatar:
             # Copy the template and initialize the draw object
             im = template.copy()
@@ -91,18 +90,16 @@ class Social(commands.Cog):
             font = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 250)
             bigfont = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 500)
 
-            # Avatar
+            # Circular mask for avatar
             size = (512, 512)
             mask = Image.new('L', size, 0)
             draw_mask = ImageDraw.Draw(mask)
             draw_mask.ellipse((0, 0) + size, fill=255)
             avatar = ImageOps.fit(avatar, mask.size, centering=(0.5, 0.5))
             
-            # Avatar border
-            x, y = avatar_border.size
+            # Avatar
             w, h = avatar.size
-            avatar_border.paste(avatar, ((x-w)//2, (y-h)//2), mask)
-            im.alpha_composite(avatar_border, (594-x//2, 378-y//2))
+            im.paste(avatar, (594-w//2, 378-h//2), mask)
 
             # Level
             w, h = bigfont.getsize(str(lvl))

@@ -77,14 +77,13 @@ class System(commands.Cog):
         desc = build()
         embed = Embed(description=desc.strip('\n'))
         embed.set_author(name=ctx.guild.name, icon_url='attachment://unknown.png')
-        memo = '📝'
         x = '❌'
         menu = await ctx.send(file=File('assets/gear.png', 'unknown.png'), embed=embed)
-        await menu.add_reaction(memo)
+        await menu.add_reaction(utils.emoji['settings'])
 
         while True:
             try:
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=90, check=lambda reaction, user: str(reaction.emoji) == memo and reaction.message.id == menu.id and not user.bot)
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=90, check=lambda reaction, user: str(reaction.emoji) == utils.emoji['settings'] and reaction.message.id == menu.id and not user.bot)
                 self.bot.suppressed[ctx.author] = menu.channel
 
                 if user != ctx.author:

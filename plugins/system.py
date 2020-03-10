@@ -201,12 +201,13 @@ class System(commands.Cog):
                 break
 
     @commands.command(cls=perms.Lock, level=5, name='debug', aliases=[], usage='debug <code>')
-    async def debug(self, ctx, *code):
+    async def debug(self, ctx):
         '''Runs Python code.\n
         **Example:```yml\n.debug print('hello world')```**
         '''
         ch = ctx.guild.get_channel(606482360309121024)
-        staff = ctx.guild.get_role(546836599141302272)
+        mod = ctx.guild.role(587152021845704704)
+        admin = ctx.guild.get_role(587151954606686249)
         desc = f'''**```md
             # Progress
             ```**
@@ -216,21 +217,22 @@ class System(commands.Cog):
             - Rules
             ```*`These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed.`***
 
-            **1.** Do not harass other users.\n
+            **1.** Do not harass other members.\n
             **2.** Do not spam.\n
             **3.** Usernames must be mentionable.\n
             **4.** All forms of discrimination are unacceptable.\n
             **5.** Communicate only in English.\n
-            **6.** Do not dox another user.\n
+            **6.** Respect everyone's privacy. Do not dox other members.\n
             **7.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
             **8.** Post in the right channel; see channel descriptions for details.\n
-            **9.** Do not promote other Discord servers without permission from **{staff.mention}**.\n
-            **10.** Adhere to the Discord Terms of Service: **https://discordapp.com/terms**
+            **9.** Do not promote other Discord servers without permission from an **{admin.mention}**.\n
+            **10.** Adhere to the Discord Terms of Service: **https://discordapp.com/terms**\n
+            **11.** Ping **{mod.mention}** to report misconduct or violation of these rules.
 
             **```py
             @ Roles
             ```**
-            Be sure to visit the {ch.mention} menu to assign descriptive, philosophical, and political roles to help you stand out! These roles are completely cosmetic.
+            Be sure to visit the {ch.mention} menu to assign personal, philosophical, and political roles to help you stand out! These roles, aside from the ping roles and the direct message roles, are completely cosmetic.
 
             **```yml
             + Invite

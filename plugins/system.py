@@ -206,7 +206,7 @@ class System(commands.Cog):
         **Example:```yml\n.debug print('hello world')```**
         '''
         ch = ctx.guild.get_channel(606482360309121024)
-        mod = ctx.guild.role(587152021845704704)
+        mod = ctx.guild.get_role(587152021845704704)
         admin = ctx.guild.get_role(587151954606686249)
         desc = f'''**```md
             # Progress

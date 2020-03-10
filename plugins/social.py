@@ -157,7 +157,6 @@ class Social(commands.Cog):
             _, offset = font.getoffset(msg)
             draw.text((x/2-w/2, 1465-h/2-offset/2), msg, font=font, fill=f'#ffffff')
 
-
             # Finalize by pasting the progress bar border
             # to prevent the corners of the rectangle
             # from jutting out.

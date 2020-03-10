@@ -108,12 +108,52 @@ class Roles(commands.Cog):
         embed = Embed(title=title, description=desc.strip('\n'), color=color)
         menu = await ctx.send(embed=embed)
 
-        ids = ''
         for i, role in enumerate(roles):
             await menu.add_reaction(utils.emoji[i+1])
-            ids += str(role.id) + ' '
 
-        await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', ids)
+        await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', role_ids)
+
+    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='rmod', aliases=[], usage='rmod <menu> <*roles>')
+    async def rmod(self, ctx, menu_id, *role_ids):
+        '''Modify a role menu.
+        This command must be invoked in the channel containing the role menu.
+        *menu* must be an ID of a role menu.
+        *roles* must be a list of role IDs delimited by spaces.\n
+        **Example:```yml\n .rmod 546836599141302272 122550600863842310 608148009213100033```**
+        '''
+        await ctx.message.delete()
+
+        roles = []
+        for role_id in role_ids:
+            role = ctx.guild.get_role(int(role_id))
+            if not role:
+                return await ctx.send(f'{ctx.author.mention} One or more roles could not be resolved: `{role_id}` is invalid.', delete_after=5)
+
+            roles.append(role)
+
+        try:
+            menu = await ctx.channel.fetch_message(menu_id)
+            if not self.bot.rmenus.get((ctx.guild.id, menu.id)):
+                raise discord.NotFound
+        except discord.NotFound:
+            return await ctx.send(f'{ctx.author.mention} Role menu with ID `{role_id}` could not be found.', delete_after=5)
+        
+        desc = ''
+        for i, role in enumerate(roles):
+            desc += f'**{i+1}.** {str(role)}\n'
+
+        embed = menu.embeds[0]
+        embed.description = desc.strip('\n')
+
+        await menu.edit(embed=embed)
+
+        for i in range(0, 15):
+            if i > len(roles) - 1:
+                await menu.clear_reaction(utils.emoji[i+1])
+            else:
+                await menu.add_reaction(utils.emoji[i+1])
+        
+        await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', ' '.join(role_ids))
 
 def setup(bot):
     bot.add_cog(Roles(bot))

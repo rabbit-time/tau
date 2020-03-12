@@ -234,6 +234,13 @@ class System(commands.Cog):
             ```**
             Be sure to visit the {ch.mention} menu to assign personal, philosophical, and political roles to help you stand out! These roles, aside from the ping roles and the direct message roles, are completely cosmetic.
 
+            **```fix
+            % Debate
+            ```**
+            **•** Please apply **[the principle of charity](https://tinyurl.com/the-principle-of-charity)**.\n
+            **•** Stay as **[epistemically humble](https://tinyurl.com/what-is-epistemic-humility)** as possible.\n
+            **•** Be prepared to make **[formal arguments](https://tinyurl.com/what-is-a-formal-argument)**.
+
             **```yml
             + Invite
             ```**

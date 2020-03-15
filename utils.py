@@ -152,7 +152,7 @@ async def autodetain(bot, member, guild, msg, timeout):
         await msg.channel.send(embed=embed)
 
         if ban:
-            await member.ban()
+            await member.ban(delete_message_days=0)
         else:
             await member.remove_roles(bind)
 

@@ -1,5 +1,6 @@
 import random
 
+from discord import Embed
 from discord.ext import commands
 
 from utils import level, levelxp
@@ -25,12 +26,13 @@ class OnMessage(commands.Cog):
             if not limited:
                 # Add xp to user
                 xp = self.bot.users_[uid]['xp']
-                newxp = xp + random.randint(20, 30)
+                newxp = xp + random.randint(10, 20)
                 await self.bot.users_.update(uid, 'xp', newxp)
                 if level(xp) is not level(newxp):
                     # Send level up message if enabled in guild config.
                     if self.bot.guilds_[msg.guild.id]['levelup_messages']:
-                        await msg.channel.send(f'**{msg.author.display_name}** has leveled up!')
+                        embed = Embed(description=f'**```yml\n↑ {level(newxp)} ↑ {msg.author.display_name} has leveled up!```**', color=0x2aa198)
+                        await msg.channel.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(OnMessage(bot))

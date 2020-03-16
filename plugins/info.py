@@ -54,7 +54,7 @@ class Info(commands.Cog):
             else:
                 return await ctx.send('Must be a hex color code.')
         elif key == 'bio':
-            await self.bot.users_.update(ctx.author.id, 'bio', ' '.join(val[1:]))
+            await self.bot.users_.update(ctx.author.id, 'bio', ' '.join(val))
         elif key:
             return await ctx.send(f'`{key}` is not editable.')
 

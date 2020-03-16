@@ -12,8 +12,10 @@ _def_guild = {
     'system_channel': 0,
     'welcome_message': 'Hi @mention, welcome to @guild!',
     'goodbye_message': 'Bye @user!',
+    'ban_message': '@user has been banned.',
     'welcome_messages': False,
     'goodbye_messages': False,
+    'ban_messages': False,
     'levelup_messages': False,
     'autorole': 0,
     'mod_role': 0,
@@ -47,8 +49,10 @@ guilds_schema = ('guild_id unsigned bigint PRIMARY KEY, '
                  'system_channel unsigned bigint, '
                  'welcome_message varchar(255), '
                  'goodbye_message varchar(255), '
+                 'ban_message varchar(255), '
                  'welcome_messages bool, '
                  'goodbye_messages bool, '
+                 'ban_messages bool, '
                  'levelup_messages bool, '
                  'autorole unsigned bigint, '
                  'mod_role unsigned bigint, '

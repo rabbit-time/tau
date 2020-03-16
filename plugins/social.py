@@ -76,6 +76,8 @@ class Social(commands.Cog):
         if not member or member.bot:
             return
 
+        message = await ctx.send(emoji['loading'])
+
         res = requests.get(str(member.avatar_url))
         with Image.open('assets/profile.png') as template, \
              Image.open('assets/border.png') as border, \
@@ -174,6 +176,7 @@ class Social(commands.Cog):
         embed.set_image(url='attachment://unknown.png')
         embed.set_footer(text=f'ID: {member.id}')
 
+        await message.delete()
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
 
         '''

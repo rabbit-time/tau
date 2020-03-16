@@ -16,6 +16,7 @@ emoji = {
     'idle': '<:idle:659932829508960256>',
     'dnd': '<:dnd:659932885062516746>',
     'offline': '<:offline:659932900405411842>',
+    'loading': '<a:loading:688977787528544301>',
     1: '<:01:683462884625481802>',
     2: '<:02:683462884650516492>',
     3: '<:03:683462884378148865>',
@@ -63,7 +64,8 @@ async def automute(bot, user_id, guild_id, unmute_time):
     guild = bot.get_guild(guild_id)
     member = await guild.fetch_member(user_id)
     bind = guild.get_role(bot.guilds_[guild_id]['bind_role'])
-    await member.remove_roles(bind)
+    if not bot.detains.get((user_id, guild_id)):
+        await member.remove_roles(bind)
 
     await bot.mutes.delete((user_id, guild_id))
     del bot.mute_tasks[user_id, guild_id]

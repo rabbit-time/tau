@@ -4,6 +4,7 @@ import requests
 import discord
 from discord import Embed, File
 from discord.ext import commands
+from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 import perms
@@ -169,8 +170,8 @@ class Social(commands.Cog):
 
             buffer.seek(0)
 
-        desc = (f'{emoji[str(member.status)]} **{member.display_name}\n'
-        f'`{member.name}#{member.discriminator}`\n\n'
+        desc = (f'{emoji[str(member.status)]} **{escape_markdown(member.display_name)}\n'
+        f'`{escape_markdown(member.name)}#{member.discriminator}`\n\n'
         f'```yml\n{self.bot.users_[member.id]["bio"]}```**')
         embed = Embed(description=desc)
         embed.set_image(url='attachment://unknown.png')

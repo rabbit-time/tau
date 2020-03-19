@@ -24,7 +24,7 @@ def perm(ctx):
     elif uid in config.admins:
         return 4
     elif ctx.guild:
-        roles = [r.name for r in ctx.author.roles]
+        roles = [r.id for r in ctx.author.roles]
         if uid == ctx.guild.owner.id:
             return 3
         elif ctx.bot.guilds_[ctx.guild.id]['admin_role'] in roles:

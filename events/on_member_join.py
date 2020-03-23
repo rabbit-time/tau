@@ -1,3 +1,5 @@
+import time
+
 from discord import Embed
 from discord.ext import commands
 
@@ -19,9 +21,11 @@ class OnMemberJoin(commands.Cog):
         if cache[guild.id]['welcome_messages'] and (chan := guild.get_channel(cache[guild.id]['system_channel'])):
             await chan.send(cache[guild.id]['welcome_message'].replace('@user', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name))
 
-        if self.bot.mute_tasks.get((member.id, guild.id)):
-            role = member.guild.get_role(self.bot.guilds_[guild.id]['bind_role'])
-            await member.add_roles(role)
+        if self.bot.members.get((member.id, guild.id)):
+            muted = self.bot.members[member.id, guild.id]['muted']
+            if muted > int(time.time()):
+                role = member.guild.get_role(self.bot.guilds_[guild.id]['bind_role'])
+                await member.add_roles(role)
 
         autorole = self.bot.guilds_[member.guild.id]['autorole']
         if role := guild.get_role(autorole):

@@ -120,10 +120,9 @@ async def init():
 
     bot.guilds_ = await Cache('guilds', 'guild_id', config.guilds_schema, config._def_guild)
     bot.users_ = await Cache('users', 'user_id', config.users_schema, config._def_user)
-    bot.mutes = await Cache('mutes', 'user_id, guild_id', config.mutes_schema, config._def_mute)
-    bot.detains = await Cache('detains', 'user_id, guild_id', config.detains_schema, config._def_detain)
+    bot.members = await Cache('members', 'user_id, guild_id', config.members_schema, config._def_member)
     bot.rmenus = await Cache('role_menus', 'guild_id, message_id', config.role_menus_schema, config._def_role_menu)
-    
+    bot.ranks = await Cache('ranks', 'guild_id', config.ranks_schema, config._def_rank)
     # Loads plugins and events
     files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file] 
     files += [f'events.{file[:-3]}' for file in os.listdir('events') if '__' not in file]

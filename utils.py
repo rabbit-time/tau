@@ -64,10 +64,10 @@ async def automute(bot, user_id, guild_id, unmute_time):
     guild = bot.get_guild(guild_id)
     member = await guild.fetch_member(user_id)
     bind = guild.get_role(bot.guilds_[guild_id]['bind_role'])
-    if not bot.detains.get((user_id, guild_id)):
+    if bot.members[user_id, guild_id]['detained'] == -1:
         await member.remove_roles(bind)
 
-    await bot.mutes.delete((user_id, guild_id))
+    await bot.members.update((user_id, guild_id), 'muted', -1)
     del bot.mute_tasks[user_id, guild_id]
 
 async def tally(msg, emoji1, emoji2):
@@ -158,7 +158,7 @@ async def autodetain(bot, member, guild, msg, timeout):
         else:
             await member.remove_roles(bind)
 
-        await bot.detains.delete((member.id, guild.id))
+        await bot.members.update((member.id, guild.id), 'detained', -1)
 
 async def before(ctx):
     member = await res_member(ctx)

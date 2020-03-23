@@ -154,6 +154,41 @@ class Roles(commands.Cog):
                 await menu.add_reaction(utils.emoji[i+1])
         
         await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', ' '.join(role_ids))
+    
+    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='ranks', aliases=[], usage='ranks <*roles>')
+    async def ranks(self, ctx, *role_ids):
+        '''Initialize rank roles.
+        *roles* must be a list of role IDs delimited by spaces, ordered from lowest to highest in hierarchy.
+        Replace *roles* with 'reset' to remove rank roles.\n
+        **Example:```yml\n.ranks 546836599141302272 122550600863842310 608148009213100033```**
+        '''
+        if role_ids[0] == 'reset':
+            await self.bot.ranks.update(ctx.guild.id, 'role_ids', '')
+            await ctx.message.delete()
+            return await ctx.send('Rank roles successfully reset.', delete_after=5)
+
+        if not 2 <= len(role_ids) <= 6:
+            await ctx.message.delete()
+            return await ctx.send(f'{ctx.author.mention} Amount of rank roles must be between 2 and 6 inclusive.', delete_after=5)
+
+        for id in role_ids:
+            try:
+                id = int(id)
+            except:
+                id = 0
+
+            if not ctx.guild.get_role(id):
+                await ctx.message.delete()
+                return await ctx.send(f'{ctx.author.mention} One or more roles could not be resolved: `{id}` is invalid.', delete_after=5)
+
+        await self.bot.ranks.update(ctx.guild.id, 'role_ids', ' '.join(role_ids))
+
+        bottom_role = ctx.guild.get_role(int(role_ids[0]))
+        for member in ctx.guild.members:
+            if not member.bot:
+                await member.add_roles(bottom_role)
+
+        await ctx.send('Rank roles successfully initialized.')
 
 def setup(bot):
     bot.add_cog(Roles(bot))

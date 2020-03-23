@@ -28,24 +28,22 @@ class OnReady(commands.Cog):
         self.bot.url = oauth_url(client_id=self.bot.user.id, permissions=Permissions(permissions=8))
         ccp.ready(f'URL: \u001b[1m\u001b[34m{self.bot.url}\u001b[0m')
 
-        cur = await self.bot.con.execute('SELECT * FROM mutes WHERE muted != -1')
+        cur = await self.bot.con.execute('SELECT * FROM members WHERE muted != -1 OR detained != -1')
         records = await cur.fetchall()
-        for user_id, guild_id, muted in records:
-            self.bot.mute_tasks[user_id, guild_id] = self.bot.loop.create_task(automute(self.bot, user_id, guild_id, muted))
-
-        cur = await self.bot.con.execute('SELECT * FROM detains')
-        records = await cur.fetchall()
-        for user_id, guild_id, channel_id, msg_id, timeout in records:
-            guild = self.bot.get_guild(guild_id)
-            member = guild.get_member(user_id)
-            channel = guild.get_channel(channel_id)
-            msg = await channel.fetch_message(msg_id)
-            if not member:
-                await guild.ban(Object(id=user_id))
-                await self.bot.detains.delete((user_id, guild_id))
-                continue
+        for user_id, guild_id, _, muted, detained, channel_id, msg_id in records:
+            if muted != -1:
+                self.bot.mute_tasks[user_id, guild_id] = self.bot.loop.create_task(automute(self.bot, user_id, guild_id, muted))
+            else:
+                guild = self.bot.get_guild(guild_id)
+                member = guild.get_member(user_id)
+                channel = guild.get_channel(channel_id)
+                msg = await channel.fetch_message(msg_id)
+                if not member:
+                    await guild.ban(Object(id=user_id))
+                    await self.bot.members.update((user_id, guild_id), 'detained', -1)
+                    continue
             
-            self.bot.loop.create_task(autodetain(self.bot, member, guild, msg, timeout))
+                self.bot.loop.create_task(autodetain(self.bot, member, guild, msg, detained))
 
 def setup(bot):
     bot.add_cog(OnReady(bot))

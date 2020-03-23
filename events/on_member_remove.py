@@ -11,7 +11,7 @@ class OnMemberRemove(commands.Cog):
     async def on_member_remove(self, member):
         try:
             await member.guild.fetch_ban(member)
-        except discord.NotFound:
+        except discord.Forbidden:
             pass
         else:
             return

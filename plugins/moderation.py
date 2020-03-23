@@ -41,7 +41,9 @@ class Moderation(commands.Cog):
         if member in mod.members or member in admin.members:
             return await ctx.send('Staff members cannot be detained.', delete_after=5)
 
-        if self.bot.detains.get((member.id, ctx.guild.id)):
+        if not self.bot.members.get((member.id, ctx.guild.id)):
+            await self.bot.members.insert((member.id, ctx.guild.id))
+        elif self.bot.members[member.id, ctx.guild.id]['detained'] != -1:
             return await ctx.send(f'**{member.display_name}** has already been detained.', delete_after=5)
 
         await ctx.send(f'**{emoji["cuffs"]} | {member.display_name}** has been detained.')
@@ -79,9 +81,9 @@ class Moderation(commands.Cog):
         await msg.add_reaction('🔻')
         await msg.pin()
 
-        await self.bot.detains.update((member.id, ctx.guild.id), 'channel_id', case.id)
-        await self.bot.detains.update((member.id, ctx.guild.id), 'message_id', msg.id)
-        await self.bot.detains.update((member.id, ctx.guild.id), 'detained', now+86400)
+        await self.bot.members.update((member.id, ctx.guild.id), 'detain_channel_id', case.id)
+        await self.bot.members.update((member.id, ctx.guild.id), 'detain_message_id', msg.id)
+        await self.bot.members.update((member.id, ctx.guild.id), 'detained', now+86400)
         await autodetain(self.bot, member, ctx.guild, msg, now+86400)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='delete', aliases=['del', 'purge'], usage='delete [count=1] [mentions]')
@@ -115,7 +117,7 @@ class Moderation(commands.Cog):
         await ctx.send(f'{content}!', delete_after=5)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <mention> [limit]')
-    async def mute(self, ctx, mention, *limit):
+    async def mute(self, ctx, mention: int, *limit):
         '''Mute a user.
         *mention* can also be a user ID.
 
@@ -125,17 +127,22 @@ class Moderation(commands.Cog):
         Mute limits are capped at 6 months to prevent memory leaks.\n
         **Example:```yml\n.mute @Tau#4272 1 day\n.mute 608367259123187741 1d 12h 30m```**
         '''
-        member = await res_member(ctx)
         
-        match = re.search(r'<@(!?)([0-9]*)>', mention)
-        if not match or member == ctx.author or member.bot:
-            raise commands.MissingRequiredArgument
+        member = ctx.guild.get_member(mention)
+        if not member:
+            msg = ctx.message
+            member = msg.mentions[0] if msg.mentions else msg.author
+        
+        if member == ctx.author or member.bot:
+            return
 
         bind = findrole(self.bot.guilds_[ctx.guild.id]['bind_role'], ctx.guild)
         
         await ctx.message.delete()
 
-        if self.bot.mutes.get((member.id, ctx.guild.id)):
+        if not self.bot.members.get((member.id, ctx.guild.id)):
+            await self.bot.members.insert((member.id, ctx.guild.id))
+        elif self.bot.members[member.id, ctx.guild.id]['muted'] != -1:
             return await ctx.send(f'**{member.display_name}** has already been muted.', delete_after=5)
         
         if limit:
@@ -181,9 +188,9 @@ class Moderation(commands.Cog):
 
             self.bot.mute_tasks[member.id, ctx.guild.id] = self.bot.loop.create_task(automute(self.bot, member.id, ctx.guild.id, total))
         else:
-            total = -1
+            total = 0
 
-        await self.bot.mutes.update((member.id, ctx.guild.id), 'muted', total)
+        await self.bot.members.update((member.id, ctx.guild.id), 'muted', total)
 
         await member.add_roles(bind)
 
@@ -203,13 +210,13 @@ class Moderation(commands.Cog):
         if member == ctx.author or member.bot:
             return
 
-        if not self.bot.mutes.get((member.id, ctx.guild.id)):
+        if not self.bot.members.get((member.id, ctx.guild.id)) or self.bot.members[member.id, ctx.guild.id]['muted'] == -1:
             return await ctx.send(f'**{member.display_name}** has not been muted.', delete_after=5)
 
         bind = findrole(self.bot.guilds_[ctx.guild.id]['bind_role'], ctx.guild)
         await member.remove_roles(bind)
 
-        await self.bot.mutes.delete((member.id, ctx.guild.id))
+        await self.bot.members.update((member.id, ctx.guild.id), 'muted', -1)
         if task := self.bot.mute_tasks.get((member.id, ctx.guild.id)):
             task.cancel()
             del self.bot.mute_tasks[member.id, ctx.guild.id]

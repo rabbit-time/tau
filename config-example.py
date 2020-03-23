@@ -11,8 +11,8 @@ _def_guild = {
     'prefix': '.',
     'system_channel': 0,
     'welcome_message': 'Hi @mention, welcome to @guild!',
-    'goodbye_message': 'Bye @user!',
-    'ban_message': '@user has been banned.',
+    'goodbye_message': 'Bye @mention!',
+    'ban_message': '@mention has been banned.',
     'welcome_messages': False,
     'goodbye_messages': False,
     'ban_messages': False,
@@ -30,17 +30,19 @@ _def_user = {
     'bio': 'This is my bio :)'
 }
 
-_def_mute = {
-    'muted': -1
-}
-
-_def_detain = {
-    'channel_id': 0,
-    'message_id': 0,
-    'detained': -1
+_def_member = {
+    'xp': 0,
+    'muted': -1,
+    'detained': -1,
+    'detain_channel_id': 0,
+    'detain_message_id': 0
 }
 
 _def_role_menu = {
+    'role_ids': ''
+}
+
+_def_rank = {
     'role_ids': ''
 }
 
@@ -64,17 +66,18 @@ users_schema = ('user_id unsigned bigint PRIMARY KEY, '
                 'xp unsigned bigint, '
                 'accent char(7), '
                 'bio varchar(2000)')
-    
-mutes_schema = ('user_id unsigned bigint, '
-                'guild_id unsigned bigint, '
-                'muted bigint')
 
-detains_schema = ('user_id unsigned bigint, '
+members_schema = ('user_id unsigned bigint, '
                   'guild_id unsigned bigint, '
-                  'channel_id unsigned bigint, '
-                  'message_id unsigned bigint, '
-                  'detained bigint')
+                  'xp unsigned bigint, '
+                  'muted bigint, '
+                  'detained bigint, '
+                  'detain_channel_id unsigned bigint, '
+                  'detain_message_id unsigned bigint')
 
 role_menus_schema = ('guild_id unsigned bigint, '
                      'message_id unsigned bigint, '
                      'role_ids varchar(250)')
+
+ranks_schema = ('guild_id unsigned bigint PRIMARY KEY, '
+                'role_ids varchar(60000)')

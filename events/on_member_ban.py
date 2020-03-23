@@ -14,7 +14,8 @@ class OnMemberBan(commands.Cog):
         if user.bot:
             return
 
-        await self.bot.members.delete((user.id, guild.id))
+        if self.bot.members.get((user.id, guild.id)):
+            await self.bot.members.delete((user.id, guild.id))
 
         cache = self.bot.guilds_
         if cache[guild.id]['ban_messages'] and (chan := guild.get_channel(cache[guild.id]['system_channel'])):

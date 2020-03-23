@@ -117,7 +117,7 @@ class Moderation(commands.Cog):
         await ctx.send(f'{content}!', delete_after=5)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <mention> [limit]')
-    async def mute(self, ctx, mention: int, *limit):
+    async def mute(self, ctx, mention, *limit):
         '''Mute a user.
         *mention* can also be a user ID.
 
@@ -127,7 +127,6 @@ class Moderation(commands.Cog):
         Mute limits are capped at 6 months to prevent memory leaks.\n
         **Example:```yml\n.mute @Tau#4272 1 day\n.mute 608367259123187741 1d 12h 30m```**
         '''
-        
         member = ctx.guild.get_member(mention)
         if not member:
             msg = ctx.message

@@ -19,6 +19,8 @@ class System(commands.Cog):
         self.bot = bot
 
     @commands.command(cls=perms.Lock, level=2, guild_only=True, name='config', aliases=['conf'], usage='config')
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
     async def config(self, ctx):
         '''Display or modify guild configuration.
         Config keys can be modified using the reaction menu.

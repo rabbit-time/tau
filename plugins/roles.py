@@ -15,6 +15,7 @@ class Roles(commands.Cog):
         self.bot = bot
 
     @commands.command(cls=perms.Lock, level=0, guild_only=True, name='role', aliases=[], usage='role <name|id>')
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def role(self, ctx, *content):
         '''Displays role info.\n
         **Example:```yml\n.role Tau\n.role 657766595321528349```**
@@ -68,6 +69,8 @@ class Roles(commands.Cog):
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
 
     @commands.command(cls=perms.Lock, level=2, guild_only=True, name='rolemenu', aliases=['rmenu'], usage='rolemenu <title> | <color> | <*roles>')
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.bot_has_permissions(add_reactions=True, manage_messages=True)
     async def rolemenu(self, ctx, *data):
         '''Create a role menu.
         Role menus are powered by message reactions and can hold up to 15 roles. 
@@ -114,6 +117,7 @@ class Roles(commands.Cog):
         await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', role_ids)
 
     @commands.command(cls=perms.Lock, level=2, guild_only=True, name='rmod', aliases=[], usage='rmod <menu> <*roles>')
+    @commands.bot_has_permissions(add_reactions=True, manage_messages=True)
     async def rmod(self, ctx, menu_id, *role_ids):
         '''Modify a role menu.
         This command must be invoked in the channel containing the role menu.
@@ -156,6 +160,8 @@ class Roles(commands.Cog):
         await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', ' '.join(role_ids))
     
     @commands.command(cls=perms.Lock, level=2, guild_only=True, name='ranks', aliases=[], usage='ranks <*roles>')
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.bot_has_permissions(manage_messages=True)
     async def ranks(self, ctx, *role_ids):
         '''Initialize rank roles.
         *roles* must be a list of role IDs delimited by spaces, ordered from lowest to highest in hierarchy.

@@ -1,7 +1,7 @@
 import sys
 import traceback
 
-from discord import Embed
+from discord import Embed, File
 from discord.ext import commands
 
 import ccp
@@ -30,6 +30,18 @@ class OnCommandError(commands.Cog):
                     f'Use **`.config`** to edit the guild configuration.')
             embed = Embed(description=desc)
             return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+
+        if isinstance(error, commands.BotMissingPermissions):
+            perms = ''
+            for perm in error.missing_perms:
+                perms += f'\n`{perm}`'
+
+            desc = (f'The following required permissions for this command are missing:**{perms}**\n\n'
+                    f'To avoid these messages in the future, please put the Tau role as the highest role '
+                    f'and enable admin permissions, as such:')
+            embed = Embed(description=desc)
+            embed.set_image(url='attachment://unknown.png')
+            return await ctx.send(f'Hey {ctx.author.mention}!', file=File('assets/perms.png', 'unknown.png'), embed=embed)
 
         if isinstance(error, commands.CommandNotFound):
             return ccp.error(f'\u001b[1m{str(ctx.author)}@{str(ctx.guild)}\u001b[0m {ctx.message.content}')

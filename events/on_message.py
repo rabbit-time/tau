@@ -21,8 +21,9 @@ class OnMessage(commands.Cog):
         if not self.bot.users_.get(uid):
             await self.bot.users_.insert(uid)
 
-        cat_name = msg.channel.category.name if msg.channel.category else None
-        if not msg.content.startswith(self.bot.guilds_[guild.id]['prefix']) and cat_name != 'appeals' and (member not in self.bot.suppressed.keys() or self.bot.suppressed.get(member) != msg.channel):
+        chan = msg.channel
+        cat_name = chan.category.name if chan.category else None
+        if not msg.content.startswith(self.bot.guilds_[guild.id]['prefix']) and cat_name != 'appeals' and (member not in self.bot.suppressed.keys() or self.bot.suppressed.get(member) != chan):
             bucket = self._cd.get_bucket(msg)
             limited = bucket.update_rate_limit()
             if not limited:
@@ -35,7 +36,7 @@ class OnMessage(commands.Cog):
                     if self.bot.guilds_[guild.id]['levelup_messages']:
                         desc = f'**```yml\n↑ {level(newxp)} ↑ {member.display_name} has leveled up!```**'
                         embed = Embed(description=desc, color=0x2aa198)
-                        await msg.channel.send(embed=embed)
+                        await chan.send(embed=embed)
                 
             # Rank roles
             if not self.bot.members.get((uid, guild.id)):
@@ -47,28 +48,28 @@ class OnMessage(commands.Cog):
 
                 req = [0, 250, 1000, 2500, 5000, 10000]
                 role_ids = role_ids.split()
-                if not xp > req[-1]:
-                    roles = [guild.get_role(int(id)) for id in role_ids]
-                    if None in roles:
-                        return await self.bot.ranks.update(guild.id, 'role_ids', '')
+                roles = [guild.get_role(int(id)) for id in role_ids]
+                if None in roles:
+                    return await self.bot.ranks.update(guild.id, 'role_ids', '')
+                
+                for i in range(len(roles)-1, -1, -1):
+                    if xp < req[i]:
+                        continue
                     
-                    for i in range(len(roles)-1, -1, -1):
-                        if xp >= req[i] and roles[i] not in member.roles:
-                            for role in roles:
-                                if role in member.roles:
-                                    await member.remove_roles(role)
-                            
-                            if xp == req[i]:
-                                desc = f'**```yml\n{member.display_name} has ranked up to {str(roles[i])}!```**'
-                                embed = Embed(description=desc, color=0x2aa198)
-                                await msg.channel.send(embed=embed)
-                            
-                            await member.add_roles(roles[i])
-                            break
-                else:
-                    top_role = guild.get_role(int(role_ids[-1]))
-                    if top_role not in member.roles:
-                        await member.add_roles(top_role)
+                    rank = roles.pop(i)
+                    for role in roles:
+                        if role in member.roles:
+                            await member.remove_roles(role)
+                    
+                    if xp == req[i]:
+                        desc = f'**```yml\n{member.display_name} has ranked up to {str(roles[i])}!```**'
+                        embed = Embed(description=desc, color=0x2aa198)
+                        await chan.send(embed=embed)
+
+                    if rank not in member.roles:        
+                        await member.add_roles(rank)
+                        
+                    break
 
 def setup(bot):
     bot.add_cog(OnMessage(bot))

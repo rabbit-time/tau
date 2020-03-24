@@ -63,7 +63,7 @@ class Social(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='profile', aliases=['card', 'info', 'user'], usage='profile [mention]')
-    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    @commands.bot_has_permissions(attach_files=True, external_emojis=True, manage_messages=True)
     async def profile(self, ctx):
         '''Display profile card.
         The accent color and the bio features may be customized.

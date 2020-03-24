@@ -62,7 +62,7 @@ class OnMessage(commands.Cog):
                             await member.remove_roles(role)
                     
                     if xp == req[i]:
-                        desc = f'**```yml\n{member.display_name} has ranked up to {str(roles[i])}!```**'
+                        desc = f'**```yml\n{member.display_name} has ranked up to {str(rank)}!```**'
                         embed = Embed(description=desc, color=0x2aa198)
                         await chan.send(embed=embed)
 

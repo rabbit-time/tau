@@ -132,8 +132,9 @@ class Moderation(commands.Cog):
         Mute limits are capped at 6 months to prevent memory leaks.\n
         **Example:```yml\n.mute @Tau#4272 1 day\n.mute 608367259123187741 1d 12h 30m```**
         '''
-        member = ctx.guild.get_member(mention)
-        if not member:
+        try:
+            member = ctx.guild.get_member(int(mention))
+        except:
             msg = ctx.message
             member = msg.mentions[0] if msg.mentions else msg.author
         

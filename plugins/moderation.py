@@ -13,6 +13,8 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], description='Detains a member', usage='detain <mention>')
+    @commands.bot_has_guild_permissions(add_reactions=True, external_emojis=True, manage_messages=True, manage_channels=True, manage_roles=True, ban_members=True)
+    @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
     async def detain(self, ctx, mention):
         '''Detain a member.
         This command replaces a ban functionality to implement
@@ -87,6 +89,7 @@ class Moderation(commands.Cog):
         await autodetain(self.bot, member, ctx.guild, msg, now+86400)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='delete', aliases=['del', 'purge'], usage='delete [count=1] [mentions]')
+    @commands.bot_has_permissions(manage_messages=True)
     async def delete(self, ctx, n=1.0):
         '''Delete messages from a channel.
         Specify *count* to delete multiple messages. The command message will not be included in this amount.
@@ -117,6 +120,8 @@ class Moderation(commands.Cog):
         await ctx.send(f'{content}!', delete_after=5)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <mention> [limit]')
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def mute(self, ctx, mention, *limit):
         '''Mute a user.
         *mention* can also be a user ID.
@@ -197,6 +202,8 @@ class Moderation(commands.Cog):
         await ctx.send(f'**{emoji["mute"]} | {member.display_name}** has been muted.', embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <mention>')
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def unmute(self, ctx):
         '''Unmute a user.
         *mention* can also be a user ID.\n

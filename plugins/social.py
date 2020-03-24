@@ -15,6 +15,7 @@ class Social(commands.Cog):
         self.bot = bot
 
     @commands.command(cls=perms.Lock, guild_only=True, name='guild', aliases=['guildinfo'], usage='guild')
+    @commands.bot_has_permissions(external_emojis=True)
     async def guild(self, ctx):
         '''Display guild profile.
         If the server has a banner, it will be displayed here.
@@ -62,6 +63,7 @@ class Social(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='profile', aliases=['card', 'info', 'user'], usage='profile [mention]')
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def profile(self, ctx):
         '''Display profile card.
         The accent color and the bio features may be customized.

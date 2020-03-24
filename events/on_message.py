@@ -56,13 +56,15 @@ class OnMessage(commands.Cog):
                         if xp >= req[i] and roles[i] not in member.roles:
                             for role in roles:
                                 if role in member.roles:
+                                    print(1)
                                     await member.remove_roles(role)
                             
                             if xp == req[i]:
                                 desc = f'**```yml\n{member.display_name} has ranked up to {str(roles[i])}!```**'
                                 embed = Embed(description=desc, color=0x2aa198)
                                 await msg.channel.send(embed=embed)
-
+                            
+                            print(2)
                             await member.add_roles(roles[i])
                             break
                 else:

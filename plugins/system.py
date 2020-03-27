@@ -134,6 +134,10 @@ class System(commands.Cog):
                             if on_msg in done:
                                 msg = done.pop().result()
                                 await msg.delete()
+                                
+                                if msg.channel != menu.channel:
+                                    embed.set_footer(text='')
+                                    raise asyncio.TimeoutError
 
                                 if msg.content == 'reset':
                                     val = default[key]
@@ -219,22 +223,18 @@ class System(commands.Cog):
             - Rules
             ```*`These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed.`***
 
-            **1.** Do not harass other members.\n
-            **2.** Do not spam.\n
-            **3.** Usernames must be mentionable.\n
-            **4.** All forms of discrimination are unacceptable.\n
+            **1.** Do not spam or excessively troll.\n
+            **2.** Do not use insults or ad hominems.\n
+            **3.** Display names must be mentionable.\n
+            **4.** All discriminatory behavior is unacceptable.\n
             **5.** Communicate only in English.\n
             **6.** Respect everyone's privacy. Do not dox other members.\n
             **7.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
             **8.** Post in the right channel; see channel descriptions for details.\n
             **9.** Do not promote other Discord servers without permission from an **{admin.mention}**.\n
-            **10.** Adhere to the Discord Terms of Service: **https://discordapp.com/terms**\n
-            **11.** Ping **{mod.mention}** to report misconduct or violation of these rules.
-
-            **```py
-            @ Roles
-            ```**
-            Be sure to visit the {ch.mention} menu to assign personal, philosophical, and political roles to help you stand out! These roles, aside from the ping roles and the direct message roles, are completely cosmetic.
+            **10.** Adhere to the Discord **[Terms of Service](https://discordapp.com/terms)**.\n
+            **11.** Ping **{mod.mention}** to report misconduct or violation of these rules.\n
+            **12.** Follow the debate guidelines below.
 
             **```fix
             % Debate
@@ -243,23 +243,17 @@ class System(commands.Cog):
             **•** Stay as **[epistemically humble](https://tinyurl.com/what-is-epistemic-humility)** as possible.\n
             **•** Be prepared to make **[formal arguments](https://tinyurl.com/what-is-a-formal-argument)**.
 
+            **```py
+            @ Roles
+            ```**
+            Be sure to visit the {ch.mention} menu to assign personal, philosophical, and political roles to help you stand out! These roles, aside from the ping roles and the direct message roles, are completely cosmetic.
+
             **```yml
             + Invite
             ```**
             Share to help us progress: **{config.invite}**'''
         embed = Embed(description=desc.replace(' '*12, ''))
         await ctx.send(embed=embed)
-
-        '''
-        code = ctx.message.content[7:].strip('`\n')
-        if code.startswith('py\n'):
-            code = code[3:]
-
-        try:
-            eval(code)
-        except Exception as error:
-            embed = Embed(description=f'```py\n{error}```', color=0xff4e4e)
-            await ctx.send(embed=embed)'''
 
     @commands.command(cls=perms.Lock, level=5, name='reboot', aliases=['r', 'restart'], usage='reboot')
     async def reboot(self, ctx):

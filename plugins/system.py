@@ -207,21 +207,24 @@ class System(commands.Cog):
                 break
 
     @commands.command(cls=perms.Lock, level=5, name='debug', aliases=[], usage='debug <code>')
-    async def debug(self, ctx):
+    async def debug(self, ctx, code=0):
         '''Runs Python code.\n
         **Example:```yml\n.debug print('hello world')```**
         '''
+        await ctx.message.delete()
+
         ch = ctx.guild.get_channel(606482360309121024)
         mod = ctx.guild.get_role(587152021845704704)
         admin = ctx.guild.get_role(587151954606686249)
         desc = f'''**```md
             # Progress
             ```**
-            {utils.emoji["progress"]} A Discord community for civil discourse about philosophy, politics, and more. Progress is a platform for open dialogue and debate to aid human progress even if it is on a small scale.
+            {utils.emoji["progress"]} Welcome to Progress! We are a Discord community for civil discourse about philosophy, politics, and more. Progress is a platform for learning and debating different ideas. Thank you for joining and we hope you enjoy your stay!
 
             **```diff
             - Rules
-            ```*`These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed.`***
+            ```**
+            *These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed. These rules are subject to change at any time.*
 
             **1.** Do not spam or excessively troll.\n
             **2.** Do not use insults or ad hominems.\n
@@ -232,7 +235,7 @@ class System(commands.Cog):
             **7.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
             **8.** Post in the right channel; see channel descriptions for details.\n
             **9.** Do not promote other Discord servers without permission from an **{admin.mention}**.\n
-            **10.** Adhere to the Discord **[Terms of Service](https://discordapp.com/terms)**.\n
+            **10.** Adhere to the Discord **[Terms of Service](https://discordapp.com/terms)** and **[Community Guidelines](https://discordapp.com/guidelines)**.\n
             **11.** Ping **{mod.mention}** to report misconduct or violation of these rules.\n
             **12.** Follow the debate guidelines below.
 
@@ -249,10 +252,44 @@ class System(commands.Cog):
             Be sure to visit the {ch.mention} menu to assign personal, philosophical, and political roles to help you stand out! These roles, aside from the ping roles and the direct message roles, are completely cosmetic.
 
             **```yml
-            + Invite
+            + Share
+            ```**
+            Share to help us progress: **{config.invite}**'''
+        desc2 = f'''**```md
+            # Crew
+            ```**
+            {utils.emoji["progress"]} Congratulations on being a member of the **@crew**! 
+
+            **```diff
+            - Standards
+            ```**
+            **•** Uphold all rules in #welcome.\n
+            **•** Be accountable for your actions.\n
+            **•** Respect the democratic moderation system.\n
+            **•** Discussions in #crew and appeals are confidential.\n
+            **•** Be active.
+
+            **```fix
+            % Order of punishment
+            ```**
+            Order may be ignored depending on the severity of the offense. In some cases, it is just better to detain immediately. 
+
+            **• Warning:** an assertive reminder to follow the rules.\n
+            **• Mute:** a restriction on text and voice chatting for a specified amount of time.\n
+            **• Detain:** equal in precedence to banning. This should be used as a last resort.
+
+            **```py
+            @ Guide
+            ```**
+            Please use #guide as a reference for the moderation commands. The official documentation for each moderation command has been posted there.
+
+            **```yml
+            + Share
             ```**
             Share to help us progress: **{config.invite}**'''
         embed = Embed(description=desc.replace(' '*12, ''))
+        if code == 1:
+            embed.description = desc2.replace(' '*12, '')
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=5, name='reboot', aliases=['r', 'restart'], usage='reboot')

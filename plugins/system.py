@@ -216,6 +216,7 @@ class System(commands.Cog):
         ch = ctx.guild.get_channel(606482360309121024)
         mod = ctx.guild.get_role(587152021845704704)
         admin = ctx.guild.get_role(587151954606686249)
+        crew = ctx.guild.get_role(546836599141302272)
         desc = f'''**```md
             # Progress
             ```**
@@ -258,7 +259,7 @@ class System(commands.Cog):
         desc2 = f'''**```md
             # Crew
             ```**
-            {utils.emoji["progress"]} Congratulations on being a member of the **@crew**! 
+            {utils.emoji["progress"]} Congratulations on being a member of the **{crew.mention}**! 
 
             **```diff
             - Standards

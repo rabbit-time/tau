@@ -10,9 +10,11 @@ version = '1.0.0'
 _def_guild = {
     'prefix': '.',
     'system_channel': 0,
+    'starboard_channel': 0,
+    'star_quantity': 3,
     'welcome_message': 'Hi @mention, welcome to @guild!',
-    'goodbye_message': 'Bye @mention!',
-    'ban_message': '@mention has been banned.',
+    'goodbye_message': 'Bye @user!',
+    'ban_message': '@user has been banned.',
     'welcome_messages': False,
     'goodbye_messages': False,
     'ban_messages': False,
@@ -46,9 +48,16 @@ _def_rank = {
     'role_ids': ''
 }
 
+_def_star = {
+    'channel_id': 0,
+    'star_id': 0
+}
+
 guilds_schema = ('guild_id unsigned bigint PRIMARY KEY, '
                  'prefix varchar(255), '
                  'system_channel unsigned bigint, '
+                 'starboard_channel unsigned bigint, '
+                 'star_quantity unsigned tinyint, '
                  'welcome_message varchar(255), '
                  'goodbye_message varchar(255), '
                  'ban_message varchar(255), '
@@ -81,3 +90,6 @@ role_menus_schema = ('guild_id unsigned bigint, '
 
 ranks_schema = ('guild_id unsigned bigint PRIMARY KEY, '
                 'role_ids varchar(60000)')
+
+stars_schema = ('message_id unsigned bigint PRIMARY KEY, '
+                'star_id unsigned bigint')

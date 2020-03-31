@@ -123,6 +123,7 @@ async def init():
     bot.members = await Cache('members', 'user_id, guild_id', config.members_schema, config._def_member)
     bot.rmenus = await Cache('role_menus', 'guild_id, message_id', config.role_menus_schema, config._def_role_menu)
     bot.ranks = await Cache('ranks', 'guild_id', config.ranks_schema, config._def_rank)
+    bot.stars = await Cache('stars', 'message_id', config.stars_schema, config._def_star)
     # Loads plugins and events
     files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file] 
     files += [f'events.{file[:-3]}' for file in os.listdir('events') if '__' not in file]

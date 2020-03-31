@@ -162,6 +162,12 @@ class System(commands.Cog):
                                         await ctx.send(f'{ctx.author.mention} Sorry! A channel named \'{msg.content}\' could not be found.', delete_after=5)
                                     else:
                                         await self.bot.guilds_.update(ctx.guild.id, key, ch.id)
+                                elif 'quantity' in key:
+                                    qty = int(msg.content) if msg.content.isdigit() else 0
+                                    if not 0 < qty < 256:
+                                        await ctx.send(f'{ctx.author.mention} `star_quantity` must be an integer between 1 and 255.', delete_after=5)
+                                    else:
+                                        await self.bot.guilds_.update(ctx.guild.id, key, qty)
                                 else:
                                     await self.bot.guilds_.update(ctx.guild.id, key, msg.content)
 

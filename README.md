@@ -6,6 +6,7 @@ To protect users against power-hungry and overzealous moderators, Tau implements
 ### Features
 + Democratic moderation
 + Server management
++ Rank roles
 + XP and leveling system
 + Currency
 + Information commands

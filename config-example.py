@@ -49,7 +49,6 @@ _def_rank = {
 }
 
 _def_star = {
-    'channel_id': 0,
     'star_id': 0
 }
 

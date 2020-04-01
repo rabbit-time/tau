@@ -44,7 +44,8 @@ class OnRawReactionAdd(commands.Cog):
                 file = msg.attachments[0]
                 if file.url.lower().endswith(('png', 'jpeg', 'jpg', 'gif', 'webp')):
                     embed.set_image(url=file.url)
-            embed.set_footer(text=f'ID: {msg.id}')
+            embed.set_footer(text=msg.id)
+            embed.timestamp = msg.created_at
                 
             def star_emoji(stars):
                 if 5 > stars >= 0:

@@ -189,11 +189,11 @@ class Moderation(commands.Cog):
         if total != 0:
             file = File('assets/clock.png', 'unknown.png')
             embed.set_footer(text=time_, icon_url='attachment://unknown.png')
-            embed.timestamp = datetime.datetime.fromtimestamp(total)
+            embed.timestamp = datetime.datetime.fromtimestamp(total).astimezone(tz=datetime.timezone.utc)
         else:
             file = None
             embed.set_footer(text='Muted')
-            embed.timestamp = datetime.datetime.fromtimestamp(time.time())
+            embed.timestamp = datetime.datetime.utcnow()
 
         await ctx.send(file=file, embed=embed)
 
@@ -224,7 +224,7 @@ class Moderation(commands.Cog):
 
         embed = Embed(description=f'**{emoji["sound"]} {member.mention} has been unmuted.**')
         embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
-        embed.timestamp = datetime.datetime.fromtimestamp(time.time())
+        embed.timestamp = datetime.datetime.utcnow()
 
         await ctx.send(embed=embed)
 

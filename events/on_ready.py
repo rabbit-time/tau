@@ -16,6 +16,11 @@ class OnReady(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        if not self.bot.boot:
+            return
+
+        self.bot.boot = False
+
         for guild in self.bot.guilds:
             if guild.id not in self.bot.guilds_.keys():
                 await self.bot.guilds_.insert(guild.id)

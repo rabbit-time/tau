@@ -52,6 +52,11 @@ _def_star = {
     'star_id': 0
 }
 
+_def_reminder = {
+    'channel_id': 0,
+    'reminder': '',
+}
+
 guilds_schema = ('guild_id unsigned bigint PRIMARY KEY, '
                  'prefix varchar(255), '
                  'system_channel unsigned bigint, '
@@ -92,3 +97,8 @@ ranks_schema = ('guild_id unsigned bigint PRIMARY KEY, '
 
 stars_schema = ('message_id unsigned bigint PRIMARY KEY, '
                 'star_id unsigned bigint')
+
+reminders_schema = ('user_id unsigned bigint, '
+                    'time unsigned bigint, '
+                    'channel_id unsigned bigint, '
+                    'reminder varchar(2048)')

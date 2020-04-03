@@ -1,6 +1,7 @@
 import sys
 import traceback
 
+import discord
 from discord import Embed, File
 from discord.ext import commands
 
@@ -22,6 +23,10 @@ class OnCommandError(commands.Cog):
                     f'If you\'re not sure how to use the command, try:'
                     f'**```yml\n{ctx.prefix}help {ctx.command.name}```**\n')
             embed = Embed(description=desc)
+            return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+
+        if isinstance(error, discord.NotFound):
+            embed = Embed(description='Sorry, a message with that ID could not be fetched in this channel.')
             return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
 
         if isinstance(error, utils.RoleNotFound):

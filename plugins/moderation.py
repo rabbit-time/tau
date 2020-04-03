@@ -1,21 +1,24 @@
 import asyncio
+import datetime
 import time
 import re
 
 from discord import Embed, File, PermissionOverwrite
 from discord.ext import commands
+from discord.utils import escape_markdown
 
 import perms
+import utils
 from utils import autodetain, automute, emoji, findrole, res_member
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], description='Detains a member', usage='detain <mention>')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], description='Detains a member', usage='detain <mention|id>')
     @commands.bot_has_guild_permissions(add_reactions=True, external_emojis=True, manage_messages=True, manage_channels=True, manage_roles=True, ban_members=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
-    async def detain(self, ctx, mention):
+    async def detain(self, ctx, mention, *, reason=None):
         '''Detain a member.
         This command replaces a ban functionality to implement
         a democratic moderation system. Detained members will
@@ -23,8 +26,7 @@ class Moderation(commands.Cog):
         accessing the guild with the exception of the case
         channel. Staff members will vote on whether the member
         shall be permenantly banned.
-
-        *mention* can be a mention or a user ID.\n
+        *reason* is a reason that will show up in the audit log.\n
         **Example:```yml\n.detain @Tau#4272\n.bind 608367259123187741```**
         '''
         member = await res_member(ctx)
@@ -38,17 +40,24 @@ class Moderation(commands.Cog):
 
         await ctx.message.delete()
 
-        await member.add_roles(bind)
-
         if member in mod.members or member in admin.members:
             return await ctx.send('Staff members cannot be detained.', delete_after=5)
+
+        await member.add_roles(bind, reason=reason)
 
         if not self.bot.members.get((member.id, ctx.guild.id)):
             await self.bot.members.insert((member.id, ctx.guild.id))
         elif self.bot.members[member.id, ctx.guild.id]['detained'] != -1:
             return await ctx.send(f'**{member.display_name}** has already been detained.', delete_after=5)
+        
+        desc = f'**{emoji["cuffs"]} {member.mention} has been detained.**'
+        if reason:
+            desc += f'\nReason: *{reason}*'
+        embed = Embed(description=desc)
+        embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
+        embed.timestamp = datetime.datetime.fromtimestamp(time.time())
 
-        await ctx.send(f'**{emoji["cuffs"]} | {member.display_name}** has been detained.')
+        await ctx.send(embed=embed)
 
         overwrites = {
                 ctx.guild.default_role: PermissionOverwrite(read_messages=False),
@@ -119,18 +128,17 @@ class Moderation(commands.Cog):
             content += 's'
         await ctx.send(f'{content}!', delete_after=5)
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <mention> [limit]')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <mention|id> [limit] [reason]')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def mute(self, ctx, mention, *limit):
+    async def mute(self, ctx, mention, limit=None, *, reason=None):
         '''Mute a user.
-        *mention* can also be a user ID.
-
         *limit* is how long to mute the user for.
-        Suffix with *d*, *h*, or *m* to specify unit of time.
+        *reason* is a reason that will show up in the audit log.
+        Suffix with *m*, *d*, or *h* to specify unit of time.
         If *limit* is omitted, the user will be muted indefinitely.
         Mute limits are capped at 6 months to prevent memory leaks.\n
-        **Example:```yml\n.mute @Tau#4272 1 day\n.mute 608367259123187741 1d 12h 30m```**
+        **Example:```yml\n.mute @Tau#4272 10m\n.hush 608367259123187741 1h being a baddie```**
         '''
         try:
             member = ctx.guild.get_member(int(mention))
@@ -149,65 +157,51 @@ class Moderation(commands.Cog):
             await self.bot.members.insert((member.id, ctx.guild.id))
         elif self.bot.members[member.id, ctx.guild.id]['muted'] != -1:
             return await ctx.send(f'**{member.display_name}** has already been muted.', delete_after=5)
-        
-        if limit:
-            units = {
-                'm': 60,
-                'h': 3600,
-                'd': 86400
-            }
-        
-            t = ''.join(limit).lower().replace('and', '')
-        
-            limit = ''
-            for c in t:
-                if c in units.keys() or c.isdigit():
-                    limit += c
-        
-            for u in units.keys():
-                limit = limit.replace(u, u + ' ')
-            limit = limit.split()
 
-            time_ = []
-            for u in units.keys():
-                c = 0
-                for i in limit:
-                    if u in i:
-                        c += int(i[:-1])
-                time_.insert(0, f'{c}{u}')
-            time_ = ', '.join(time_)
+        try:
+            time_, delay = utils.parse_time(limit)
+        except:
+            delay = None
 
-            for i, val in enumerate(limit):
-                unit = val[-1]
-                limit[i] = int(val[:-1]) * units[unit]
-        
-            limit = sum(limit)
+        if delay:
             SEMIYEAR = 1555200
-            if limit > SEMIYEAR:
-                return await ctx.send(f'{member.mention} Mute limits are capped at 6 months to prevent memory leaks.')
+            if delay > SEMIYEAR:
+                raise commands.BadArgument
 
-            total = int(time.time()) + limit
-
-            date = time.strftime('%d.%m.%Y %H:%M:%S UTC', time.gmtime(total))
-            desc = f'**For: `{time_}`\nUntil: `{date}`**'
-
+            total = delay + int(time.time())
             self.bot.mute_tasks[member.id, ctx.guild.id] = self.bot.loop.create_task(automute(self.bot, member.id, ctx.guild.id, total))
         else:
             total = 0
+            if reason:
+                reason = f'{limit} {reason}'
+            elif limit:
+                reason = limit
 
+        await member.add_roles(bind, reason=reason)
         await self.bot.members.update((member.id, ctx.guild.id), 'muted', total)
 
-        await member.add_roles(bind)
+        desc = f'**{emoji["mute"]} {member.mention} has been muted.**'
+        if reason:
+            desc += f'\nReason: *{reason}*'
+        
+        embed = Embed(description=desc)
+        embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
+        if total != 0:
+            file = File('assets/clock.png', 'unknown.png')
+            embed.set_footer(text=time_, icon_url='attachment://unknown.png')
+            embed.timestamp = datetime.datetime.fromtimestamp(total)
+        else:
+            file = None
+            embed.set_footer(text='Muted')
+            embed.timestamp = datetime.datetime.fromtimestamp(time.time())
 
-        embed = Embed(description=desc) if limit else None
-        await ctx.send(f'**{emoji["mute"]} | {member.display_name}** has been muted.', embed=embed)
+        await ctx.send(file=file, embed=embed)
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <mention>')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <mention|id>')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def unmute(self, ctx):
-        '''Unmute a user.
-        *mention* can also be a user ID.\n
+        '''Unmute a user.\n
         **Example:```yml\n.unmute @Tau#4272\n.unmute 608367259123187741```**
         '''
         await ctx.message.delete()
@@ -228,7 +222,11 @@ class Moderation(commands.Cog):
             task.cancel()
             del self.bot.mute_tasks[member.id, ctx.guild.id]
 
-        await ctx.send(f'**{emoji["sound"]} | {member.display_name}** has been unmuted.')
+        embed = Embed(description=f'**{emoji["sound"]} {member.mention} has been unmuted.**')
+        embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
+        embed.timestamp = datetime.datetime.fromtimestamp(time.time())
+
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

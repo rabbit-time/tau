@@ -32,7 +32,7 @@ class Utilities(commands.Cog):
         embed = Embed(description=f'Reminder to **{reminder}** has been set for {time_}!')
         embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
         embed.set_footer(text=time_, icon_url='attachment://unknown.png')
-        embed.timestamp = datetime.datetime.fromtimestamp(delay+now)
+        embed.timestamp = datetime.datetime.fromtimestamp(delay+now).astimezone(tz=datetime.timezone.utc)
 
         await ctx.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
 

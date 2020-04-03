@@ -89,7 +89,7 @@ async def remind(bot, user, channel, reminder, remind_time):
     embed = Embed(description=f'Remember to **{reminder}**!')
     embed.set_author(name=escape_markdown(user.display_name), icon_url=user.avatar_url)
     embed.set_footer(text='Time\'s up!', icon_url='attachment://unknown.png')
-    embed.timestamp = datetime.datetime.fromtimestamp(int(time.time()))
+    embed.timestamp = datetime.datetime.utcnow()
 
     await channel.send(f'Hey {user.mention}!', file=File('assets/clock.png', 'unknown.png'), embed=embed)
 

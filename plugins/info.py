@@ -73,7 +73,7 @@ class Info(commands.Cog):
             for cog in cogs:
                 cmds = cog[1].get_commands()
                 cmds.sort(key=lambda cmd: cmd.name)
-                cmds = '\n'.join(f'**`{c.usage}`**\n*{c.short_doc if c.short_doc else "None"}*' for c in cmds)
+                cmds = ' '.join(f'**`{c.name}`**' for c in cmds)
                 res += f'**{cog[0]}**\n{cmds}\n\n'
 
             desc = f'Here\'s a list of commands. For further detail, use **`help [command]`**.\n\n{res}'

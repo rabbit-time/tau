@@ -1,7 +1,10 @@
 import asyncio
+import datetime
 import time
 
 from discord import Embed, File
+from discord.ext import commands
+from discord.utils import escape_markdown
 
 emoji = {
     'progress': '<:progress:683525894530138171>',
@@ -55,6 +58,42 @@ def findrole(id, guild):
     if not role:
         raise RoleNotFound
     return role
+
+def parse_time(text):
+    units = {
+        'm': 60,
+        'h': 3600,
+        'd': 86400
+    }
+
+    time_= ''
+    for char in text:
+        if char in units.keys() or char.isdigit():
+            time_ += char
+
+    try:
+        limit = int(time_[:-1])
+        unit = units[time_[-1]]
+    except:
+        raise commands.BadArgument
+
+    limit *= unit
+
+    return time_, limit
+        
+async def remind(bot, user, channel, reminder, remind_time):
+    now = int(time.time())
+    delay = remind_time - now if remind_time > now else 0
+    await asyncio.sleep(delay)
+
+    embed = Embed(description=f'Remember to **{reminder}**!')
+    embed.set_author(name=escape_markdown(user.display_name), icon_url=user.avatar_url)
+    embed.set_footer(text='Time\'s up!', icon_url='attachment://unknown.png')
+    embed.timestamp = datetime.datetime.fromtimestamp(int(time.time()))
+
+    await channel.send(f'Hey {user.mention}!', file=File('assets/clock.png', 'unknown.png'), embed=embed)
+
+    await bot.reminders.delete((user.id, remind_time))
 
 async def automute(bot, user_id, guild_id, unmute_time):
     now = int(time.time())

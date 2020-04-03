@@ -7,6 +7,7 @@ from discord.ext import commands
 from discord.utils import oauth_url
 
 import ccp
+import utils
 from utils import automute, autodetain
 
 class OnReady(commands.Cog):
@@ -44,6 +45,16 @@ class OnReady(commands.Cog):
                     continue
             
                 self.bot.loop.create_task(autodetain(self.bot, member, guild, msg, detained))
+        
+        cur = await self.bot.con.execute('SELECT * FROM reminders')
+        records = await cur.fetchall()
+        for user_id, remind_time, channel_id, reminder in records:
+            chan = self.bot.get_channel(channel_id)
+            member = chan.guild.get_member(user_id)
+            if chan and member:
+                self.bot.loop.create_task(utils.remind(self.bot, member, chan, reminder, remind_time))
+            else:
+                await self.bot.reminders.delete((user_id, remind_time))
 
 def setup(bot):
     bot.add_cog(OnReady(bot))

@@ -18,8 +18,6 @@ class Utilities(commands.Cog):
         Reminders are capped at 6 months to prevent memory leaks.\n
         **Example:```yml\n.remind 2h clean room\n.remind 1h fix bugs```**
         '''
-        await ctx.message.delete()
-
         time_, delay = utils.parse_time(limit)
         now = int(time.time())
 

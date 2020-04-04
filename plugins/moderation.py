@@ -15,7 +15,7 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], description='Detains a member', usage='detain <mention|id>')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], description='Detains a member', usage='detain <mention|id> [reason]')
     @commands.bot_has_guild_permissions(add_reactions=True, external_emojis=True, manage_messages=True, manage_channels=True, manage_roles=True, ban_members=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
     async def detain(self, ctx, mention, *, reason=None):
@@ -27,7 +27,7 @@ class Moderation(commands.Cog):
         channel. Staff members will vote on whether the member
         shall be permenantly banned.
         *reason* is a reason that will show up in the audit log.\n
-        **Example:```yml\n.detain @Tau#4272\n.bind 608367259123187741```**
+        **Example:```yml\n.detain @Tau#4272\n.detain 608367259123187741 being a baddie```**
         '''
         member = await res_member(ctx)
 

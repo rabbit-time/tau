@@ -233,7 +233,7 @@ class System(commands.Cog):
             ```**
             *These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed. These rules are subject to change at any time.*
 
-            **1.** Moderation decisions will not be discussed. If you have a question about our rules, you may contact our mod team privately.
+            **1.** Moderation decisions will not be discussed. If you have a question about our rules, you may contact our mod team privately.\n
             **2.** Topics such as scientific racism, advocating pedophilia, genocide denial, anti-Semitic conspiracy theories, and flat-Earth conspiracy theories are strictly prohibited.\n
             **3.** Do not spam or excessively troll.\n
             **4.** Do not use insults or ad hominems.\n

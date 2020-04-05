@@ -233,18 +233,20 @@ class System(commands.Cog):
             ```**
             *These are just basic guidelines. Use common sense ー just because it is not mentioned here does not mean it is allowed. These rules are subject to change at any time.*
 
-            **1.** Do not spam or excessively troll.\n
-            **2.** Do not use insults or ad hominems.\n
-            **3.** Display names must be mentionable.\n
-            **4.** All discriminatory behavior is unacceptable.\n
-            **5.** Communicate only in English.\n
-            **6.** Respect everyone's privacy. Do not dox other members.\n
-            **7.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
-            **8.** Post in the right channel; see channel descriptions for details.\n
-            **9.** Do not promote other Discord servers without permission from an **{admin.mention}**.\n
-            **10.** Adhere to the Discord **[Terms of Service](https://discordapp.com/terms)** and **[Community Guidelines](https://discordapp.com/guidelines)**.\n
-            **11.** Ping **{mod.mention}** to report misconduct or violation of these rules.\n
-            **12.** Follow the debate guidelines below.
+            **1.** Moderation decisions will not be discussed. If you have a question about our rules, you may contact our mod team privately.
+            **2.** Topics such as scientific racism, advocating pedophilia, genocide denial, anti-Semitic conspiracy theories, and flat-Earth conspiracy theories are strictly prohibited.\n
+            **3.** Do not spam or excessively troll.\n
+            **4.** Do not use insults or ad hominems.\n
+            **5.** Display names must be mentionable.\n
+            **6.** All discriminatory behavior is unacceptable.\n
+            **7.** Communicate only in English.\n
+            **8.** Respect everyone's privacy. Do not dox other members.\n
+            **9.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
+            **10.** Post in the right channel; see channel descriptions for details.\n
+            **11.** Do not promote other Discord servers without permission from an **{admin.mention}**.\n
+            **12.** Adhere to the Discord **[Terms of Service](https://discordapp.com/terms)** and **[Community Guidelines](https://discordapp.com/guidelines)**.\n
+            **13.** Ping **{mod.mention}** to report misconduct or violation of these rules.\n
+            **14.** Follow the debate guidelines below.
 
             **```fix
             % Debate

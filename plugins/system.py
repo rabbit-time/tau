@@ -231,7 +231,6 @@ class System(commands.Cog):
             **```diff
             - Rules
             ```**
-           
             **1.** Moderation decisions is not a topic of discussion. If you have a question about our rules, you may contact our **{mod.mention}** team privately.\n
             **2.** Topics such as scientific racism, advocating pedophilia, genocide denial, anti-Semitic conspiracy theories, and flat-Earth conspiracy theories are strictly prohibited.\n
             **3.** Do not spam or excessively troll.\n

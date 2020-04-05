@@ -232,15 +232,15 @@ class System(commands.Cog):
             - Rules
             ```**
            
-            **1.** Moderation decisions will not be discussed. If you have a question about our rules, you may contact our mod team privately.\n
+            **1.** Moderation decisions is not a topic of discussion. If you have a question about our rules, you may contact our **{mod.mention}** team privately.\n
             **2.** Topics such as scientific racism, advocating pedophilia, genocide denial, anti-Semitic conspiracy theories, and flat-Earth conspiracy theories are strictly prohibited.\n
             **3.** Do not spam or excessively troll.\n
             **4.** Do not use insults or ad hominems.\n
             **5.** Display names must be mentionable.\n
             **6.** All discriminatory behavior is unacceptable.\n
             **7.** Communicate only in English.\n
-            **8.** Respect everyone's privacy. Do not dox other members.\n
-            **9.** Any NSFW content is strictly prohibited including user profiles, messages, images, links, etc.\n
+            **8.** Respect everyone's privacy; no doxxing.\n
+            **9.** Any NSFW content is strictly prohibited.\n
             **10.** Post in the right channel; see channel descriptions for details.\n
             **11.** Do not promote other Discord servers without permission from an **{admin.mention}**.\n
             **12.** Adhere to the Discord **[Terms of Service](https://discordapp.com/terms)** and **[Community Guidelines](https://discordapp.com/guidelines)**.\n

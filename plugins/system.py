@@ -257,7 +257,7 @@ class System(commands.Cog):
             **```py
             @ Roles
             ```**
-            Be sure to visit the {ch.mention} menu to assign personal, philosophical, and political roles to help you stand out! These roles, aside from the ping roles and the direct message roles, are completely cosmetic.
+            Be sure to visit the {ch.mention} menu to assign descripitive roles to help you stand out!
 
             **```yml
             + Share

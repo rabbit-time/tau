@@ -16,12 +16,12 @@ class OnReady(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        if not self.bot.boot:
-            return
-
         prefix = self.bot.guilds_.default['prefix']
         await self.bot.change_presence(activity=Game(name=f'{prefix}tau'))
         
+        if not self.bot.boot:
+            return
+
         self.bot.boot = False
         
         ccp.ready(f'Logged in as {self.bot.user.name}')

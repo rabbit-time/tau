@@ -24,7 +24,7 @@ class OnRawReactionRemove(commands.Cog):
                 if role:
                     await member.remove_roles(role)
         
-        if str(payload.emoji) in '⭐🌟💫✨' and self.bot.stars.get(payload.message_id):
+        if str(payload.emoji) == '⭐' and self.bot.stars.get(payload.message_id):
             starchan = guild.get_channel(self.bot.guilds_[guild.id]['starboard_channel'])
             chan = guild.get_channel(payload.channel_id)
             if chan and starchan:
@@ -35,7 +35,7 @@ class OnRawReactionRemove(commands.Cog):
             
             stars = 0
             for reaction in msg.reactions:
-                if str(reaction.emoji) in '⭐🌟💫✨':
+                if str(reaction.emoji) == '⭐':
                     stars += reaction.count
             
             embed = Embed(description=msg.content, color=0xffc20c)

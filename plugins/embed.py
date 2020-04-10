@@ -85,7 +85,7 @@ class Embed(commands.Cog):
         await msg.edit(embed=embed)
     
     @commands.command(cls=perms.Lock, name='footericon', aliases=[], usage='footericon <message> <url>')
-    async def footericon(self, ctx, msg: discord.Message, url=discord.Embed.Empty):
+    async def footericon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
         '''Modify the footer icon of an embed.\n
         **Example:```yml\n.footericon 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
@@ -114,7 +114,7 @@ class Embed(commands.Cog):
         await msg.edit(embed=embed)
     
     @commands.command(cls=perms.Lock, name='authoricon', aliases=[], usage='authoricon <message> <url>')
-    async def authoricon(self, ctx, msg: discord.Message, url=discord.Embed.Empty):
+    async def authoricon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
         '''Modify the author icon of an embed.\n
         **Example:```yml\n.authoricon 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
@@ -129,7 +129,7 @@ class Embed(commands.Cog):
             raise commands.BadArgument
 
     @commands.command(cls=perms.Lock, name='authorurl', aliases=[], usage='authorurl <message> <url>')
-    async def authorurl(self, ctx, msg: discord.Message, url=discord.Embed.Empty):
+    async def authorurl(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
         '''Modify the author URL of an embed.\n
         **Example:```yml\n.authorurl 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''

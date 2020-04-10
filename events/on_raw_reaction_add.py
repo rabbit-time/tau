@@ -69,8 +69,8 @@ class OnRawReactionAdd(commands.Cog):
                     except discord.NotFound:
                         await self.bot.stars.delete(msg.id)
                 else:
-                    starmsg = await starchan.send(f'{star_emoji(stars)} **{stars}**', embed=embed)
                     await self.bot.stars.update(msg.id, 'star_id', starmsg.id)
+                    starmsg = await starchan.send(f'{star_emoji(stars)} **{stars}**', embed=embed)
 
 def setup(bot):
     bot.add_cog(OnRawReactionAdd(bot))

@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord import Embed
 from discord.ext import commands
@@ -69,8 +70,10 @@ class OnRawReactionAdd(commands.Cog):
                     except discord.NotFound:
                         await self.bot.stars.delete(msg.id)
                 else:
-                    await self.bot.stars.update(msg.id, 'star_id', starmsg.id)
-                    starmsg = await starchan.send(f'{star_emoji(stars)} **{stars}**', embed=embed)
+                    lock = asyncio.Lock()
+                    async with lock:
+                        starmsg = await starchan.send(f'{star_emoji(stars)} **{stars}**', embed=embed)
+                        await self.bot.stars.update(msg.id, 'star_id', starmsg.id)
 
 def setup(bot):
     bot.add_cog(OnRawReactionAdd(bot))

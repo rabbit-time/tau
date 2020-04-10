@@ -1,6 +1,7 @@
 import time
 import datetime
 
+import discord
 from discord import Embed, File
 from discord.ext import commands
 from discord.utils import escape_markdown
@@ -35,6 +36,23 @@ class Utilities(commands.Cog):
         embed.timestamp = datetime.datetime.fromtimestamp(delay+now).astimezone(tz=datetime.timezone.utc)
 
         await ctx.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
+
+    @commands.command(cls=perms.Lock, name='resend', aliases=['rs'], usage='resend <message>')
+    async def resend(self, ctx, msg: discord.Message):
+        '''Resend a message.
+        This is useful for getting rid of the "edited" indicator.
+        To resend a message from another channel, use a message link instead of an ID.\n
+        **Example:```yml\n.resend 694890918645465138```**
+        '''
+        await msg.delete()
+
+        embed = None
+        for e in msg.embeds:
+            if e.type == 'rich':
+                embed = e
+                break
+
+        await ctx.send(content=msg.content, embed=embed)
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

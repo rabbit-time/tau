@@ -1,11 +1,12 @@
 import io
+import random
 
-import requests
 import discord
 from discord import Embed, File
 from discord.ext import commands
 from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+import requests
 
 import perms
 from utils import emoji, res_member, level, levelxp
@@ -14,35 +15,47 @@ class Social(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='guild', aliases=['guildinfo'], usage='guild')
+    @commands.command(cls=perms.Lock, guild_only=True, name='server', aliases=['serverinfo'], usage='server')
     @commands.bot_has_permissions(external_emojis=True)
-    async def guild(self, ctx):
-        '''Display guild profile.
+    async def server(self, ctx):
+        '''Display server profile.
         If the server has a banner, it will be displayed here.
         This profile cannot be customized.\n
-        **Example:```yml\n.guild```**
+        **Example:```yml\n.server```**
         '''
         guild = ctx.guild
 
-        statuses = dict(online=0, idle=0, dnd=0, offline=0)
+        bots = 0
+        statuses = dict(online=0, idle=0, dnd=0, streaming=0, offline=0)
         for member in guild.members:
+            if member.bot: bots += 1
+            if member.activity and member.activity.type == 'streaming':
+                statuses['streaming'] += 1
+                continue
             statuses[str(member.status)] += 1
 
-        desc = (f'**{guild.name}**\n'
-        f'**`{guild.owner.name}#{guild.owner.discriminator}`**\n\n'
-        f'**Region:** {str(guild.region)}\n'
-        f'**Verification:** {str(guild.verification_level)}\n'
-        f'**Members:** {guild.member_count}\n'
-        f'{emoji["online"]} {statuses["online"]}\n'
-        f'{emoji["idle"]} {statuses["idle"]}\n'
-        f'{emoji["dnd"]} {statuses["dnd"]}\n'
-        f'{emoji["offline"]} {statuses["offline"]}')
-        embed = Embed(description=desc)
-        embed.set_footer(text=f'ID: {guild.id}')
-        embed.set_thumbnail(url=guild.icon_url)
-        if guild.banner_url:
-            embed.set_image(url=guild.banner_url)
+        desc = (f'**{escape_markdown(str(guild.owner))}** {emoji["owner"]}\n\n'
+        f'**Region:** {guild.region}\n'
+        f'**Verification:** {guild.verification_level}\n\n')
         
+        emojis = guild.emojis
+        n = random.sample(emojis, 10 if len(emojis) > 10 else len(emojis)) 
+        emojis = ''.join(str(e) for e in n)
+
+        stats = f'**Humans:** `{guild.member_count-bots}` **Bots:** `{bots}`\n'
+        for key in list(statuses.keys()):
+            stats += f'{emoji[key]} `{statuses[key]}` '
+
+        embed = Embed(description=desc)
+        embed.set_author(name=guild.name, icon_url=guild.owner.avatar_url)
+        embed.set_thumbnail(url=guild.icon_url)
+        embed.add_field(name=f'Members `{guild.member_count}`', value=stats, inline=False)
+        embed.add_field(name=f'Emoji `{len(guild.emojis)}`', value=emojis, inline=False)
+        
+        embed.set_image(url=guild.banner_url)
+        embed.set_footer(text=f'ID: {guild.id}, created')
+        embed.timestamp = guild.created_at
+
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, name='leaderboard', aliases=['lb'], usage='leaderboard')
@@ -62,21 +75,22 @@ class Social(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='profile', aliases=['card', 'info', 'user'], usage='profile [mention]')
+    @commands.command(cls=perms.Lock, guild_only=True, name='profile', aliases=['card', 'info', 'user'], usage='profile [member]')
     @commands.bot_has_permissions(attach_files=True, external_emojis=True, manage_messages=True)
-    async def profile(self, ctx):
+    async def profile(self, ctx, member: discord.Member = None):
         '''Display profile card.
         The accent color and the bio features may be customized.
-        In addition to a mention, *mention* can also be substituted with a user ID.
-        Although, this only works with members within the guild.\n
+        This only works with members within the server.\n
         **Example:```yml\n.profile @Tau#4272\n.profile 608367259123187741```**
         '''
-        member = await res_member(ctx)
+        if not member:
+            member = ctx.author
+
         if member.id == self.bot.user.id:
             ctx.command = self.bot.get_command('tau')
             return await self.bot.invoke(ctx)
 
-        if not member or member.bot:
+        if member.bot:
             return
 
         message = await ctx.send(emoji['loading'])

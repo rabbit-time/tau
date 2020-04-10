@@ -14,22 +14,12 @@ class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=0, guild_only=True, name='role', aliases=[], usage='role <name|id>')
+    @commands.command(cls=perms.Lock, level=0, guild_only=True, name='role', aliases=[], usage='role <role>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def role(self, ctx, *content):
+    async def role(self, ctx, *, role: discord.Role):
         '''Displays role info.\n
         **Example:```yml\n.role Tau\n.role 657766595321528349```**
         '''
-        content = ' '.join(content)
-        role = find(lambda r: r.name == content, ctx.guild.roles)
-        if not role:
-            role_id = int(content) if content.isdigit() else 0
-            role = ctx.guild.get_role(role_id)
-
-        if not role:
-            await ctx.message.delete()
-            return await ctx.send(f'{ctx.author.mention} Sorry! A role named \'{content}\' could not be found.', delete_after=5)
-
         im = Image.new('RGB', (1200, 400), role.color.to_rgb())
         draw = ImageDraw.Draw(im)
 

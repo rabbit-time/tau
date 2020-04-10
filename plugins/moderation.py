@@ -3,6 +3,7 @@ import datetime
 import time
 import re
 
+import discord
 from discord import Embed, File, PermissionOverwrite
 from discord.ext import commands
 from discord.utils import escape_markdown
@@ -15,7 +16,7 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], description='Detains a member', usage='detain <mention|id> [reason]')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], usage='detain <mention|id> [reason]')
     @commands.bot_has_guild_permissions(add_reactions=True, external_emojis=True, manage_messages=True, manage_channels=True, manage_roles=True, ban_members=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
     async def detain(self, ctx, mention, *, reason=None):
@@ -97,22 +98,19 @@ class Moderation(commands.Cog):
         await self.bot.members.update((member.id, ctx.guild.id), 'detained', now+86400)
         await autodetain(self.bot, member, ctx.guild, msg, now+86400)
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='delete', aliases=['del', 'purge'], usage='delete [count=1] [mentions]')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='delete', aliases=['del', 'purge'], usage='delete [quantity=1] [members]')
     @commands.bot_has_permissions(manage_messages=True)
-    async def delete(self, ctx, n=1.0):
+    async def delete(self, ctx, n: int = 1, *members: discord.Member):
         '''Delete messages from a channel.
-        Specify *count* to delete multiple messages. The command message will not be included in this amount.
-        *count* cannot be greater than 100 and messages that are more than 14 days old cannot be deleted.
-        You can filter messages by user with *mentions*. Multiple users may be mentioned.\n
+        Specify *quantity* to delete multiple messages. The command message will not be included in this amount.
+        *quantity* cannot be greater than 100 and messages that are more than 14 days old cannot be deleted.
+        You can filter messages by member with *members*. Multiple members may be mentioned.\n
         **Example:```yml\n.delete 5\n.del 8 @Tau#4272```**
         '''
-        n = int(n)
-        if not 0 < n <= 100:
-            return await ctx.send('*count* must be an integer greater than 0 and less than or equal to 100.')
-
-        members = ctx.message.mentions
-
         await ctx.message.delete()
+
+        if not 0 < n <= 100:
+            raise commands.BadArgument
 
         messages = []
         async for msg in ctx.channel.history(limit=None):
@@ -123,15 +121,18 @@ class Moderation(commands.Cog):
 
         await ctx.channel.delete_messages(messages)
 
-        content = f'Deleted **{n}** message'
+        content = f'Deleted {n} message'
         if n != 1:
             content += 's'
-        await ctx.send(f'{content}!', delete_after=5)
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <mention|id> [limit] [reason]')
+        embed = Embed(description=f'**```diff\n- {content}!```**', color=0xff4e4e)
+        
+        await ctx.send(embed=embed)
+
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <member> [limit] [reason]')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def mute(self, ctx, mention, limit=None, *, reason=None):
+    async def mute(self, ctx, member: discord.Member, limit=None, *, reason=None):
         '''Mute a user.
         *limit* is how long to mute the user for.
         *reason* is a reason that will show up in the audit log.
@@ -140,18 +141,17 @@ class Moderation(commands.Cog):
         Mute limits are capped at 6 months to prevent memory leaks.\n
         **Example:```yml\n.mute @Tau#4272 10m\n.hush 608367259123187741 1h being a baddie```**
         '''
-        try:
-            member = ctx.guild.get_member(int(mention))
-        except:
-            msg = ctx.message
-            member = msg.mentions[0] if msg.mentions else msg.author
-        
-        if member == ctx.author or member.bot:
+        await ctx.message.delete()
+
+        if member.bot:
             return
 
         bind = findrole(self.bot.guilds_[ctx.guild.id]['bind_role'], ctx.guild)
-        
-        await ctx.message.delete()
+        mod = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['mod_role'])
+        admin = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['admin_role'])
+
+        if mod in member.roles or admin in member.roles:
+            return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be muted.', delete_after=5)
 
         if not self.bot.members.get((member.id, ctx.guild.id)):
             await self.bot.members.insert((member.id, ctx.guild.id))
@@ -197,16 +197,14 @@ class Moderation(commands.Cog):
 
         await ctx.send(file=file, embed=embed)
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <mention|id>')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <member>')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def unmute(self, ctx):
+    async def unmute(self, ctx, member: discord.Member):
         '''Unmute a user.\n
         **Example:```yml\n.unmute @Tau#4272\n.unmute 608367259123187741```**
         '''
         await ctx.message.delete()
-
-        member = await res_member(ctx)
         
         if member == ctx.author or member.bot:
             return

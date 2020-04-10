@@ -219,7 +219,7 @@ class System(commands.Cog):
         '''
         await ctx.message.delete()
 
-        ch = ctx.guild.get_channel(546397781888073776)
+        ch = ctx.guild.get_channel(696141596877652028)
         mod = ctx.guild.get_role(587152021845704704)
         admin = ctx.guild.get_role(587151954606686249)
         crew = ctx.guild.get_role(546836599141302272)

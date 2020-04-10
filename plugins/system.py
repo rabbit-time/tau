@@ -219,7 +219,7 @@ class System(commands.Cog):
         '''
         await ctx.message.delete()
 
-        ch = ctx.guild.get_channel(606482360309121024)
+        ch = ctx.guild.get_channel(546397781888073776)
         mod = ctx.guild.get_role(587152021845704704)
         admin = ctx.guild.get_role(587151954606686249)
         crew = ctx.guild.get_role(546836599141302272)
@@ -299,16 +299,23 @@ class System(commands.Cog):
             embed.description = desc2.replace(' '*12, '')
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, level=5, name='reboot', aliases=['r', 'restart'], usage='reboot')
-    async def reboot(self, ctx):
-        '''Restart the bot.\n
-        **Example:```yml\n.reboot```**
+    @commands.command(cls=perms.Lock, level=4, name='remove', aliases=['leave', 'rem'], usage='remove [id]')
+    async def remove(self, ctx, id: int):
+        '''Remove a server.\n
+        If an ID is not given, the current server will be removed.
+        **Example:```yml\n.remove 546397670793805825\n.leave```**
         '''
-        embed = Embed(description='**```yml\nRestarting...```**', color=0x2aa198)
-        await ctx.send(embed=embed)
-        
-        await self.bot.con.close()
-        os.execv(sys.executable, ['python'] + sys.argv)
+        guild = self.bot.get_guild(id)
+        if not guild:
+            guild = ctx.guild
+
+        await guild.leave()
+
+        if ctx.guild != guild:
+            desc = f'**```diff\n- {guild.name} has been removed```**'
+            embed = Embed(description=desc, color=0xff4e4e)
+
+            await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=5, name='shutdown', aliases=['exit', 'quit', 'kill'], usage='shutdown')
     async def shutdown(self, ctx):

@@ -12,17 +12,17 @@ class Fun(commands.Cog):
     @commands.command(cls=perms.Lock, name='ping', aliases=['p'], usage='ping')
     async def ping(self, ctx):
         '''Pong!
-        Displays the latency.
+        Display the latency.
         Note that this contains network latency and Discord API latency.\n
         **Example:```yml\n.ping```**
         '''
         ping = await ctx.send('Ping?')
         await ping.edit(content=f'Pong! Latency is **{int((ping.created_at-ctx.message.created_at).total_seconds()*1000)}ms**.')
 
-    @commands.command(cls=perms.Lock, name='coin', aliases=['flip'], usage='coin [count]')
-    async def coin(self, ctx, n=1):
+    @commands.command(cls=perms.Lock, name='coin', aliases=['flip'], usage='coin [quantity]')
+    async def coin(self, ctx, n: int = 1):
         '''Flip a coin.
-        Enter a positive integer for *count* to flip multiple coins.\n
+        Enter a positive integer for *quantity* to flip multiple coins.\n
         **Example:```yml\n.coin 3```**
         '''
         if n < 1:
@@ -36,11 +36,11 @@ class Fun(commands.Cog):
 
         await ctx.send(f'**{ctx.author.display_name}** got {res}!')
     
-    @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [count] [sides]')
-    async def dice(self, ctx, n=1, sides=6):
+    @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [quantity] [sides]')
+    async def dice(self, ctx, n: int = 1, sides: int = 6):
         '''Roll a die.
-        Enter a positive integer for *count* to roll multiple dice.
-        *sides* is also a positive integer specifying the amount of sides on each die.\n
+        Enter a positive integer for *quantity* to roll multiple dice.
+        *sides* is a positive integer specifying the amount of sides on each die.\n
         **Example:```yml\n.dice 2\n.roll 3 12```**
         '''
         if n < 1 or sides < 1:

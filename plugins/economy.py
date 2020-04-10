@@ -1,6 +1,7 @@
 import datetime
 import random
 
+import discord
 from discord import Embed, File
 from discord.ext import commands
 
@@ -11,16 +12,16 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, name='balance', aliases=['acc', 'bal'], usage='balance [mention]')
-    async def balance(self, ctx):
+    @commands.command(cls=perms.Lock, name='balance', aliases=['acc', 'bal'], usage='balance [member]')
+    async def balance(self, ctx, member: discord.Member = None):
         '''Display user account balance.
-        In addition to a mention, *mention* can also be substituted with a user ID.
-        Although, this only works with members within the guild.\n
+        This only works with members within the guild.\n
         **Example:```yml\n.balance\n.bal @Tau#4272\n.acc 608367259123187741```**
         '''
-        member = await res_member(ctx)
+        if not member:
+            member = ctx.author
 
-        if not member or member.bot:
+        if member.bot:
             return
 
         bal = self.bot.users_[member.id]['tickets']
@@ -29,29 +30,27 @@ class Economy(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='give', usage='give <amt> <mention>')
-    async def give(self, ctx, amt):
+    @commands.command(cls=perms.Lock, guild_only=True, name='give', usage='give <member> <quantity>')
+    async def give(self, ctx, member: discord.Member, qty):
         '''Give tickets to another user.
         *mention* can also be a user ID.
-        *amt* can also be '\\*' or 'all'\n
-        **Example:```yml\n.give 420 @Tau#4272\n.give 69 608367259123187741```**
+        *quantity* can also be '\\*' or 'all'\n
+        **Example:```yml\n.give @Tau#4272 420 \n.give 608367259123187741 69```**
         '''
-        member = await res_member(ctx)
-
-        if not member or member.bot:
+        if member.bot:
             return
 
         bal = self.bot.users_[ctx.author.id]['tickets']
-        amt = bal if amt == '*' or amt == 'all' else int(amt) if amt.isdigit() and 0 < int(amt) <= bal else None
-        if not amt:
-            return await ctx.send('Invalid *amt*.')
+        qty = bal if qty == '*' or qty == 'all' else int(qty) if qty.isdigit() and 0 < int(qty) <= bal else None
+        if not qty:
+            return await ctx.send('Invalid *qty*.')
 
-        await self.bot.users_.update(ctx.author.id, 'tickets', bal-amt)
+        await self.bot.users_.update(ctx.author.id, 'tickets', bal-qty)
 
         bal = self.bot.users_[member.id]['tickets']
-        await self.bot.users_.update(member.id, 'tickets', bal+amt)
+        await self.bot.users_.update(member.id, 'tickets', bal+qty)
 
-        await ctx.send(f'**{ctx.author.display_name}** gave {emoji["tickets"]}**{amt}** to **{member.display_name}**!')
+        await ctx.send(f'**{ctx.author.display_name}** gave {emoji["tickets"]}**{qty}** to **{member.display_name}**!')
 
     @commands.cooldown(1, 86400.0, type=commands.BucketType.user)
     @commands.command(cls=perms.Lock, name='tickets', aliases=['credits', 'daily', 'tic'], usage='tickets')

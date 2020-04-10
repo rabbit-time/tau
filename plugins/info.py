@@ -17,12 +17,13 @@ class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, name='avatar', aliases=['pfp'], usage='avatar [mention|id]')
-    async def avatar(self, ctx):
+    @commands.command(cls=perms.Lock, name='avatar', aliases=['pfp'], usage='avatar [member]')
+    async def avatar(self, ctx, member: discord.Member = None):
         '''Retrieve user avatar.
-        **Example:```yml\n.avatar\n.pfp @Tau#4272\n .pfp 608367259123187741```**
+        **Example:```yml\n.avatar\n.pfp @Tau#4272\n.pfp 608367259123187741```**
         '''
-        member = await res_member(ctx)
+        if not member:
+            member = ctx.author
 
         embed = Embed(description=f'**[{member.display_name}]({member.avatar_url})**')
         embed.set_image(url=member.avatar_url)
@@ -32,7 +33,7 @@ class Info(commands.Cog):
     @commands.command(cls=perms.Lock, guild_only=True, name='edit', aliases=['e'], usage='edit <key> <value>')
     async def edit(self, ctx, key=None, *val):
         '''Modify user profile.\n
-        **Example:```yml\n.help config```**
+        **Example:```yml\n.edit accent #8bb3f8```**
         '''
         editable = ['accent', 'bio']
         if not key:
@@ -100,12 +101,13 @@ class Info(commands.Cog):
                         return await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='level', aliases=['lvl'], usage='level [mention]')
-    async def level(self, ctx):
+    async def level(self, ctx, member: discord.Member = None):
         '''Retrieve permission level.
         *mention* can be a mention or a user ID.\n
         **Example:```yml\n.level\n.lvl @Tau#4272\n.lvl 608367259123187741```**
         '''
-        ctx.author = member = await res_member(ctx)
+        if member:
+            ctx.author = member
         lvl = perms.perm(ctx)
 
         embed = Embed(description=f'**`{lvl}`** *{list(perms.levels.keys())[lvl]}*')

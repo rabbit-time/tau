@@ -13,7 +13,18 @@ class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(cls=perms.Lock, name='echo', aliases=['say'], usage='echo <text>')
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def echo(self, ctx, *, text: str):
+        '''Echo a message.\n
+        **Example:```yml\n.echo ECHO!\n.say hello!```**
+        '''
+        await ctx.message.delete()
+
+        await ctx.send(text)
+
     @commands.command(cls=perms.Lock, name='remind', aliases=[], usage='remind <time> <reminder>')
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def remind(self, ctx, limit, *, reminder):
         '''Set a reminder.
         Reminders are capped at 6 months to prevent memory leaks.\n
@@ -38,6 +49,7 @@ class Utilities(commands.Cog):
         await ctx.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
 
     @commands.command(cls=perms.Lock, name='resend', aliases=['rs'], usage='resend <message>')
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def resend(self, ctx, msg: discord.Message):
         '''Resend a message.
         This is useful for getting rid of the "edited" indicator.

@@ -102,11 +102,14 @@ async def automute(bot, user_id, guild_id, unmute_time):
     delay = unmute_time - now if unmute_time > now else 0
     await asyncio.sleep(delay)
 
-    guild = bot.get_guild(guild_id)
-    member = await guild.fetch_member(user_id)
-    bind = guild.get_role(bot.guilds_[guild_id]['bind_role'])
-    if bot.members[user_id, guild_id]['detained'] == -1:
-        await member.remove_roles(bind)
+    try:
+        guild = bot.get_guild(guild_id)
+        member = await guild.fetch_member(user_id)
+        bind = guild.get_role(bot.guilds_[guild_id]['bind_role'])
+        if bot.members[user_id, guild_id]['detained'] == -1:
+            await member.remove_roles(bind)
+    except:
+        pass
 
     await bot.members.update((user_id, guild_id), 'muted', -1)
     del bot.mute_tasks[user_id, guild_id]

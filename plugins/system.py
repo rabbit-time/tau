@@ -299,6 +299,25 @@ class System(commands.Cog):
             embed.description = desc2.replace(' '*12, '')
         await ctx.send(embed=embed)
 
+    @commands.command(cls=perms.Lock, level=5, name='reload', aliases=['r'], usage='reload <path>')
+    async def reload(self, ctx, path):
+        '''Reload an extension.
+        *path* must be the dot path relative to the entry point of the app.\n
+        **Example:```yml\n.remove 546397670793805825\n.leave```**
+        '''
+        try:
+            self.bot.reload_extension(path)
+
+            desc = f'yml\n+ {path} has been reloaded'
+            color = 0x2aa198
+        except (commands.ExtensionFailed, commands.ExtensionNotLoaded, commands.NoEntryPointError) as err:
+            desc = f'diff\n- {err}'
+            color = 0xff4e4e
+
+        embed = Embed(description=f'**```{desc}```**', color=color)
+        
+        await ctx.send(embed=embed)
+
     @commands.command(cls=perms.Lock, level=4, name='remove', aliases=['leave', 'rem'], usage='remove [id]')
     async def remove(self, ctx, id: int):
         '''Remove a server.\n

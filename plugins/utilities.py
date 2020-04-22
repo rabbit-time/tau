@@ -37,7 +37,7 @@ class Utilities(commands.Cog):
 
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
 
-    @commands.command(cls=perms.Lock, name='emoji', aliases=[], usage='echo <text>')
+    @commands.command(cls=perms.Lock, name='emoji', aliases=[], usage='emoji <emoji>')
     @commands.bot_has_permissions(external_emojis=True)
     async def emoji(self, ctx, *, emoji: discord.Emoji):
         '''Display info on an emoji.

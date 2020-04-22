@@ -5,7 +5,6 @@ import discord
 from discord import Embed, File
 from discord.ext import commands
 from discord.utils import find
-from PIL import Image, ImageDraw, ImageFont
 
 import perms
 import utils
@@ -20,21 +19,7 @@ class Roles(commands.Cog):
         '''Displays role info.\n
         **Example:```yml\n.role Tau\n.role 657766595321528349```**
         '''
-        im = Image.new('RGB', (1200, 400), role.color.to_rgb())
-        draw = ImageDraw.Draw(im)
-
-        font = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 250)
-        
-        x, y = im.width, im.height
-        w, h = font.getsize(str(role.color))
-        # Around 6,000,000 just happened to be the sweet spot for white text
-        fill = 'black' if role.color.value > 6000000 else 'white'
-        draw.text((x//2-w//2, y//2-h//2), str(role.color), font=font, fill=fill)
-
-        buffer = io.BytesIO()
-        im.save(buffer, 'png')
-
-        buffer.seek(0)
+        buffer = utils.display_color(role.color)
 
         perms = [(perm, value) for perm, value in iter(role.permissions)]
         perms.sort()

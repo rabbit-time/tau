@@ -18,7 +18,7 @@ class Info(commands.Cog):
         self.bot = bot
 
     @commands.command(cls=perms.Lock, name='avatar', aliases=['pfp'], usage='avatar [member]')
-    async def avatar(self, ctx, member: discord.Member = None):
+    async def avatar(self, ctx, *, member: discord.Member = None):
         '''Retrieve user avatar.
         **Example:```yml\n.avatar\n.pfp @Tau#4272\n.pfp 608367259123187741```**
         '''
@@ -30,36 +30,34 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='edit', aliases=['e'], usage='edit <key> <value>')
-    async def edit(self, ctx, key=None, *val):
-        '''Modify user profile.\n
-        **Example:```yml\n.edit accent #8bb3f8```**
+    @commands.command(cls=perms.Lock, guild_only=True, name='accent', aliases=[], usage='accent [color]')
+    async def accent(self, ctx, *, color: discord.Color = None):
+        '''Modify accent in user profile.
+        Leave *color* blank to reset to default\n
+        **Example:```yml\n.accent #88b3f8```**
         '''
-        editable = ['accent', 'bio']
-        if not key:
-            bio = self.bot.users_[ctx.author.id]['bio']
-            keys = ':\n'.join(editable)
-            menu = Embed(title=ctx.author.display_name, description='**Please select one of the below to edit.**')
-            menu.add_field(name='\u200b', value=f'**{keys}:**')
-            menu.add_field(name='\u200b', value=f'{self.bot.users_[ctx.author.id]["accent"]}\n{bio if len(bio) < 64 else bio[:64] + "..."}')
-            menu.set_footer(text=f'{self.bot.guilds_[ctx.guild.id]["prefix"]}help edit for more details.')
+        color = color if color else discord.Color.from_rgb(136, 179, 248)
 
-            return await ctx.send(embed=menu)
+        await self.bot.users_.update(ctx.author.id, 'accent', str(color))
 
-        key = key.lower()
-        if key == 'accent':
-            code = val[0]
-            match = re.search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', code)
-            if match:
-                await self.bot.users_.update(ctx.author.id, 'accent', code)
-            else:
-                return await ctx.send('Must be a hex color code.')
-        elif key == 'bio':
-            await self.bot.users_.update(ctx.author.id, 'bio', ' '.join(val))
-        elif key:
-            return await ctx.send(f'`{key}` is not editable.')
+        desc = f'**```yml\n+ Accent has been set to {hex(color.value) if color.value != 0x88b3f8 else "default"}```**'
+        embed = Embed(description=desc, color=color)
 
-        await ctx.send(f'**`{key}`** successfully set to **`{" ".join(val)}`**.')
+        await ctx.send(embed=embed)
+
+    @commands.command(cls=perms.Lock, guild_only=True, name='bio', aliases=[], usage='bio [bio]')
+    async def bio(self, ctx, *, bio=''):
+        '''Modify bio in user profile.
+        Leave *bio* blank to remove bio\n
+        **Example:```yml\n.bio Hello!```**
+        '''
+        await self.bot.users_.update(ctx.author.id, 'bio', bio)
+
+        res = f'set to: {bio}' if bio else f'removed'
+        desc = f'**```yml\n+ Bio has been {res}```**'
+        embed = Embed(description=desc, color=0x2aa198)
+
+        await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, name='help', aliases=['cmd', 'h'], usage='help [command]')
     async def help(self, ctx, cmd=None):
@@ -101,7 +99,7 @@ class Info(commands.Cog):
                         return await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='level', aliases=['lvl'], usage='level [mention]')
-    async def level(self, ctx, member: discord.Member = None):
+    async def level(self, ctx, *, member: discord.Member = None):
         '''Retrieve permission level.
         *mention* can be a mention or a user ID.\n
         **Example:```yml\n.level\n.lvl @Tau#4272\n.lvl 608367259123187741```**

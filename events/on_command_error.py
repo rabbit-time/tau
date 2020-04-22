@@ -48,6 +48,14 @@ class OnCommandError(commands.Cog):
             embed.set_image(url='attachment://unknown.png')
             return await ctx.send(f'Hey {ctx.author.mention}!', file=File('assets/perms.png', 'unknown.png'), embed=embed)
 
+        if isinstance(error, commands.MissingPermissions):
+            perms = ''
+            for perm in error.missing_perms:
+                perms += f'\n`{perm}`'
+
+            embed = Embed(description=f'You lack the following permissions needed to use this command:\n**{perms}**')
+            return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+
         if isinstance(error, commands.CommandNotFound):
             return ccp.error(f'\u001b[1m{str(ctx.author)}@{str(ctx.guild)}\u001b[0m {ctx.message.content}')
 

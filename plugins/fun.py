@@ -1,9 +1,11 @@
 from math import isnan
-from random import randint, choice
+import random
 
+from discord import Embed, File
 from discord.ext import commands
 
 import perms
+import utils
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -22,19 +24,32 @@ class Fun(commands.Cog):
     @commands.command(cls=perms.Lock, name='coin', aliases=['flip'], usage='coin [quantity]')
     async def coin(self, ctx, n: int = 1):
         '''Flip a coin.
-        Enter a positive integer for *quantity* to flip multiple coins.\n
+        Enter a positive integer for *quantity* to flip multiple coins.
+        Max is 84.\n
         **Example:```yml\n.coin 3```**
         '''
-        if n < 1:
+        if not 0 < n <= 84:
             raise commands.BadArgument
         
-        coin = ['**heads**', '**tails**']
-        res = [choice(coin) for i in range(n)]
-        res = ', '.join(res[:-1]) + f' and **{choice(coin)}**' if n > 1 else ', '.join(res)
-        if n == 2:
-            res = res.replace(',', '')
+        val = random.choices(range(2), k=n)
 
-        await ctx.send(f'**{ctx.author.display_name}** got {res}!')
+        embed = Embed(description=f'**You got {["tails", "heads"][val[0]]}!**', color=0xfbb041)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if n == 1:
+            embed.set_thumbnail(url='attachment://unknown.png')
+            file = File(f'assets/{val[0]}.png', 'unknown.png')
+        else:
+            file = None
+            coins = ''
+            for i, v in enumerate(val):
+                coins += utils.emoji[f'coin{v}']
+                if (i + 1) % 10 == 0:
+                    coins += '\n'
+
+            embed.description = f'**You got:\n\n{coins}**'
+            embed.add_field(name='\u200b', value=f'**Heads: {val.count(1)}\nTails: {val.count(0)}**')
+        
+        await ctx.send(file=file, embed=embed)
     
     @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [quantity] [sides]')
     async def dice(self, ctx, n: int = 1, sides: int = 6):
@@ -49,13 +64,13 @@ class Fun(commands.Cog):
         val = ''
         for i in range(n):
             if i == n - 1:
-                val += f'and **{randint(1, sides)}**'
+                val += f'and **{random.randint(1, sides)}**'
                 if n == 1:
                     val = val[4:]
                 elif n == 2:
                     val = val.replace(',', '')
                 break
-            val += f'**{randint(1, sides)}**, '
+            val += f'**{random.randint(1, sides)}**, '
 
         await ctx.send(f'**{ctx.author.display_name}** got {val}!')
 

@@ -1,6 +1,7 @@
 import colorsys
 import time
 import datetime
+import random
 
 import discord
 from discord import Embed, File
@@ -45,6 +46,19 @@ class Utilities(commands.Cog):
         await ctx.message.delete()
 
         await ctx.send(text)
+
+    @commands.command(cls=perms.Lock, name='random', aliases=['ran'], usage='random <lower> <upper>')
+    @commands.bot_has_permissions(external_emojis=True)
+    async def random(self, ctx, lower: int, upper: int):
+        '''Randomly generate an integer between a lower and upper bound.\n
+        **Example:```yml\n.random 0 1\n.ran 1 10```**
+        '''
+        colors = (0xff4e4e, 0xffa446, 0xffc049, 0x2aa198, 0x55b8f8, 0xc8aaff, 0xffadca)
+
+        embed = Embed(description=f'**You got {random.randint(lower, upper)}!**', color=random.choice(colors))
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, name='remind', aliases=[], usage='remind <time> <reminder>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)

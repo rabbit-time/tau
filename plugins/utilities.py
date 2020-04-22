@@ -47,11 +47,11 @@ class Utilities(commands.Cog):
 
         await ctx.send(text)
 
-    @commands.command(cls=perms.Lock, name='random', aliases=['ran'], usage='random <lower> <upper>')
+    @commands.command(cls=perms.Lock, name='random', aliases=['rng'], usage='random <lower> <upper>')
     @commands.bot_has_permissions(external_emojis=True)
     async def random(self, ctx, lower: int, upper: int):
         '''Randomly generate an integer between a lower and upper bound.\n
-        **Example:```yml\n.random 0 1\n.ran 1 10```**
+        **Example:```yml\n.random 0 1\n.rng 1 10```**
         '''
         colors = (0xff4e4e, 0xffa446, 0xffc049, 0x2aa198, 0x55b8f8, 0xc8aaff, 0xffadca)
 

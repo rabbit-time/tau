@@ -14,9 +14,8 @@ class Roles(commands.Cog):
         self.bot = bot
 
     @commands.command(cls=perms.Lock, level=0, guild_only=True, name='role', aliases=[], usage='role <role>')
-    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def role(self, ctx, *, role: discord.Role):
-        '''Displays role info.\n
+        '''Display info on a role.\n
         **Example:```yml\n.role Tau\n.role 657766595321528349```**
         '''
         buffer = utils.display_color(role.color)

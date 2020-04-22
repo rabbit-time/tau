@@ -37,6 +37,26 @@ class Utilities(commands.Cog):
 
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
 
+    @commands.command(cls=perms.Lock, name='emoji', aliases=[], usage='echo <text>')
+    @commands.bot_has_permissions(external_emojis=True)
+    async def emoji(self, ctx, *, emoji: discord.Emoji):
+        '''Display info on an emoji.
+        Only applicable to custom emoji.\n
+        **Example:```yml\n.emoji 608367259123187741```**
+        '''
+        anime = utils.emoji['on'] if emoji.animated else utils.emoji['off']
+        man = utils.emoji['on'] if emoji.managed else utils.emoji['off']
+        info = (f'**`animated`** {anime}\n'
+                f'**`managed `** {man}')
+
+        embed = Embed(description=f'{emoji} **[{emoji.name}]({emoji.url})\n`{emoji}`**', color=0x88b3f8)
+        embed.set_thumbnail(url=emoji.url)
+        embed.add_field(name='Information', value=info)
+        embed.set_footer(text=f'ID: {emoji.id}, created')
+        embed.timestamp = emoji.created_at
+
+        await ctx.send(embed=embed)
+
     @commands.command(cls=perms.Lock, name='echo', aliases=['say'], usage='echo <text>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def echo(self, ctx, *, text: str):

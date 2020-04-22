@@ -21,7 +21,8 @@ class Fun(commands.Cog):
         ping = await ctx.send('Ping?')
         await ping.edit(content=f'Pong! Latency is **{int((ping.created_at-ctx.message.created_at).total_seconds()*1000)}ms**.')
 
-    @commands.command(cls=perms.Lock, name='coin', aliases=['flip'], usage='coin [quantity]')
+    @commands.command(cls=perms.Lock, name='coin', aliases=['flip'], usage='coin [quantity=1]')
+    @commands.bot_has_permissions(external_emojis=True)
     async def coin(self, ctx, n: int = 1):
         '''Flip a coin.
         Enter a positive integer for *quantity* to flip multiple coins.
@@ -51,7 +52,7 @@ class Fun(commands.Cog):
         
         await ctx.send(file=file, embed=embed)
     
-    @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [quantity] [sides]')
+    @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [quantity=1] [sides=6]')
     async def dice(self, ctx, n: int = 1, sides: int = 6):
         '''Roll a die.
         Enter a positive integer for *quantity* to roll multiple dice.

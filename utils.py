@@ -1,14 +1,20 @@
 import asyncio
 import datetime
+import io
 import time
 
+import discord
 from discord import Embed, File
 from discord.ext import commands
 from discord.utils import escape_markdown
+from PIL import Image, ImageDraw, ImageFont
 
+# Emoji taken from a private emoji server.
+# These must be redefined if you fork, or
+# everything is going to break.
 emoji = {
     'progress': '<:progress:683525894530138171>',
-    'tickets': '<:tic:669031445628583944>',
+    'tickets': '<:credits:702269510488686663>',
     'sound': '<:sound:673362944280494080>',
     'mute': '<:mute:673362944280494110>',
     'cuffs': '<:cuffs:678393038095122461>',
@@ -22,6 +28,8 @@ emoji = {
     'offline': '<:offline:659932900405411842>',
     'owner': '<:owner:697338812971483187>',
     'loading': '<a:loading:688977787528544301>',
+    'coin0': '<:0_:702492300877496320>',
+    'coin1': '<:1_:702492300894535750>',
     1: '<:01:683462884625481802>',
     2: '<:02:683462884650516492>',
     3: '<:03:683462884378148865>',
@@ -41,6 +49,40 @@ emoji = {
 
 class RoleNotFound(Exception):
     '''Exception: Role could not be found'''
+
+def display_color(color: discord.Color) -> io.BytesIO:
+    im = Image.new('RGB', (1200, 400), color.to_rgb())
+    draw = ImageDraw.Draw(im)
+
+    font = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 250)
+
+    x, y = im.width, im.height
+    w, h = font.getsize(str(color))
+    # Around 6,000,000 just happened to be the sweet spot for white text
+    fill = 'black' if color.value > 6000000 else 'white'
+    draw.text((x//2-w//2, y//2-h//2), str(color), font=font, fill=fill)
+
+    buffer = io.BytesIO()
+    im.save(buffer, 'png')
+
+    buffer.seek(0)
+
+    return buffer
+
+def rgb_to_cmyk(r: int, g: int, b: int):
+    if (r, g, b) == (0, 0, 0):
+        return 0, 0, 0, 1
+
+    c = 1 - r / 255
+    m = 1 - g / 255
+    y = 1 - b / 255
+
+    k = min(c, m, y)
+    c = (c - k) / (1 - k)
+    m = (m - k) / (1 - k)
+    y = (y - k) / (1 - k)
+
+    return c, m, y, k
 
 async def res_member(ctx):
     msg = ctx.message

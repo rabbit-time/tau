@@ -30,50 +30,50 @@ class Embed(commands.Cog):
         '''
         await ctx.send(embed=discord.Embed())
 
-    @commands.command(cls=perms.Lock, name='content', aliases=[], usage='content <message> <text>')
-    async def content(self, ctx, msg: discord.Message, *, text):
+    @commands.command(cls=perms.Lock, name='setcontent', aliases=[], usage='setcontent <message> <text>')
+    async def setcontent(self, ctx, msg: discord.Message, *, text):
         '''Modify the content of the message with the embed.\n
-        **Example:```yml\n.content 694890918645465138 Hi!```**
+        **Example:```yml\n.setcontent 694890918645465138 Hi!```**
         '''
         embed = await self.pre(ctx, msg)
 
         await msg.edit(content=text, embed=embed)
 
-    @commands.command(cls=perms.Lock, name='desc', aliases=[], usage='desc <message> <text>')
-    async def desc(self, ctx, msg: discord.Message, *, text):
+    @commands.command(cls=perms.Lock, name='setdesc', aliases=[], usage='setdesc <message> <text>')
+    async def setdesc(self, ctx, msg: discord.Message, *, text):
         '''Modify the description of an embed.\n
-        **Example:```yml\n.desc 694890918645465138 Tau is the best!```**
+        **Example:```yml\n.setdesc 694890918645465138 Tau is the best!```**
         '''
         embed = await self.pre(ctx, msg)
         embed.description = text
 
         await msg.edit(embed=embed)
 
-    @commands.command(cls=perms.Lock, name='color', aliases=[], usage='color <message> <color>')
-    async def color(self, ctx, msg: discord.Message, color: discord.Color):
+    @commands.command(cls=perms.Lock, name='setcolor', aliases=[], usage='setcolor <message> <color>')
+    async def setcolor(self, ctx, msg: discord.Message, color: discord.Color):
         '''Modify the color of an embed.
         *color* must be in hexadecimal format.\n
-        **Example:```yml\n.color 694890918645465138 #8bb3f8```**
+        **Example:```yml\n.setcolor 694890918645465138 #8bb3f8```**
         '''
         embed = await self.pre(ctx, msg)
         embed.color = color
 
         await msg.edit(embed=embed)
     
-    @commands.command(cls=perms.Lock, name='title', aliases=[], usage='title <message> <text>')
-    async def title(self, ctx, msg: discord.Message, *, title=''):
+    @commands.command(cls=perms.Lock, name='settitle', aliases=[], usage='settitle <message> <text>')
+    async def settitle(self, ctx, msg: discord.Message, *, title=''):
         '''Modify the title of an embed.\n
-        **Example:```yml\n.title 694890918645465138 Mistborn```**
+        **Example:```yml\n.settitle 694890918645465138 Mistborn```**
         '''
         embed = await self.pre(ctx, msg)
         embed.title = title if len(title) <= 256 else title[:256]
 
         await msg.edit(embed=embed)
     
-    @commands.command(cls=perms.Lock, name='footer', aliases=[], usage='footer <message> <text>')
-    async def footer(self, ctx, msg: discord.Message, *, footer=''):
+    @commands.command(cls=perms.Lock, name='setfooter', aliases=[], usage='setfooter <message> <text>')
+    async def setfooter(self, ctx, msg: discord.Message, *, footer=''):
         '''Modify the footer text of an embed.\n
-        **Example:```yml\n.footer 694890918645465138 this text is tiny```**
+        **Example:```yml\n.setfooter 694890918645465138 this text is tiny```**
         '''
         embed = await self.pre(ctx, msg)
 
@@ -84,10 +84,10 @@ class Embed(commands.Cog):
 
         await msg.edit(embed=embed)
     
-    @commands.command(cls=perms.Lock, name='footericon', aliases=[], usage='footericon <message> <url>')
-    async def footericon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
+    @commands.command(cls=perms.Lock, name='setfootericon', aliases=[], usage='setfootericon <message> <url>')
+    async def setfootericon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
         '''Modify the footer icon of an embed.\n
-        **Example:```yml\n.footericon 694890918645465138 https://tinyurl.com/sn2aeuj```**
+        **Example:```yml\n.setfootericon 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
         embed = await self.pre(ctx, msg)
 
@@ -99,10 +99,10 @@ class Embed(commands.Cog):
         except:
             raise commands.BadArgument
     
-    @commands.command(cls=perms.Lock, name='author', aliases=[], usage='author <message> <name>')
-    async def author(self, ctx, msg: discord.Message, *, name=''):
+    @commands.command(cls=perms.Lock, name='setauthor', aliases=[], usage='setauthor <message> <name>')
+    async def setauthor(self, ctx, msg: discord.Message, *, name=''):
         '''Modify the author name of an embed.\n
-        **Example:```yml\n.author 694890918645465138 this text is tiny```**
+        **Example:```yml\n.setauthor 694890918645465138 this text is tiny```**
         '''
         embed = await self.pre(ctx, msg)
 
@@ -113,10 +113,10 @@ class Embed(commands.Cog):
 
         await msg.edit(embed=embed)
     
-    @commands.command(cls=perms.Lock, name='authoricon', aliases=[], usage='authoricon <message> <url>')
-    async def authoricon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
+    @commands.command(cls=perms.Lock, name='setauthoricon', aliases=[], usage='setauthoricon <message> <url>')
+    async def setauthoricon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
         '''Modify the author icon of an embed.\n
-        **Example:```yml\n.authoricon 694890918645465138 https://tinyurl.com/sn2aeuj```**
+        **Example:```yml\n.setauthoricon 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
         embed = await self.pre(ctx, msg)
 
@@ -128,10 +128,10 @@ class Embed(commands.Cog):
         except:
             raise commands.BadArgument
 
-    @commands.command(cls=perms.Lock, name='authorurl', aliases=[], usage='authorurl <message> <url>')
-    async def authorurl(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
+    @commands.command(cls=perms.Lock, name='setauthorurl', aliases=[], usage='setauthorurl <message> <url>')
+    async def setauthorurl(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
         '''Modify the author URL of an embed.\n
-        **Example:```yml\n.authorurl 694890918645465138 https://tinyurl.com/sn2aeuj```**
+        **Example:```yml\n.setauthorurl 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
         embed = await self.pre(ctx, msg)
         embed.set_author(name=embed.author.name, url=url, icon_url=embed.author.icon_url)
@@ -141,10 +141,10 @@ class Embed(commands.Cog):
         except:
             raise commands.BadArgument
     
-    @commands.command(cls=perms.Lock, name='image', aliases=[], usage='image <message> <url>')
-    async def image(self, ctx, msg: discord.Message, url=''):
+    @commands.command(cls=perms.Lock, name='setimage', aliases=[], usage='setimage <message> <url>')
+    async def setimage(self, ctx, msg: discord.Message, url=''):
         '''Modify the image of an embed.\n
-        **Example:```yml\n.image 694890918645465138 https://tinyurl.com/sn2aeuj```**
+        **Example:```yml\n.setimage 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
         embed = await self.pre(ctx, msg)
         embed.set_image(url=url)
@@ -154,10 +154,10 @@ class Embed(commands.Cog):
         except:
             raise commands.BadArgument
 
-    @commands.command(cls=perms.Lock, name='thumbnail', aliases=[], usage='thumbnail <message> <url>')
-    async def thumbnail(self, ctx, msg: discord.Message, url=''):
+    @commands.command(cls=perms.Lock, name='setthumbnail', aliases=[], usage='setthumbnail <message> <url>')
+    async def setthumbnail(self, ctx, msg: discord.Message, url=''):
         '''Modify the thumbnail of an embed.\n
-        **Example:```yml\n.thumbnail 694890918645465138 https://tinyurl.com/sn2aeuj```**
+        **Example:```yml\n.setthumbnail 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
         embed = await self.pre(ctx, msg)
         embed.set_thumbnail(url=url)

@@ -77,7 +77,7 @@ class Social(commands.Cog):
 
     @commands.command(cls=perms.Lock, guild_only=True, name='profile', aliases=['card', 'info', 'user'], usage='profile [member]')
     @commands.bot_has_permissions(attach_files=True, external_emojis=True, manage_messages=True)
-    async def profile(self, ctx, member: discord.Member = None):
+    async def profile(self, ctx, *, member: discord.Member = None):
         '''Display profile card.
         The accent color and the bio features may be customized.
         This only works with members within the server.\n
@@ -186,67 +186,17 @@ class Social(commands.Cog):
 
             buffer.seek(0)
 
-        desc = (f'{emoji[str(member.status)]} **{escape_markdown(member.display_name)}\n'
-        f'`{escape_markdown(member.name)}#{member.discriminator}`\n\n'
-        f'```yml\n{self.bot.users_[member.id]["bio"]}```**')
+        desc = f'{emoji[str(member.status)]} **{escape_markdown(member.display_name)}\n`{member}`**\n\n'
+        if bio := self.bot.users_[member.id]["bio"]:
+            desc += f'**```yml\n{bio}```**'
+        
         embed = Embed(description=desc)
         embed.set_image(url='attachment://unknown.png')
-        embed.set_footer(text=f'ID: {member.id}')
+        embed.set_footer(text=f'ID: {member.id}, created')
+        embed.timestamp = member.created_at
 
         await message.delete()
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
-
-        '''
-        memo = '📝'
-        x = '❌'
-        bio = self.bot.users_[ctx.author.id]['bio']
-        menu_embed = Embed(title=member.display_name, description='**Please select one of the below to edit.**', color=0x1f2124)
-        menu_embed.add_field(name='\u200b', value='**Accent:\nBio:**')
-        menu_embed.add_field(name='\u200b', value=f'{self.bot.users_[ctx.author.id]["accent"]}\n{bio if len(bio) < 64 else bio[:64] + "..."}')
-        try:
-            flag = True
-            while flag:
-                msg = await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
-                await msg.add_reaction(memo)
-                await self.bot.wait_for('reaction_add', timeout=90, check=lambda reaction, user: str(reaction.emoji) == memo and user == ctx.author)
-                await msg.delete()
-
-                msg = await ctx.send(embed=menu_embed)
-                await msg.add_reaction(x)
-                
-                while True:
-                    on_msg = self.bot.wait_for('message', check=lambda msg: msg.content.startswith('edit') and len(msg.content.split()) > 2 and msg.author == ctx.author)
-                    on_react = self.bot.wait_for('reaction_add', check=lambda reaction, user: str(reaction.emoji) == x and user == ctx.author)
-                    done, pending = await asyncio.wait([on_msg, on_react], timeout=90, return_when=asyncio.FIRST_COMPLETED)
-                    task = asyncio.create_task(on_msg)
-                    for future in pending:
-                        future.cancel()
-                    if task in done:
-                        content = done.pop().result().content
-                        sep = content.split()
-                        if sep[1] == 'accent':
-                            # Matches if string is a hex color code
-                            code = sep[2]
-                            match = re.search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', code)
-                            if match:
-                                await self.bot.users_.update(ctx.author.id, 'accent', code)
-                            else:
-                                await ctx.send('Must be a hex color code.')
-                        elif sep[1] == 'bio':
-                            if '"' not in content:
-                                await self.bot.users_.update(ctx.author.id, 'bio', ' '.join(sep[2:]))
-                        else:
-                            ctx.send(f'`{sep[1]}` is not editable.')
-                    else:
-                        await msg.delete()
-                        flag = False
-                        break
-        except asyncio.TimeoutError:
-            await msg.clear_reactions()
-        else:
-            for future in pending:
-                future.cancel()
-        '''
 
 def setup(bot):
     bot.add_cog(Social(bot))

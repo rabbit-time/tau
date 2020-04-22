@@ -29,7 +29,7 @@ _def_user = {
     'tickets': 200,
     'xp': 0,
     'accent': '#8bb3f8',
-    'bio': 'This is my bio :)'
+    'bio': ''
 }
 
 _def_member = {

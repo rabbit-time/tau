@@ -15,9 +15,10 @@ from PIL import Image, ImageDraw, ImageFont
 emoji = {
     'progress': '<:progress:683525894530138171>',
     'tickets': '<:credits:702269510488686663>',
-    'sound': '<:sound:673362944280494080>',
-    'mute': '<:mute:673362944280494110>',
+    'sound': '<:sound:702809258974249011>',
+    'mute': '<:mute:702809258915397672>',
     'cuffs': '<:cuffs:678393038095122461>',
+    'hammer': '<:hammer:702793803677040692>',
     'on': '<:toggleon:686105837294452736>',
     'off': '<:toggleoff:686105824065880150>',
     'settings': '<:settings:686113054001594372>',

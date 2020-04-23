@@ -101,12 +101,12 @@ class Info(commands.Cog):
         '''Retrieve permission level.\n
         **Example:```yml\n.level\n.lvl @Tau#4272\n.lvl 608367259123187741```**
         '''
-        if not member:
+        if member:
             ctx.author = member
         lvl = perms.perm(ctx)
 
         embed = Embed(description=f'**`{lvl}`** *{list(perms.levels.keys())[lvl]}*')
-        embed.set_author(name=member.display_name, icon_url=member.avatar_url)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)
 

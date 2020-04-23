@@ -16,7 +16,7 @@ class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, name='channel', aliases=['chan'], usage='channel <channel>')
+    @commands.command(cls=perms.Lock, guild_only=True, name='channel', aliases=['chan'], usage='channel <channel>')
     @commands.bot_has_permissions(external_emojis=True)
     async def channel(self, ctx, *, chan: Union[discord.VoiceChannel, discord.TextChannel] = None):
         '''Display info on a channel.\n

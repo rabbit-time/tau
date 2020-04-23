@@ -2,6 +2,7 @@ import colorsys
 import time
 import datetime
 import random
+from typing import Union
 
 import discord
 from discord import Embed, File
@@ -14,6 +15,37 @@ import utils
 class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(cls=perms.Lock, name='channel', aliases=['chan'], usage='channel <channel>')
+    @commands.bot_has_permissions(external_emojis=True)
+    async def channel(self, ctx, *, chan: Union[discord.VoiceChannel, discord.TextChannel] = None):
+        '''Display info on a channel.\n
+        **Example:```yml\n.channel general```**
+        '''
+        chan = chan if chan else ctx.channel
+
+        embed = Embed(color=0x88b3f8)
+        if chan.type == discord.ChannelType.text:
+            nsfw = utils.emoji['on'] if chan.is_nsfw() else utils.emoji['off']
+
+            url = f'https://discordapp.com/channels/{ctx.guild.id}/{chan.id}/'
+            desc = (f'{utils.emoji["#"]} **[{chan}]({url})**\n\n'
+                    f'**`nsfw    `** {nsfw}\n'
+                    f'**`category` {chan.category}**\n'
+                    f'**`position` {chan.position}**\n'
+                    f'**`slowmode` {chan.slowmode_delay}**\n')
+            embed.description = desc
+        else:
+            desc = (f'{utils.emoji["sound"]} **{chan}**\n\n'
+                    f'**`bitrate   ` {chan.bitrate}**\n'
+                    f'**`category  ` {chan.category}**\n'
+                    f'**`position  ` {chan.position}**\n'
+                    f'**`user_limit` {chan.user_limit}**')
+            embed.description = desc
+        embed.set_footer(text=f'ID: {chan.id}, created')
+        embed.timestamp = chan.created_at
+
+        await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, name='color', aliases=[], usage='color <color>')
     async def color(self, ctx, *, color: discord.Color):

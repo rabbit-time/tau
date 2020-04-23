@@ -11,7 +11,6 @@ from discord.ext import commands
 
 import config
 import perms
-from utils import res_member
 
 class Info(commands.Cog):
     def __init__(self, bot):
@@ -19,7 +18,7 @@ class Info(commands.Cog):
 
     @commands.command(cls=perms.Lock, name='avatar', aliases=['pfp'], usage='avatar [member]')
     async def avatar(self, ctx, *, member: discord.Member = None):
-        '''Retrieve user avatar.
+        '''Retrieve user avatar.\n
         **Example:```yml\n.avatar\n.pfp @Tau#4272\n.pfp 608367259123187741```**
         '''
         if not member:
@@ -33,7 +32,7 @@ class Info(commands.Cog):
     @commands.command(cls=perms.Lock, guild_only=True, name='accent', aliases=[], usage='accent [color]')
     async def accent(self, ctx, *, color: discord.Color = None):
         '''Modify accent in user profile.
-        Leave *color* blank to reset to default\n
+        Leave `color` blank to reset to default\n
         **Example:```yml\n.accent #88b3f8```**
         '''
         color = color if color else discord.Color.from_rgb(136, 179, 248)
@@ -48,7 +47,7 @@ class Info(commands.Cog):
     @commands.command(cls=perms.Lock, guild_only=True, name='bio', aliases=[], usage='bio [bio]')
     async def bio(self, ctx, *, bio=''):
         '''Modify bio in user profile.
-        Leave *bio* blank to remove bio\n
+        Leave `bio` blank to remove bio\n
         **Example:```yml\n.bio Hello!```**
         '''
         await self.bot.users_.update(ctx.author.id, 'bio', bio)
@@ -62,8 +61,8 @@ class Info(commands.Cog):
     @commands.command(cls=perms.Lock, name='help', aliases=['cmd', 'h'], usage='help [command]')
     async def help(self, ctx, cmd=None):
         '''Display the help message.
-        When *command* is specified, more help on a command will be displayed.
-        *command* can be the name of any command or any alias.\n
+        When `command` is specified, more help on a command will be displayed.
+        `command` can be the name of any command or any alias.\n
         **Example:```yml\n.help\n.h config```**
         '''
         cogs = list(filter(lambda cog: 'On' not in cog[0], self.bot.cogs.items()))
@@ -86,25 +85,23 @@ class Info(commands.Cog):
                     if cmd == c.name or cmd in c.aliases:
                         cmd = c
                         prefix = self.bot.guilds_[ctx.guild.id]['prefix'] if ctx.guild else self.bot.guilds_.default['prefix']
-                        aliases = 'Aliases: ' + ' | '.join(cmd.aliases) if cmd.aliases else ''
-                        if aliases:
-                            aliases = f'*`{aliases}`*\n'
+                        aliases = '*`Aliases: ' + ' | '.join(cmd.aliases) + '`*\n' if cmd.aliases else ''
                         doc = cmd.help.replace(' '*8, '')
+
                         desc = f'**```asciidoc\n{prefix}{cmd.usage}```{aliases}**\n{doc}'
                         if cmd.guild_only:
-                            desc = '*\\*This command may only be used in guilds* ' + desc
+                            desc = '*This command may only be used in guilds*' + desc
                         embed = Embed(description=desc)
-                        embed.set_footer(text=f'Perm Level: {cmd.level}')
+                        embed.set_footer(text=f'Perm level: {cmd.level}')
             
                         return await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='level', aliases=['lvl'], usage='level [mention]')
+    @commands.command(cls=perms.Lock, guild_only=True, name='level', aliases=['lvl'], usage='level [member]')
     async def level(self, ctx, *, member: discord.Member = None):
-        '''Retrieve permission level.
-        *mention* can be a mention or a user ID.\n
+        '''Retrieve permission level.\n
         **Example:```yml\n.level\n.lvl @Tau#4272\n.lvl 608367259123187741```**
         '''
-        if member:
+        if not member:
             ctx.author = member
         lvl = perms.perm(ctx)
 
@@ -116,7 +113,7 @@ class Info(commands.Cog):
     @commands.command(cls=perms.Lock, name='tau', usage='tau')
     async def tau(self, ctx):
         '''Display app info.
-        This is the introduction command.
+        This is the introduction command.\n
         **Example:```yml\n.tau```**
         '''
         uptime = time.time() - self.bot.start_time

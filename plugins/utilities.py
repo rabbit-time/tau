@@ -155,5 +155,34 @@ class Utilities(commands.Cog):
 
         await ctx.send(content=msg.content, embed=embed)
 
+    @commands.command(cls=perms.Lock, guild_only=True, name='role', aliases=[], usage='role <role>')
+    async def role(self, ctx, *, role: discord.Role):
+        '''Display info on a role.\n
+        **Example:```yml\n.role Tau\n.role 657766595321528349```**
+        '''
+        buffer = utils.display_color(role.color)
+
+        perms = [(perm, value) for perm, value in iter(role.permissions)]
+        perms.sort()
+        plen = len(max(perms, key=lambda p: len(p[0]))[0])
+        
+        half = len(perms) // 2
+        fields = ['', '']
+        for i, tup in enumerate(perms):
+            perm, value = tup
+            tog = utils.emoji['on'] if value else utils.emoji['off']
+            align = ' ' * (plen-len(perm))
+            fields[i > half] += f'**`{perm}{align}`** {tog}\n'
+
+        plural = 's' if len(role.members) != 1 else ''
+        mention = role.mention if not role.is_default() else '@everyone'
+        embed = Embed(description=f'**{mention}\n`{len(role.members)} member{plural}`**')
+        embed.add_field(name='Permissions', value=fields[0])
+        embed.add_field(name='\u200b', value=fields[1])
+        embed.set_image(url='attachment://unknown.png')
+        embed.set_footer(text=f'ID: {role.id}')
+        
+        await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
+
 def setup(bot):
     bot.add_cog(Utilities(bot))

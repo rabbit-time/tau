@@ -1,3 +1,4 @@
+import asyncio
 from math import isnan
 import random
 
@@ -18,8 +19,18 @@ class Fun(commands.Cog):
         Note that this contains network latency and Discord API latency.\n
         **Example:```yml\n.ping```**
         '''
-        ping = await ctx.send('Ping?')
-        await ping.edit(content=f'Pong! Latency is **{int((ping.created_at-ctx.message.created_at).total_seconds()*1000)}ms**.')
+        embed = Embed(description='**Ping?**', color=0xfbb041)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        ping = await ctx.send(embed=embed)
+
+        await asyncio.sleep(0.2)
+
+        embed.colour = 0x2aa198
+        embed.description = '**Pong!**'
+        embed.add_field(name='Latency', value=f'**{self.bot.latency*1000:.2f}**ms')
+
+        await ping.edit(embed=embed)
 
     @commands.command(cls=perms.Lock, name='coin', aliases=['flip'], usage='coin [quantity=1]')
     @commands.bot_has_permissions(external_emojis=True)

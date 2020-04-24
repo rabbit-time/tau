@@ -16,13 +16,21 @@ class OnCommandError(commands.Cog):
     async def on_command_error(self, ctx, error):
         error = getattr(error, 'original', error)
 
-        user_error = (commands.MissingRequiredArgument, commands.BadArgument)
+        user_error = (commands.MissingRequiredArgument, commands.BadArgument, commands.BadUnionArgument)
         if isinstance(error, user_error):
-            desc = (f'It seems like you\'re either missing one or more required arguments, '
-                    f'or a bad argument was given.\n\n'
-                    f'If you\'re not sure how to use the command, try:'
-                    f'**```yml\n{ctx.prefix}help {ctx.command.name}```**\n')
+            cmd = ctx.command
+            prefix = self.bot.guilds_[ctx.guild.id]['prefix'] if ctx.guild else self.bot.guilds_.default['prefix']
+            aliases = '*`Aliases: ' + ' | '.join(cmd.aliases) + '`*\n' if cmd.aliases else ''
+            doc = cmd.help.replace(' '*8, '')
+
+            desc = f'**```asciidoc\n{prefix}{cmd.usage}```{aliases}**\n{doc}'
+            if cmd.guild_only:
+                desc = '*This command may only be used in guilds* ' + desc
+
+            desc = f'**```diff\n- Invalid command usage```**\n' + desc
             embed = Embed(description=desc)
+            embed.set_footer(text=f'Perm level: {cmd.level}')
+
             return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
 
         if isinstance(error, discord.NotFound):
@@ -57,7 +65,7 @@ class OnCommandError(commands.Cog):
             return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
 
         if isinstance(error, commands.CommandNotFound):
-            return ccp.error(f'\u001b[1m{str(ctx.author)}@{str(ctx.guild)}\u001b[0m {ctx.message.content}')
+            return ccp.error(f'\u001b[1m{ctx.author}@{ctx.guild}\u001b[0m {ctx.message.content}')
 
         ccp.error(f'{ctx.command}:')
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)

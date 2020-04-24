@@ -16,28 +16,6 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='ban', aliases=[], usage='ban <member> [reason]')
-    @commands.bot_has_guild_permissions(manage_roles=True, ban_members=True)
-    async def ban(self, ctx, member: discord.Member, *, reason=None):
-        '''Ban a member.
-        `reason` will show up in the audit log\n
-        **Example:```yml\n.ban @Tau#4272\n.ban 608367259123187741 being a baddie```**
-        '''
-        try:
-            desc = (f'{emoji["hammer"]} **{ctx.author}** has invoked a ban on you in **{ctx.guild}**.\n\n'
-                    f'If you would like to appeal, you must do so within\none hour using '
-                    f'the following command:\n**`.appeal {ctx.guild.id} <message>`**')
-            if reason:
-                desc += f'\n\nReason: *{reason}*'
-            embed = Embed(description=desc, color=0xff4e4e)
-            embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
-            embed.set_footer(text='1h', icon_url='attachment://unknown.png')
-            embed.timestamp = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-
-            await member.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
-        except discord.Forbidden:
-            await member.ban(reason=reason, delete_message_days=0)
-
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], usage='detain <mention|id> [reason]')
     @commands.bot_has_guild_permissions(add_reactions=True, external_emojis=True, manage_messages=True, manage_channels=True, manage_roles=True, ban_members=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)

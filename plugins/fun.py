@@ -25,7 +25,7 @@ class Fun(commands.Cog):
     @commands.bot_has_permissions(external_emojis=True)
     async def coin(self, ctx, n: int = 1):
         '''Flip a coin.
-        Enter a positive integer for *quantity* to flip multiple coins.
+        Enter a positive integer for `quantity` to flip multiple coins.
         Max is 84.\n
         **Example:```yml\n.coin 3```**
         '''
@@ -55,8 +55,8 @@ class Fun(commands.Cog):
     @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [quantity=1] [sides=6]')
     async def dice(self, ctx, n: int = 1, sides: int = 6):
         '''Roll a die.
-        Enter a positive integer for *quantity* to roll multiple dice.
-        *sides* is a positive integer specifying the amount of sides on each die.\n
+        Enter a positive integer for `quantity` to roll multiple dice.
+        `sides` is a positive integer specifying the amount of sides on each die.\n
         **Example:```yml\n.dice 2\n.roll 3 12```**
         '''
         if n < 1 or sides < 1:

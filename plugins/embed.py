@@ -52,7 +52,7 @@ class Embed(commands.Cog):
     @commands.command(cls=perms.Lock, name='setcolor', aliases=[], usage='setcolor <message> <color>')
     async def setcolor(self, ctx, msg: discord.Message, color: discord.Color):
         '''Modify the color of an embed.
-        *color* must be in hexadecimal format.\n
+        `color` must be in hexadecimal format.\n
         **Example:```yml\n.setcolor 694890918645465138 #8bb3f8```**
         '''
         embed = await self.pre(ctx, msg)

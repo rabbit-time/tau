@@ -20,9 +20,9 @@ class Roles(commands.Cog):
         '''Create a role menu.
         Role menus are powered by message reactions and can hold up to 15 roles. 
         Arguments must be separated by pipes: `|`
-        *title* must be no more than 256 characters long.
-        *color* must be a color represented in hexadecimal format.
-        *roles* must be a list of role IDs delimited by spaces.\n
+        `title` must be no more than 256 characters long.
+        `color` must be a color represented in hexadecimal format.
+        `roles` must be a list of role IDs delimited by spaces.\n
         **Example:```yml\n .rolemenu Color Roles | #8bb3f8 | 546836599141302272```**
         '''
         await ctx.message.delete()
@@ -66,8 +66,8 @@ class Roles(commands.Cog):
     async def rmod(self, ctx, menu_id, *role_ids):
         '''Modify a role menu.
         This command must be invoked in the channel containing the role menu.
-        *menu* must be an ID of a role menu.
-        *roles* must be a list of role IDs delimited by spaces.\n
+        `menu` must be an ID of a role menu.
+        `roles` must be a list of role IDs delimited by spaces.\n
         **Example:```yml\n .rmod 546836599141302272 122550600863842310 608148009213100033```**
         '''
         await ctx.message.delete()
@@ -109,8 +109,8 @@ class Roles(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True)
     async def ranks(self, ctx, *role_ids):
         '''Initialize rank roles.
-        *roles* must be a list of role IDs delimited by spaces, ordered from lowest to highest in hierarchy.
-        Replace *roles* with 'reset' to remove rank roles.\n
+        `roles` must be a list of role IDs delimited by spaces, ordered from lowest to highest in hierarchy.
+        Replace `roles` with 'reset' to remove rank roles.\n
         **Example:```yml\n.ranks 546836599141302272 122550600863842310 608148009213100033```**
         '''
         if role_ids[0] == 'reset':

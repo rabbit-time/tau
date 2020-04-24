@@ -21,6 +21,9 @@ class OnMessage(commands.Cog):
         if not self.bot.users_.get(uid):
             await self.bot.users_.insert(uid)
 
+        if not guild:
+            return
+
         chan = msg.channel
         cat_name = chan.category.name if chan.category else None
         if not msg.content.startswith(self.bot.guilds_[guild.id]['prefix']) and cat_name != 'appeals' and (member not in self.bot.suppressed.keys() or self.bot.suppressed.get(member) != chan):

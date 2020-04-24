@@ -27,7 +27,7 @@ class Fun(commands.Cog):
         '''Flip a coin.
         Enter a positive integer for `quantity` to flip multiple coins.
         Max is 84.\n
-        **Example:```yml\n.coin 3```**
+        **Example:```yml\n.coin\n.flip 3```**
         '''
         if not 0 < n <= 84:
             raise commands.BadArgument
@@ -52,28 +52,36 @@ class Fun(commands.Cog):
         
         await ctx.send(file=file, embed=embed)
     
-    @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [quantity=1] [sides=6]')
-    async def dice(self, ctx, n: int = 1, sides: int = 6):
+    @commands.command(cls=perms.Lock, name='dice', aliases=['die', 'roll'], usage='dice [quantity=1]')
+    async def dice(self, ctx, n: int = 1):
         '''Roll a die.
         Enter a positive integer for `quantity` to roll multiple dice.
-        `sides` is a positive integer specifying the amount of sides on each die.\n
-        **Example:```yml\n.dice 2\n.roll 3 12```**
+        Max is 84.\n
+        **Example:```yml\n.dice\n.roll 3```**
         '''
-        if n < 1 or sides < 1:
+        if not 0 < n <= 84:
             raise commands.BadArgument
+        
+        val = random.choices(range(6), k=n)
 
-        val = ''
-        for i in range(n):
-            if i == n - 1:
-                val += f'and **{random.randint(1, sides)}**'
-                if n == 1:
-                    val = val[4:]
-                elif n == 2:
-                    val = val.replace(',', '')
-                break
-            val += f'**{random.randint(1, sides)}**, '
+        embed = Embed(description=f'**You got {val[0]+1}!**', color=0xf94a4a)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if n == 1:
+            embed.set_thumbnail(url='attachment://unknown.png')
+            file = File(f'assets/d{val[0]+1}.png', 'unknown.png')
+        else:
+            file = None
+            dice = ''
+            for i, v in enumerate(val):
+                dice += utils.emoji[f'die{v+1}']
+                if (i + 1) % 10 == 0:
+                    dice += '\n'
 
-        await ctx.send(f'**{ctx.author.display_name}** got {val}!')
+            embed.description = f'**You got:\n\n{dice}**'
+            for i in range(6):
+                embed.add_field(name=utils.emoji[f'die{i+1}']+'\u200b', value=f'**{val.count(i)}**')
+        
+        await ctx.send(file=file, embed=embed)
 
 def setup(bot):
     bot.add_cog(Fun(bot))

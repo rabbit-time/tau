@@ -6,7 +6,7 @@ from discord import Embed, File
 from discord.ext import commands
 
 import perms
-from utils import res_member, emoji
+import utils
 
 class Economy(commands.Cog):
     def __init__(self, bot):
@@ -25,7 +25,7 @@ class Economy(commands.Cog):
             return
 
         bal = self.bot.users_[member.id]['tickets']
-        embed = Embed(description=f'{emoji["tickets"]}**{bal}**')
+        embed = Embed(description=f'{utils.emoji["tickets"]}**{bal}**')
         embed.set_author(name=member.display_name, icon_url=member.avatar_url)
 
         await ctx.send(embed=embed)
@@ -33,7 +33,7 @@ class Economy(commands.Cog):
     @commands.command(cls=perms.Lock, guild_only=True, name='give', usage='give <member> <quantity>')
     async def give(self, ctx, member: discord.Member, qty):
         '''Give credits to another user.
-        *quantity* can also be '\\*' or 'all'\n
+        `quantity` can also be '\\*' or 'all'\n
         **Example:```yml\n.give @Tau#4272 420 \n.give 608367259123187741 69```**
         '''
         if member.bot:
@@ -49,7 +49,7 @@ class Economy(commands.Cog):
         bal = self.bot.users_[member.id]['tickets']
         await self.bot.users_.update(member.id, 'tickets', bal+qty)
 
-        await ctx.send(f'**{ctx.author.display_name}** gave {emoji["tickets"]}**{qty}** to **{member.display_name}**!')
+        await ctx.send(f'**{ctx.author.display_name}** gave {utils.emoji["tickets"]}**{qty}** to **{member.display_name}**!')
 
     @commands.cooldown(1, 86400.0, type=commands.BucketType.user)
     @commands.command(cls=perms.Lock, name='credits', aliases=['daily'], usage='tickets')
@@ -70,7 +70,7 @@ class Economy(commands.Cog):
             amt *= 2
         await self.bot.users_.update(ctx.author.id, 'tickets', bal+amt)
 
-        desc = f'You have collected **{amt}** credits for a new balance of {emoji["tickets"]}**{bal+amt}**!'
+        desc = f'You have collected **{amt}** credits for a new balance of {utils.emoji["tickets"]}**{bal+amt}**!'
         embed = Embed(description=desc)
 
         await ctx.send(ctx.author.mention + ' ' + random.choice(msgs), embed=embed)

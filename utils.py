@@ -86,13 +86,6 @@ def rgb_to_cmyk(r: int, g: int, b: int):
 
     return c, m, y, k
 
-async def res_member(ctx):
-    msg = ctx.message
-    if (uid := msg.content.split()[-1]).isdigit():
-        if member := ctx.guild.get_member(int(uid)):
-            return member
-    return msg.mentions[0] if msg.mentions else msg.author
-
 def level(xp):
     return int(((5 ** (2/3)) * (xp ** (2/3))) / 100) + 1
 
@@ -249,6 +242,10 @@ async def autodetain(bot, member, guild, msg, timeout):
         await bot.members.update((member.id, guild.id), 'detained', -1)
 
 async def before(ctx):
-    member = await res_member(ctx)
-    if not ctx.bot.users_.get(member.id):
-        await ctx.bot.users_.insert(member.id)
+    if not ctx.bot.users_.get(ctx.author.id):
+        await ctx.bot.users_.insert(ctx.author.id)
+
+    if ctx.guild:
+        for kw in list(ctx.kwargs.values()):
+            if isinstance(kw, discord.Member) and not ctx.bot.users_.get(kw.id):
+                await ctx.bot.users_.insert(kw.id)

@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 
 import perms
-from utils import emoji, res_member, level, levelxp
+from utils import emoji, level, levelxp
 
 class Social(commands.Cog):
     def __init__(self, bot):

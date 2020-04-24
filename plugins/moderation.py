@@ -10,16 +10,38 @@ from discord.utils import escape_markdown
 
 import perms
 import utils
-from utils import autodetain, automute, emoji, findrole, res_member
+from utils import autodetain, automute, emoji, findrole
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='ban', aliases=[], usage='ban <member> [reason]')
+    @commands.bot_has_guild_permissions(manage_roles=True, ban_members=True)
+    async def ban(self, ctx, member: discord.Member, *, reason=None):
+        '''Ban a member.
+        `reason` will show up in the audit log\n
+        **Example:```yml\n.ban @Tau#4272\n.ban 608367259123187741 being a baddie```**
+        '''
+        try:
+            desc = (f'{emoji["hammer"]} **{ctx.author}** has invoked a ban on you in **{ctx.guild}**.\n\n'
+                    f'If you would like to appeal, you must do so within\none hour using '
+                    f'the following command:\n**`.appeal {ctx.guild.id} <message>`**')
+            if reason:
+                desc += f'\n\nReason: *{reason}*'
+            embed = Embed(description=desc, color=0xff4e4e)
+            embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+            embed.set_footer(text='1h', icon_url='attachment://unknown.png')
+            embed.timestamp = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+
+            await member.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
+        except discord.Forbidden:
+            await member.ban(reason=reason, delete_message_days=0)
+
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], usage='detain <mention|id> [reason]')
     @commands.bot_has_guild_permissions(add_reactions=True, external_emojis=True, manage_messages=True, manage_channels=True, manage_roles=True, ban_members=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
-    async def detain(self, ctx, mention, *, reason=None):
+    async def detain(self, ctx, member: discord.Member, *, reason=None):
         '''Detain a member.
         This command replaces a ban functionality to implement
         a democratic moderation system. Detained members will
@@ -27,11 +49,9 @@ class Moderation(commands.Cog):
         accessing the guild with the exception of the case
         channel. Staff members will vote on whether the member
         shall be permenantly banned.
-        *reason* is a reason that will show up in the audit log.\n
+        `reason` is a reason that will show up in the audit log.\n
         **Example:```yml\n.detain @Tau#4272\n.detain 608367259123187741 being a baddie```**
         '''
-        member = await res_member(ctx)
-
         if member == ctx.author or member.bot:
             return
 
@@ -102,9 +122,9 @@ class Moderation(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True)
     async def delete(self, ctx, n: int = 1, *members: discord.Member):
         '''Delete messages from a channel.
-        Specify *quantity* to delete multiple messages. The command message will not be included in this amount.
-        *quantity* cannot be greater than 100 and messages that are more than 14 days old cannot be deleted.
-        You can filter messages by member with *members*. Multiple members may be mentioned.\n
+        Specify `quantity` to delete multiple messages. The command message will not be included in this amount.
+        `quantity` cannot be greater than 100 and messages that are more than 14 days old cannot be deleted.
+        You can filter messages by member with `members`. Multiple members may be mentioned.\n
         **Example:```yml\n.delete 5\n.del 8 @Tau#4272```**
         '''
         await ctx.message.delete()
@@ -134,10 +154,10 @@ class Moderation(commands.Cog):
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def mute(self, ctx, member: discord.Member, limit=None, *, reason=None):
         '''Mute a user.
-        *limit* is how long to mute the user for.
-        *reason* is a reason that will show up in the audit log.
-        Suffix with *m*, *d*, or *h* to specify unit of time.
-        If *limit* is omitted, the user will be muted indefinitely.
+        `limit` is how long to mute the user for.
+        `reason` is a reason that will show up in the audit log.
+        Suffix with *`m`*, *`d`*, or *`h`* to specify unit of time.
+        If `limit` is omitted, the user will be muted indefinitely.
         Mute limits are capped at 6 months to prevent memory leaks.\n
         **Example:```yml\n.mute @Tau#4272 10m\n.hush 608367259123187741 1h being a baddie```**
         '''
@@ -200,7 +220,7 @@ class Moderation(commands.Cog):
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <member>')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def unmute(self, ctx, member: discord.Member):
+    async def unmute(self, ctx, *, member: discord.Member):
         '''Unmute a user.\n
         **Example:```yml\n.unmute @Tau#4272\n.unmute 608367259123187741```**
         '''

@@ -214,7 +214,7 @@ class System(commands.Cog):
 
     @commands.command(cls=perms.Lock, level=5, name='debug', aliases=[], usage='debug <code>')
     async def debug(self, ctx, code=0):
-        '''Runs Python code.\n
+        '''Run Python code.\n
         **Example:```yml\n.debug print('hello world')```**
         '''
         await ctx.message.delete()
@@ -299,11 +299,11 @@ class System(commands.Cog):
             embed.description = desc2.replace(' '*12, '')
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, level=5, name='reload', aliases=['r'], usage='reload <path>')
+    @commands.command(cls=perms.Lock, level=5, name='reload', aliases=['r'], usage='reload <ext>')
     async def reload(self, ctx, path):
         '''Reload an extension.
-        *path* must be the dot path relative to the entry point of the app.\n
-        **Example:```yml\n.remove 546397670793805825\n.leave```**
+        `ext` must be the dot path to the extension relative to the entry point of the app.\n
+        **Example:```yml\n.reload plugins.system\n.r events.on_ready```**
         '''
         try:
             self.bot.reload_extension(path)

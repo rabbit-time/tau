@@ -8,7 +8,7 @@ from discord.utils import oauth_url
 
 import ccp
 import utils
-from utils import automute, autodetain
+from utils import automute
 
 class OnReady(commands.Cog):
     def __init__(self, bot):
@@ -35,22 +35,10 @@ class OnReady(commands.Cog):
                 if guild.system_channel:
                    await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
 
-        cur = await self.bot.con.execute('SELECT * FROM members WHERE muted != -1 OR detained != -1')
+        cur = await self.bot.con.execute('SELECT user_id, guild_id, muted FROM members WHERE muted != -1')
         records = await cur.fetchall()
-        for user_id, guild_id, _, muted, detained, channel_id, msg_id in records:
-            if muted != -1:
-                self.bot.mute_tasks[user_id, guild_id] = self.bot.loop.create_task(automute(self.bot, user_id, guild_id, muted))
-            else:
-                guild = self.bot.get_guild(guild_id)
-                member = guild.get_member(user_id)
-                channel = guild.get_channel(channel_id)
-                msg = await channel.fetch_message(msg_id)
-                if not member:
-                    await guild.ban(Object(id=user_id))
-                    await self.bot.members.update((user_id, guild_id), 'detained', -1)
-                    continue
-            
-                self.bot.loop.create_task(autodetain(self.bot, member, guild, msg, detained))
+        for user_id, guild_id, muted in records:
+            self.bot.mute_tasks[user_id, guild_id] = self.bot.loop.create_task(automute(self.bot, user_id, guild_id, muted))
         
         cur = await self.bot.con.execute('SELECT * FROM reminders')
         records = await cur.fetchall()

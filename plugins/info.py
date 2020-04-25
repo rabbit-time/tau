@@ -65,7 +65,8 @@ class Info(commands.Cog):
         `command` can be the name of any command or any alias.\n
         **Example:```yml\n.help\n.h config```**
         '''
-        cogs = list(filter(lambda cog: 'On' not in cog[0], self.bot.cogs.items()))
+        cogs = list(filter(lambda cog: not cog[0].startswith('On'), self.bot.cogs.items()))
+        cogs.sort(key=lambda cog: cog[0])
         if not cmd:
             res = ''
             for cog in cogs:

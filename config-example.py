@@ -14,10 +14,8 @@ _def_guild = {
     'star_quantity': 3,
     'welcome_message': 'Hi @mention, welcome to @guild!',
     'goodbye_message': 'Bye @user!',
-    'ban_message': '@user has been banned.',
     'welcome_messages': False,
     'goodbye_messages': False,
-    'ban_messages': False,
     'levelup_messages': False,
     'autorole': 0,
     'mod_role': 0,
@@ -34,10 +32,7 @@ _def_user = {
 
 _def_member = {
     'xp': 0,
-    'muted': -1,
-    'detained': -1,
-    'detain_channel_id': 0,
-    'detain_message_id': 0
+    'muted': -1
 }
 
 _def_role_menu = {
@@ -64,10 +59,8 @@ guilds_schema = ('guild_id unsigned bigint PRIMARY KEY, '
                  'star_quantity unsigned tinyint, '
                  'welcome_message varchar(255), '
                  'goodbye_message varchar(255), '
-                 'ban_message varchar(255), '
                  'welcome_messages bool, '
                  'goodbye_messages bool, '
-                 'ban_messages bool, '
                  'levelup_messages bool, '
                  'autorole unsigned bigint, '
                  'mod_role unsigned bigint, '
@@ -83,10 +76,7 @@ users_schema = ('user_id unsigned bigint PRIMARY KEY, '
 members_schema = ('user_id unsigned bigint, '
                   'guild_id unsigned bigint, '
                   'xp unsigned bigint, '
-                  'muted bigint, '
-                  'detained bigint, '
-                  'detain_channel_id unsigned bigint, '
-                  'detain_message_id unsigned bigint')
+                  'muted bigint')
 
 role_menus_schema = ('guild_id unsigned bigint, '
                      'message_id unsigned bigint, '

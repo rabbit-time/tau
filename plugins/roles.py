@@ -104,14 +104,14 @@ class Roles(commands.Cog):
         
         await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', ' '.join(role_ids))
     
-    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='ranks', aliases=[], usage='ranks <*roles>')
+    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='setranks', aliases=[], usage='setranks <*roles>')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_messages=True)
-    async def ranks(self, ctx, *role_ids):
+    async def setranks(self, ctx, *role_ids):
         '''Initialize rank roles.
         `roles` must be a list of role IDs delimited by spaces, ordered from lowest to highest in hierarchy.
         Replace `roles` with 'reset' to remove rank roles.\n
-        **Example:```yml\n.ranks 546836599141302272 122550600863842310 608148009213100033```**
+        **Example:```yml\n.setranks 546836599141302272 122550600863842310 608148009213100033```**
         '''
         if role_ids[0] == 'reset':
             await self.bot.ranks.update(ctx.guild.id, 'role_ids', '')
@@ -140,6 +140,26 @@ class Roles(commands.Cog):
                 await member.add_roles(bottom_role)
 
         await ctx.send('Rank roles successfully initialized.')
+    
+    @commands.command(cls=perms.Lock, guild_only=True, name='ranks', aliases=[], usage='ranks')
+    @commands.bot_has_guild_permissions(mention_everyone=True)
+    async def ranks(self, ctx):
+        '''Display rank hierarchy.
+        **Example:```yml\n.ranks```**
+        '''
+        role_ids = None
+        if self.bot.ranks.get(ctx.guild.id):
+            role_ids = self.bot.ranks[ctx.guild.id]['role_ids']
+
+        if role_ids:
+            ranks = '\n'.join(ctx.guild.get_role(int(id)).mention for id in role_ids.split())
+
+            embed = Embed(description=f'**{ranks}**')
+            embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+        else:
+            embed = Embed(description=f'**{ctx.guild}** does not have ranks enabled.')
+
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Roles(bot))

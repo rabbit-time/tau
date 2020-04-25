@@ -21,21 +21,5 @@ class Manual(commands.Cog):
 
         await ctx.send(file=File('assets/devmode.png', 'unknown.png'), embed=embed)
 
-    @commands.command(cls=perms.Lock, name='moderation', aliases=[], usage='moderation')
-    async def moderation(self, ctx):
-        desc = ('Moderators are intended to have three key powers: deleting messages, '
-                'muting, and detaining. Mods are purposefully not given the permission '
-                'to ban members by themselves, otherwise it could lead to overzealous'
-                'mods. Accordingly, instead mods are given the `detain` command where'
-                'the member in question is locked in a private channel and they may '
-                'appeal their case while staff members vote on whether or not to ban '
-                'the member. The member is only banned through a majority vote among '
-                'the moderators.\n\nShown below is an example screenshot of what a case '
-                'might look like.')
-        embed = Embed(description=desc.replace(' '*8, ''))
-        embed.set_image(url='attachment://unknown.png')
-
-        await ctx.send(file=File('assets/detain.png', 'unknown.png'), embed=embed)
-
 def setup(bot):
     bot.add_cog(Manual(bot))

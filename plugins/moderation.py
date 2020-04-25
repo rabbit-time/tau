@@ -4,97 +4,72 @@ import time
 import re
 
 import discord
-from discord import Embed, File, PermissionOverwrite
+from discord import Embed, File, Object, PermissionOverwrite
 from discord.ext import commands
 from discord.utils import escape_markdown
 
 import perms
 import utils
-from utils import autodetain, automute, emoji, findrole
+from utils import automute, emoji, findrole
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='detain', aliases=['bind'], usage='detain <mention|id> [reason]')
-    @commands.bot_has_guild_permissions(add_reactions=True, external_emojis=True, manage_messages=True, manage_channels=True, manage_roles=True, ban_members=True)
-    @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
-    async def detain(self, ctx, member: discord.Member, *, reason=None):
-        '''Detain a member.
-        This command replaces a ban functionality to implement
-        a democratic moderation system. Detained members will
-        be given the **`bind_role`** and will be blocked from
-        accessing the guild with the exception of the case
-        channel. Staff members will vote on whether the member
-        shall be permenantly banned.
-        `reason` is a reason that will show up in the audit log.\n
-        **Example:```yml\n.detain @Tau#4272\n.detain 608367259123187741 being a baddie```**
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='ban', aliases=[], usage='ban <member> [reason]')
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.bot_has_permissions(manage_messages=True)
+    async def ban(self, ctx, member: discord.Member, *, reason=None):
+        '''Ban a member.
+        `reason` will show up in the audit log\n
+        **Example:```yml\n.ban @Tau#4272\n.ban 608367259123187741 being a baddie```**
         '''
-        if member == ctx.author or member.bot:
-            return
-
-        mod = findrole(self.bot.guilds_[ctx.guild.id]['mod_role'], ctx.guild)
-        admin = findrole(self.bot.guilds_[ctx.guild.id]['admin_role'], ctx.guild)
-        bind = findrole(self.bot.guilds_[ctx.guild.id]['bind_role'], ctx.guild)
-
         await ctx.message.delete()
 
-        if member in mod.members or member in admin.members:
-            return await ctx.send('Staff members cannot be detained.', delete_after=5)
+        mod = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['mod_role'])
+        admin = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['admin_role'])
 
-        await member.add_roles(bind, reason=reason)
+        if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
+            return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be banned.', delete_after=5)
 
-        if not self.bot.members.get((member.id, ctx.guild.id)):
-            await self.bot.members.insert((member.id, ctx.guild.id))
-        elif self.bot.members[member.id, ctx.guild.id]['detained'] != -1:
-            return await ctx.send(f'**{member.display_name}** has already been detained.', delete_after=5)
-        
-        desc = f'**{emoji["cuffs"]} {member.mention} has been detained.**'
+        await member.ban(reason=reason, delete_message_days=0)
+
+        desc = f'**{emoji["hammer"]} {member} has been banned.**'
         if reason:
             desc += f'\nReason: *{reason}*'
-        embed = Embed(description=desc)
-        embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
-        embed.timestamp = datetime.datetime.fromtimestamp(time.time())
+
+        embed = Embed(description=desc, color=0xff4e4e)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)
 
-        overwrites = {
-                ctx.guild.default_role: PermissionOverwrite(read_messages=False),
-                mod: PermissionOverwrite(read_messages=True),
-                admin: PermissionOverwrite(read_messages=True)
-        }
-        for cat in ctx.guild.categories:
-            if cat.name.lower() == 'appeals':
-                appeals = cat
-                break
-        else:
-            appeals = await ctx.guild.create_category('appeals', overwrites=overwrites)
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='blacklist', aliases=[], usage='blacklist <id> [reason]')
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.bot_has_permissions(manage_messages=True)
+    async def blacklist(self, ctx, id: int, *, reason=None):
+        '''Blacklist a user.
+        This is also known as hackbanning. Use the `ban` command for ordinary bans.
+        `reason` will show up in the audit log\n
+        **Example:```yml\n.blacklist 608367259123187741 being a baddie```**
+        '''
+        await ctx.message.delete()
 
-        now = int(time.time())
-        date = time.strftime('%d.%m.%Y %H:%M:%S UTC', time.gmtime(now+86400))
-        overwrites[member] = PermissionOverwrite(read_messages=True, send_messages=True, add_reactions=False)
-        case = await ctx.guild.create_text_channel(name=f'case-{now:x}', category=appeals, overwrites=overwrites)
+        try:
+            ban = await ctx.guild.fetch_ban(Object(id=id))
+            return await ctx.send(f'**{ban.user}** has already been blacklisted.', delete_after=5)
+        except discord.NotFound:
+            pass
 
-        desc = (f'You, **{member.display_name}**, have been detained by **{ctx.author.display_name}** '
-                'for violating or infringing the server rules and are in danger of a permenant ban. '
-                'Over the course of the next 24 hours, you may appeal the decision using this channel. '
-                'This channel is only accessible to staff members and yourself to maintain confidentiality. '
-                'Understand that leaving the server will result in an immediate ban.\n\n'
-                'Staff members will each vote to affirm or reverse the decision to ban. '
-                'A plurality vote or a tie is required to reverse the decision to ban.')
-        embed = Embed(title=f'Case {now:x}', description=desc, color=0xff4e4e)
-        embed.add_field(name='\u200b', value=':small_red_triangle: Reverse decision to ban', inline=True)
-        embed.add_field(name='\u200b', value=':small_red_triangle_down: Affirm decision to ban', inline=True)
-        embed.add_field(name='\u200b', value=f'**`Votes will be counted at: {date}`**', inline=False)
-        msg = await case.send('@everyone', embed=embed)
-        await msg.add_reaction('🔺')
-        await msg.add_reaction('🔻')
-        await msg.pin()
+        await ctx.guild.ban(Object(id=id), reason=reason, delete_message_days=0)
 
-        await self.bot.members.update((member.id, ctx.guild.id), 'detain_channel_id', case.id)
-        await self.bot.members.update((member.id, ctx.guild.id), 'detain_message_id', msg.id)
-        await self.bot.members.update((member.id, ctx.guild.id), 'detained', now+86400)
-        await autodetain(self.bot, member, ctx.guild, msg, now+86400)
+        desc = f'**{emoji["hammer"]} `{id}` has been blacklisted.**'
+        if reason:
+            desc += f'\nReason: *{reason}*'
+
+        embed = Embed(description=desc, color=0xff4e4e)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='delete', aliases=['del', 'purge'], usage='delete [quantity=1] [members]')
     @commands.bot_has_permissions(manage_messages=True)
@@ -126,6 +101,33 @@ class Moderation(commands.Cog):
         embed = Embed(description=f'**```diff\n- {content}!```**', color=0xff4e4e)
         
         await ctx.send(embed=embed)
+    
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='kick', aliases=[], usage='kick <member> [reason]')
+    @commands.bot_has_guild_permissions(kick_members=True)
+    @commands.bot_has_permissions(manage_messages=True)
+    async def kick(self, ctx, member: discord.Member, *, reason=None):
+        '''Kick a member.
+        `reason` will show up in the audit log\n
+        **Example:```yml\n.kick @Tau#4272\n.kick 608367259123187741 being a baddie```**
+        '''
+        await ctx.message.delete()
+
+        mod = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['mod_role'])
+        admin = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['admin_role'])
+
+        if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
+            return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be kicked.', delete_after=5)
+
+        await member.kick(reason=reason)
+
+        desc = f'**{emoji["hammer"]} {member} has been kicked.**'
+        if reason:
+            desc += f'\nReason: *{reason}*'
+
+        embed = Embed(description=desc, color=0xff4e4e)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <member> [limit] [reason]')
     @commands.bot_has_guild_permissions(manage_roles=True)
@@ -148,7 +150,7 @@ class Moderation(commands.Cog):
         mod = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['mod_role'])
         admin = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['admin_role'])
 
-        if mod in member.roles or admin in member.roles:
+        if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
             return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be muted.', delete_after=5)
 
         if not self.bot.members.get((member.id, ctx.guild.id)):
@@ -194,6 +196,62 @@ class Moderation(commands.Cog):
             embed.timestamp = datetime.datetime.utcnow()
 
         await ctx.send(file=file, embed=embed)
+    
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='softban', aliases=[], usage='softban <member> [reason]')
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.bot_has_permissions(manage_messages=True)
+    async def softban(self, ctx, member: discord.Member, *, reason=None):
+        '''Softban a member.
+        This will ban and then immediately unban a member to delete their messages.
+        `reason` will show up in the audit log\n
+        **Example:```yml\n.softban @Tau#4272\n.softban 608367259123187741 being a baddie```**
+        '''
+        await ctx.message.delete()
+
+        mod = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['mod_role'])
+        admin = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['admin_role'])
+
+        if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
+            return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be banned.', delete_after=5)
+
+        await member.ban(reason=reason, delete_message_days=7)
+        await member.unban(reason=reason)
+
+        desc = f'**{emoji["hammer"]} {member} has been softbanned.**'
+        if reason:
+            desc += f'\nReason: *{reason}*'
+
+        embed = Embed(description=desc, color=0xff4e4e)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unban', aliases=[], usage='unban <id> [reason]')
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.bot_has_permissions(manage_messages=True)
+    async def unban(self, ctx, id: int, *, reason=None):
+        '''Unban a member.
+        `reason` will show up in the audit log\n
+        **Example:```yml\n.unban 608367259123187741 being a good boi```**
+        '''
+        await ctx.message.delete()
+
+        try:
+            ban = await ctx.guild.fetch_ban(Object(id=id))
+            user = ban.user
+        except discord.NotFound:
+            return await ctx.send(f'**`{id}`** has not been banned.', delete_after=5)
+
+        await ctx.guild.unban(user, reason=reason)
+
+        desc = f'**{emoji["hammer"]} {user} has been unbanned.**'
+        if reason:
+            desc += f'\nReason: *{reason}*'
+
+        embed = Embed(description=desc, color=0x2aa198)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <member>')
     @commands.bot_has_guild_permissions(manage_roles=True)

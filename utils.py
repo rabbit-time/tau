@@ -77,7 +77,7 @@ def display_color(color: discord.Color) -> io.BytesIO:
 
     return buffer
 
-def rgb_to_cmyk(r: int, g: int, b: int):
+def rgb_to_cmyk(r: float, g: float, b: float):
     if (r, g, b) == (0, 0, 0):
         return 0, 0, 0, 1
 
@@ -91,6 +91,64 @@ def rgb_to_cmyk(r: int, g: int, b: int):
     y = (y - k) / (1 - k)
 
     return c, m, y, k
+
+def cmyk_to_rgb(c: float, m: float, y: float, k: float):
+    r = (1 - c) * (1 - k) * 255
+    g = (1 - m) * (1 - k) * 255
+    b = (1 - y) * (1 - k) * 255
+    
+    return r, g, b
+
+def rgb_to_hsl(r: float, g: float, b: float):
+    r /= 255
+    g /= 255
+    b /= 255
+
+    cmax = max(r, g, b)
+    cmin = min(r, g, b)
+
+    Δ = cmax - cmin
+    l = (cmax + cmin) / 2
+
+    if Δ == 0:
+        h = s = 0
+    else:
+        s = Δ / (1 - abs(2*l-1))
+        if cmax == r:
+            h = (g - b) / Δ % 6
+        if cmax == g:
+            h = (b - r) / Δ + 2
+        if cmax == b:
+            h = (r - g) / Δ + 4
+    
+    h *= 60
+    
+    return h, s, l
+
+def rgb_to_hsv(r: float, g: float, b: float):
+    r /= 255
+    g /= 255
+    b /= 255
+
+    cmax = v = max(r, g, b)
+    cmin = min(r, g, b)
+
+    Δ = cmax - cmin
+
+    if Δ == 0:
+        h = s = 0
+    else:
+        s = Δ / cmax
+        if cmax == r:
+            h = (g - b) / Δ % 6
+        if cmax == g:
+            h = (b - r) / Δ + 2
+        if cmax == b:
+            h = (r - g) / Δ + 4
+    
+    h *= 60
+    
+    return h, s, v
 
 def level(xp):
     return int(((5 ** (2/3)) * (xp ** (2/3))) / 100) + 1
@@ -145,14 +203,12 @@ async def automute(bot, user_id, guild_id, unmute_time):
     delay = unmute_time - now if unmute_time > now else 0
     await asyncio.sleep(delay)
 
-    try:
-        guild = bot.get_guild(guild_id)
-        member = await guild.fetch_member(user_id)
+    guild = bot.get_guild(guild_id)
+    if guild:
+        member = guild.get_member(user_id)
         bind = guild.get_role(bot.guilds_[guild_id]['bind_role'])
-        if bot.members[user_id, guild_id]['detained'] == -1:
+        if member and bind:
             await member.remove_roles(bind)
-    except:
-        pass
 
     await bot.members.update((user_id, guild_id), 'muted', -1)
     del bot.mute_tasks[user_id, guild_id]

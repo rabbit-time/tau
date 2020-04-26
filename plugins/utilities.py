@@ -1,4 +1,3 @@
-import colorsys
 import time
 import datetime
 import random
@@ -56,15 +55,15 @@ class Utilities(commands.Cog):
 
         r, g, b = color.to_rgb()
         c, m, y, k = utils.rgb_to_cmyk(*color.to_rgb())
-        h, l, s = colorsys.rgb_to_hls(color.r/255, color.g/255, color.b/255)
-        h, s, v = colorsys.rgb_to_hsv(color.r/255, color.g/255, color.b/255)
+        h, s, l = utils.rgb_to_hsl(*color.to_rgb())
+        h, s_, v = utils.rgb_to_hsv(*color.to_rgb())
 
         embed = Embed()
         embed.set_author(name=color)
         embed.add_field(name='RGB', value=f'{r}, {g}, {b}')
         embed.add_field(name='CMYK', value=f'{c:.0%}, {m:.0%}, {y:.0%}, {k:.0%}')
-        embed.add_field(name='HSL', value=f'{round(h*360)}°, {s:.0%}, {l:.0%}')
-        embed.add_field(name='HSV', value=f'{round(h*360)}°, {s:.0%}, {v:.0%}')
+        embed.add_field(name='HSL', value=f'{round(h)}°, {s:.0%}, {l:.0%}')
+        embed.add_field(name='HSV', value=f'{round(h)}°, {s_:.0%}, {v:.0%}')
         embed.set_image(url='attachment://unknown.png')
 
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)

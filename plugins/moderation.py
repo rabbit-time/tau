@@ -59,10 +59,12 @@ class Moderation(commands.Cog):
             return await ctx.send(f'**{ban.user}** has already been blacklisted.', delete_after=5)
         except discord.NotFound:
             pass
+        
+        user = Object(id=id)
+        await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+        ban = await ctx.guild.fetch_ban(user)
 
-        await ctx.guild.ban(Object(id=id), reason=reason, delete_message_days=0)
-
-        desc = f'**{emoji["hammer"]} `{id}` has been blacklisted.**'
+        desc = f'**{emoji["hammer"]} {ban.user} has been blacklisted.**'
         if reason:
             desc += f'\nReason: *{reason}*'
 

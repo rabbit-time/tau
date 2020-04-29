@@ -60,9 +60,12 @@ class Moderation(commands.Cog):
         except discord.NotFound:
             pass
         
-        user = Object(id=id)
-        await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-        ban = await ctx.guild.fetch_ban(user)
+        try:
+            user = Object(id=id)
+            await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+            ban = await ctx.guild.fetch_ban(user)
+        except discord.NotFound:
+            return await ctx.send(f'User with **`{id}`** could not be found.', delete_after=5)
 
         desc = f'**{emoji["hammer"]} {ban.user} has been blacklisted.**'
         if reason:

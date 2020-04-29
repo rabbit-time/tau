@@ -24,7 +24,8 @@ class Info(commands.Cog):
         if not member:
             member = ctx.author
 
-        embed = Embed(description=f'**[{member.display_name}]({member.avatar_url})**')
+        embed = Embed(description=f':link: **[Avatar]({member.avatar_url})**')
+        embed.set_author(name=member, icon_url=member.avatar_url)
         embed.set_image(url=member.avatar_url)
 
         await ctx.send(embed=embed)

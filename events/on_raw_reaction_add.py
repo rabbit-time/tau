@@ -58,11 +58,10 @@ class OnRawReactionAdd(commands.Cog):
                         return '💫'
                     else:
                         return '✨'
-
+                        
                 qty = self.bot.guilds_[guild.id]['star_quantity']
                 if stars < qty:
                     return
-
                 if self.bot.stars.get(msg.id):
                     try:
                         starmsg = await starchan.fetch_message(self.bot.stars[msg.id]['star_id'])

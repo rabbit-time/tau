@@ -92,7 +92,7 @@ class Info(commands.Cog):
 
                         desc = f'**```asciidoc\n{prefix}{cmd.usage}```{aliases}**\n{doc}'
                         if cmd.guild_only:
-                            desc = '*This command may only be used in guilds* ' + desc
+                            desc = '*This command may only be used in servers* ' + desc
                         embed = Embed(description=desc)
                         embed.set_footer(text=f'Perm level: {cmd.level}')
             

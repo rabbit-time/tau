@@ -248,6 +248,69 @@ class System(commands.Cog):
             embed = Embed(description=desc, color=0xff4e4e)
 
             await ctx.send(embed=embed)
+    
+    @commands.command(cls=perms.Lock, guild_only=True, name='rule', aliases=[], usage='rule <index>')
+    @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
+    async def rule(self, ctx, index: int):
+        '''Cite a rule.\n
+        **Example:```yml\n.rule 1```**
+        '''
+        rule = self.bot.rules.get((ctx.guild.id, index), {'rule': ''})
+
+        if not rule["rule"]:
+            return await ctx.send(f'{ctx.author.mention} Rule with index **`{index}`** could not be found.', delete_after=5)
+
+        embed = Embed(title='Rules', description=f'**{index}.** {rule["rule"]}')
+
+        await ctx.send(embed=embed)
+    
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='rules', aliases=[], usage='rules')
+    @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
+    async def rules(self, ctx):
+        '''Display the rules.\n
+        **Example:```yml\n.rules```**
+        '''
+        cur = await self.bot.con.execute('SELECT index_, rule FROM rules WHERE guild_id = ? ORDER BY index_ ASC', (ctx.guild.id,))
+        rules = await cur.fetchall()
+
+        if not rules:
+            return await ctx.send(f'{ctx.author.mention} Rules have not been initialized.', delete_after=5)
+
+        board = ''
+        for index, rule in rules:
+            board += f'**{index}.** {rule}\n'
+
+        embed = Embed(title='Rules', description=board)
+
+        await ctx.send(embed=embed)
+    
+    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='setrule', aliases=[], usage='setrule <index> [rule]')
+    @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
+    async def setrule(self, ctx, index: int, *, rule: str = ''):
+        '''Set a rule.
+        `index` must be a positive integer no larger than 255.
+        Leave `rule` blank to reset.\n
+        **Example:```yml\n.setrule 1 Do not spam```**
+        '''
+        if not 0 <= index < 256:
+            raise commands.BadArgument
+
+        if rule:
+            await self.bot.rules.update((ctx.guild.id, index), 'rule', rule)
+        else:
+            await self.bot.rules.delete((ctx.guild.id, index))
+
+        embed = Embed(title='Rules')
+
+        if rule:
+            desc = f'**{index}.** {rule}'
+        else:
+            desc = f'**```yml\n+ Rule {index} has been reset```**'
+            embed.colour = utils.Color.green
+
+        embed.description = desc
+
+        await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=5, name='shutdown', aliases=['exit', 'quit', 'kill'], usage='shutdown')
     async def shutdown(self, ctx):

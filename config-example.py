@@ -52,6 +52,16 @@ _def_reminder = {
     'reminder': '',
 }
 
+_def_rule = {
+    'rule': ''
+}
+
+_def_modlog = {
+    'action': '',
+    'time': 0,
+    'reason': ''
+}
+
 guilds_schema = ('guild_id unsigned bigint PRIMARY KEY, '
                  'prefix varchar(255), '
                  'system_channel unsigned bigint, '
@@ -92,3 +102,13 @@ reminders_schema = ('user_id unsigned bigint, '
                     'time unsigned bigint, '
                     'channel_id unsigned bigint, '
                     'reminder varchar(2048)')
+
+rules_schema = ('guild_id unsigned bigint, '
+                'index_ unsigned tinyint, '
+                'rule varchar(2000)')
+
+modlog_schema = ('user_id unsigned bigint, '
+                 'guild_id unsigned bigint, '
+                 'action tinytext, '
+                 'time unsigned bigint, '
+                 'reason varchar(2048)')

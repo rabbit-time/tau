@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import time
 import re
+from typing import Union
 
 import discord
 from discord import Embed, File, Object, PermissionOverwrite
@@ -16,10 +17,15 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def _log(self, user: Union[discord.Member, discord.User], guild: discord.Guild, action: str, reason: str):
+        sql = 'INSERT INTO modlog VALUES (?, ?, ?, ?, ?)'
+        await self.bot.con.execute(sql, (user.id, guild.id, action, int(time.time()), reason))
+        await self.bot.con.commit()
+
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='ban', aliases=[], usage='ban <member> [reason]')
     @commands.bot_has_guild_permissions(ban_members=True)
-    @commands.bot_has_permissions(manage_messages=True)
-    async def ban(self, ctx, member: discord.Member, *, reason=None):
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def ban(self, ctx, member: discord.Member, *, reason: str = None):
         '''Ban a member.
         `reason` will show up in the audit log\n
         **Example:```yml\n.ban @Tau#4272\n.ban 608367259123187741 being a baddie```**
@@ -34,19 +40,19 @@ class Moderation(commands.Cog):
 
         await member.ban(reason=reason, delete_message_days=0)
 
-        desc = f'**{emoji["hammer"]} {member} has been banned.**'
-        if reason:
-            desc += f'\nReason: *{reason}*'
+        await self._log(member, ctx.guild, 'ban', reason if reason else '')
 
-        embed = Embed(description=desc, color=0xff4e4e)
+        embed = Embed(description=f'**{emoji["hammer"]} {member} has been banned.**', color=utils.Color.red)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='blacklist', aliases=[], usage='blacklist <id> [reason]')
     @commands.bot_has_guild_permissions(ban_members=True)
-    @commands.bot_has_permissions(manage_messages=True)
-    async def blacklist(self, ctx, id: int, *, reason=None):
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def blacklist(self, ctx, id: int, *, reason: str = None):
         '''Blacklist a user.
         This is also known as hackbanning. Use the `ban` command for ordinary bans.
         `reason` will show up in the audit log\n
@@ -67,12 +73,12 @@ class Moderation(commands.Cog):
         except discord.NotFound:
             return await ctx.send(f'User with **`{id}`** could not be found.', delete_after=5)
 
-        desc = f'**{emoji["hammer"]} {ban.user} has been blacklisted.**'
-        if reason:
-            desc += f'\nReason: *{reason}*'
+        await self._log(user, ctx.guild, 'ban', reason if reason else '')
 
-        embed = Embed(description=desc, color=0xff4e4e)
+        embed = Embed(description=f'**{emoji["hammer"]} {ban.user} has been blacklisted.**', color=utils.Color.red)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
@@ -103,14 +109,14 @@ class Moderation(commands.Cog):
         if n != 1:
             content += 's'
 
-        embed = Embed(description=f'**```diff\n- {content}!```**', color=0xff4e4e)
+        embed = Embed(description=f'**```diff\n- {content}!```**', color=utils.Color.red)
         
         await ctx.send(embed=embed)
     
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='kick', aliases=[], usage='kick <member> [reason]')
     @commands.bot_has_guild_permissions(kick_members=True)
-    @commands.bot_has_permissions(manage_messages=True)
-    async def kick(self, ctx, member: discord.Member, *, reason=None):
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def kick(self, ctx, member: discord.Member, *, reason: str = None):
         '''Kick a member.
         `reason` will show up in the audit log\n
         **Example:```yml\n.kick @Tau#4272\n.kick 608367259123187741 being a baddie```**
@@ -125,21 +131,21 @@ class Moderation(commands.Cog):
 
         await member.kick(reason=reason)
 
-        desc = f'**{emoji["hammer"]} {member} has been kicked.**'
-        if reason:
-            desc += f'\nReason: *{reason}*'
+        await self._log(member, ctx.guild, 'kick', reason if reason else '')
 
-        embed = Embed(description=desc, color=0xff4e4e)
+        embed = Embed(description=f'**{emoji["hammer"]} {member} has been kicked.**', color=utils.Color.red)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='mute', aliases=['hush'], usage='mute <member> [limit] [reason]')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def mute(self, ctx, member: discord.Member, limit=None, *, reason=None):
-        '''Mute a user.
-        `limit` is how long to mute the user for.
+    async def mute(self, ctx, member: discord.Member, limit=None, *, reason: str = None):
+        '''Mute a member.
+        `limit` is how long to mute the member for.
         `reason` is a reason that will show up in the audit log.
         Suffix with *`m`*, *`d`*, or *`h`* to specify unit of time.
         If `limit` is omitted, the user will be muted indefinitely.
@@ -185,12 +191,13 @@ class Moderation(commands.Cog):
         await member.add_roles(bind, reason=reason)
         await self.bot.members.update((member.id, ctx.guild.id), 'muted', total)
 
-        desc = f'**{emoji["mute"]} {member.mention} has been muted.**'
-        if reason:
-            desc += f'\nReason: *{reason}*'
+        await self._log(member, ctx.guild, 'mute', reason if reason else '')
         
-        embed = Embed(description=desc)
-        embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
+        embed = Embed(description=f'**{emoji["mute"]} {member.mention} has been muted.**')
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
+
         if total != 0:
             file = File('assets/clock.png', 'unknown.png')
             embed.set_footer(text=time_, icon_url='attachment://unknown.png')
@@ -202,10 +209,111 @@ class Moderation(commands.Cog):
 
         await ctx.send(file=file, embed=embed)
     
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='record', aliases=['history'], usage='record <member> [index]')
+    @commands.bot_has_permissions(add_reactions=True, manage_messages=True, external_emojis=True)
+    async def record(self, ctx, member: Union[discord.Member, discord.User], i: int = None):
+        '''View a user's moderation record.
+        Use `index` to view details on a log.\n
+        **Example:```yml\n.record @Tau#4272```**
+        '''
+        cur = await self.bot.con.execute('SELECT action, time, reason FROM modlog WHERE user_id = ? AND guild_id = ? ORDER BY time DESC', (member.id, ctx.guild.id))
+        records = await cur.fetchall()
+
+        plural = 's' if len(records) != 1 else ''
+        embed = Embed(title=f'Mod record: {len(records)} result{plural}')
+        embed.set_author(name=member, icon_url=member.avatar_url)
+
+        if not records:
+            embed.description = 'This user does not have a mod record.'
+            return await ctx.send(embed=embed)
+
+        if i != None:
+            try:
+                action, time_, reason = records[i-1]
+            except IndexError:
+                return await ctx.send(f'{ctx.author.mention} Record with index `{i}` does not exist.`', delete_after=5)
+
+            date = time.strftime('%d.%m.%Y %H:%M:%S UTC', time.gmtime(time_))
+            embed.title = f'Record #{i}'
+            embed.description = f'**Action: `{action}`**'
+            embed.add_field(name='Reason', value=reason if reason else 'n/a')
+            embed.set_footer(text=date)
+
+            return await ctx.send(embed=embed)
+
+        i = 1
+        pages = []
+        logs = []
+        for action, time_, _ in records:
+            align = ' ' if i < 10 else ''
+            space = ' ' * (7-len(action))
+            date = datetime.date.fromtimestamp(time_)
+            log = f'**`{i}.{align} {action+space} | {date}`**'
+            if len(logs) == 20:
+                pages.append('\n'.join(logs))
+                logs.clear()
+
+            logs.append(log)
+            i += 1
+        
+        if logs:
+            pages.append('\n'.join(logs))
+        
+        page = 1
+        embed.description = pages[0]
+        embed.set_footer(text=f'Page {page}/{len(pages)}')
+
+        msg = await ctx.send(embed=embed)
+
+        if len(pages) > 1:
+            emojis = (utils.emoji['start'], utils.emoji['previous'], utils.emoji['next'], utils.emoji['end'], utils.emoji['stop'])
+            for emoji in emojis:
+                await msg.add_reaction(emoji)
+
+            while True:
+                try:
+                    reaction, user = await self.bot.wait_for('reaction_add', timeout=90, check=lambda reaction, user: str(reaction.emoji) in emojis and reaction.message.id == msg.id and not user.bot)
+                
+                    await reaction.remove(user)
+                    emoji = str(reaction.emoji)
+                    if user != ctx.author or emoji not in emojis:
+                        continue
+                    
+                    if emoji == emojis[0]: # start
+                        if page == 1:
+                            continue
+                        
+                        page = 1
+                    elif emoji == emojis[1]: # previous
+                        if page == 1:
+                            continue
+
+                        page -= 1
+                    elif emoji == emojis[2]: # next
+                        if page == len(pages):
+                            continue
+
+                        page += 1
+                    elif emoji == emojis[3]: # end
+                        if page == len(pages):
+                            continue
+
+                        page = len(pages)
+                    elif emoji == emojis[4]: # stop
+                        raise asyncio.TimeoutError
+
+                    embed.description = pages[page-1]
+                    embed.set_footer(text=f'Page {page}/{len(pages)}')
+
+                    await msg.edit(embed=embed)
+                except asyncio.TimeoutError:
+                    await msg.clear_reactions()
+                    break
+
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='softban', aliases=[], usage='softban <member> [reason]')
     @commands.bot_has_guild_permissions(ban_members=True)
-    @commands.bot_has_permissions(manage_messages=True)
-    async def softban(self, ctx, member: discord.Member, *, reason=None):
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def softban(self, ctx, member: discord.Member, *, reason: str = None):
         '''Softban a member.
         This will ban and then immediately unban a member to delete their messages.
         `reason` will show up in the audit log\n
@@ -222,19 +330,19 @@ class Moderation(commands.Cog):
         await member.ban(reason=reason, delete_message_days=7)
         await member.unban(reason=reason)
 
-        desc = f'**{emoji["hammer"]} {member} has been softbanned.**'
-        if reason:
-            desc += f'\nReason: *{reason}*'
+        await self._log(member, ctx.guild, 'softban', reason if reason else '')
 
-        embed = Embed(description=desc, color=0xff4e4e)
+        embed = Embed(description=f'**{emoji["hammer"]} {member} has been softbanned.**', color=utils.Color.red)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unban', aliases=[], usage='unban <id> [reason]')
     @commands.bot_has_guild_permissions(ban_members=True)
-    @commands.bot_has_permissions(manage_messages=True)
-    async def unban(self, ctx, id: int, *, reason=None):
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def unban(self, ctx, id: int, *, reason: str = None):
         '''Unban a member.
         `reason` will show up in the audit log\n
         **Example:```yml\n.unban 608367259123187741 being a good boi```**
@@ -249,21 +357,21 @@ class Moderation(commands.Cog):
 
         await ctx.guild.unban(user, reason=reason)
 
-        desc = f'**{emoji["hammer"]} {user} has been unbanned.**'
-        if reason:
-            desc += f'\nReason: *{reason}*'
+        await self._log(user, ctx.guild, 'unban', reason if reason else '')
 
-        embed = Embed(description=desc, color=0x2aa198)
+        embed = Embed(description=f'**{emoji["hammer"]} {user} has been unbanned.**', color=utils.Color.green)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <member>')
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unmute', usage='unmute <member> [reason]')
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def unmute(self, ctx, *, member: discord.Member):
-        '''Unmute a user.\n
-        **Example:```yml\n.unmute @Tau#4272\n.unmute 608367259123187741```**
+    async def unmute(self, ctx, member: discord.Member, *, reason: str = None):
+        '''Unmute a member.\n
+        **Example:```yml\n.unmute @Tau#4272\n.unmute 608367259123187741 Mistakenly muted```**
         '''
         await ctx.message.delete()
         
@@ -281,9 +389,35 @@ class Moderation(commands.Cog):
             task.cancel()
             del self.bot.mute_tasks[member.id, ctx.guild.id]
 
+        await self._log(member, ctx.guild, 'unmute', reason if reason else '')
+
         embed = Embed(description=f'**{emoji["sound"]} {member.mention} has been unmuted.**')
-        embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
         embed.timestamp = datetime.datetime.utcnow()
+
+        await ctx.send(embed=embed)
+    
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='warn', usage='warn <member> <reason>')
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def warn(self, ctx, member: discord.Member, *, reason: str):
+        '''Warn a member.\n
+        **Example:```yml\n.warn @Tau#4272 for being Tau```**
+        '''
+        await ctx.message.delete()
+
+        mod = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['mod_role'])
+        admin = ctx.guild.get_role(self.bot.guilds_[ctx.guild.id]['admin_role'])
+
+        if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
+            return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be warned.', delete_after=5)
+
+        await self._log(member, ctx.guild, 'warn', reason)
+
+        embed = Embed(description=f'**{emoji["warn"]} {member.mention} has been warned.**', color=utils.Color.gold)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 

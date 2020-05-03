@@ -23,7 +23,7 @@ class Utilities(commands.Cog):
         '''
         chan = chan if chan else ctx.channel
 
-        embed = Embed(color=0x88b3f8)
+        embed = Embed(color=utils.Color.sky)
         if chan.type == discord.ChannelType.text:
             nsfw = utils.emoji['on'] if chan.is_nsfw() else utils.emoji['off']
 
@@ -80,7 +80,7 @@ class Utilities(commands.Cog):
         info = (f'**`animated`** {anime}\n'
                 f'**`managed `** {man}')
 
-        embed = Embed(description=f'{emoji} **[{emoji.name}]({emoji.url})\n`{emoji}`**', color=0x88b3f8)
+        embed = Embed(description=f'{emoji} **[{emoji.name}]({emoji.url})\n`{emoji}`**', color=utils.Color.sky)
         embed.set_thumbnail(url=emoji.url)
         embed.add_field(name='Information', value=info)
         embed.set_footer(text=f'ID: {emoji.id}, created')
@@ -104,9 +104,9 @@ class Utilities(commands.Cog):
         '''Randomly generate an integer between a lower and upper bound.\n
         **Example:```yml\n.random 0 1\n.rng 1 10```**
         '''
-        colors = (0xff4e4e, 0xffa446, 0xffc049, 0x2aa198, 0x55b8f8, 0xc8aaff, 0xffadca)
+        rainbow = (0xff4e4e, 0xffa446, 0xffc049, 0x2aa198, 0x55b8f8, 0xc8aaff, 0xffadca)
 
-        embed = Embed(description=f'**You got {random.randint(lower, upper)}!**', color=random.choice(colors))
+        embed = Embed(description=f'**You got {random.randint(lower, upper)}!**', color=random.choice(rainbow))
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)

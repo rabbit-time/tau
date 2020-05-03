@@ -105,6 +105,7 @@ class Cache(aobject):
         
         self._records[index][key] = val
         if isinstance(val, str):
+            val = val.replace('\'', '\'\'')
             val = f'\'{val}\''
 
         if isinstance(index, Iterable):

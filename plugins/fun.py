@@ -19,14 +19,14 @@ class Fun(commands.Cog):
         Note that this contains network latency and Discord API latency.\n
         **Example:```yml\n.ping```**
         '''
-        embed = Embed(description='**Ping?**', color=0xfbb041)
+        embed = Embed(description='**Ping?**', color=utils.Color.gold)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         ping = await ctx.send(embed=embed)
 
         await asyncio.sleep(0.2)
 
-        embed.colour = 0x2aa198
+        embed.colour = utils.Color.green
         embed.description = '**Pong!**'
         embed.add_field(name='Latency', value=f'**{self.bot.latency*1000:.2f}**ms')
 
@@ -45,7 +45,7 @@ class Fun(commands.Cog):
         
         val = random.choices(range(2), k=n)
 
-        embed = Embed(description=f'**You got {["tails", "heads"][val[0]]}!**', color=0xfbb041)
+        embed = Embed(description=f'**You got {["tails", "heads"][val[0]]}!**', color=utils.Color.gold)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         if n == 1:
             embed.set_thumbnail(url='attachment://unknown.png')
@@ -75,7 +75,7 @@ class Fun(commands.Cog):
         
         val = random.choices(range(6), k=n)
 
-        embed = Embed(description=f'**You got {val[0]+1}!**', color=0xf94a4a)
+        embed = Embed(description=f'**You got {val[0]+1}!**', color=utils.Color.red)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         if n == 1:
             embed.set_thumbnail(url='attachment://unknown.png')

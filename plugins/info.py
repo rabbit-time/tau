@@ -11,6 +11,7 @@ from discord.ext import commands
 
 import config
 import perms
+import utils
 
 class Info(commands.Cog):
     def __init__(self, bot):
@@ -31,16 +32,14 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='accent', aliases=[], usage='accent [color]')
-    async def accent(self, ctx, *, color: discord.Color = None):
+    async def accent(self, ctx, *, color: discord.Color = discord.Color.from_rgb(136, 179, 248)):
         '''Modify accent in user profile.
         Leave `color` blank to reset to default\n
         **Example:```yml\n.accent #88b3f8```**
         '''
-        color = color if color else discord.Color.from_rgb(136, 179, 248)
-
         await self.bot.users_.update(ctx.author.id, 'accent', str(color))
 
-        desc = f'**```yml\n+ Accent has been set to {hex(color.value) if color.value != 0x88b3f8 else "default"}```**'
+        desc = f'**```yml\n+ Accent has been set to {hex(color.value) if color.value != utils.Color.sky else "default"}```**'
         embed = Embed(description=desc, color=color)
 
         await ctx.send(embed=embed)
@@ -55,7 +54,7 @@ class Info(commands.Cog):
 
         res = f'set to: {bio}' if bio else f'removed'
         desc = f'**```yml\n+ Bio has been {res}```**'
-        embed = Embed(description=desc, color=0x2aa198)
+        embed = Embed(description=desc, color=utils.Color.green)
 
         await ctx.send(embed=embed)
 

@@ -106,7 +106,8 @@ class Social(commands.Cog):
             xp = self.bot.users_[member.id]['xp']
             lvl = level(self.bot.users_[member.id]['xp'])
             accent = self.bot.users_[member.id]['accent']
-            font = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 250)
+            font = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 200)
+            font2 = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 250)
             bigfont = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 500)
 
             # Circular mask for avatar
@@ -140,8 +141,8 @@ class Social(commands.Cog):
             # and the other is the integer value.
             text = [
                 (252, rank), # Global rank
-                (632, xp), # XP
-                (1016, self.bot.users_[member.id]['tickets']) # Tickets
+                (624, xp), # XP
+                (978, self.bot.users_[member.id]['tickets']) # Tickets
             ]
             for y, val in text:
                 # Python has this neat trick to automatically interpolate
@@ -174,7 +175,7 @@ class Social(commands.Cog):
             x, _ = im.size
             w, h = font.getsize(msg)
             _, offset = font.getoffset(msg)
-            draw.text((x/2-w/2, 1465-h/2-offset/2), msg, font=font, fill=f'#ffffff')
+            draw.text((x/2-w/2, 1465-h/2-offset/2), msg, font=font2, fill=f'#ffffff')
 
             # Finalize by pasting the progress bar border
             # to prevent the corners of the rectangle

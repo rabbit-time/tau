@@ -126,6 +126,9 @@ async def init():
     bot.ranks = await Cache('ranks', 'guild_id', config.ranks_schema, config._def_rank)
     bot.stars = await Cache('stars', 'message_id', config.stars_schema, config._def_star)
     bot.reminders = await Cache('reminders', 'user_id, time', config.reminders_schema, config._def_reminder)
+    bot.rules = await Cache('rules', 'guild_id, index_', config.rules_schema, config._def_rule)
+    bot.modlog = await Cache('modlog', 'user_id, guild_id', config.modlog_schema, config._def_modlog)
+
     # Loads plugins and events
     files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file] 
     files += [f'events.{file[:-3]}' for file in os.listdir('events') if '__' not in file]

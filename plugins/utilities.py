@@ -144,15 +144,20 @@ class Utilities(commands.Cog):
         To resend a message from another channel, use a message link instead of an ID.\n
         **Example:```yml\n.resend 694890918645465138```**
         '''
-        await msg.delete()
-
         embed = None
         for e in msg.embeds:
             if e.type == 'rich':
                 embed = e
                 break
+        
+        files = []
+        for a in msg.attachments:
+            file = await a.to_file()
+            files.append(file)
 
-        await ctx.send(content=msg.content, embed=embed)
+        await msg.delete()
+        
+        await ctx.send(content=msg.content, files=files, embed=embed)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='role', aliases=[], usage='role <role>')
     async def role(self, ctx, *, role: discord.Role):

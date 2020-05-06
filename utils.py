@@ -66,6 +66,7 @@ class Color:
     green = 0x2aa198
     sky = 0x88b3f8
     red = 0xf94a4a
+    rainbow = (red, 0xffa446, 0xffc049, green, 0x55b8f8, 0xc8aaff, 0xffadca)
 
 class RoleNotFound(Exception):
     '''Exception: Role could not be found'''

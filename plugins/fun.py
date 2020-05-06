@@ -1,9 +1,9 @@
 import asyncio
-from math import isnan
 import random
 
 from discord import Embed, File
 from discord.ext import commands
+import requests
 
 import perms
 import utils
@@ -12,6 +12,66 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
+    def _img(self, ctx, path: str, name: str = None) -> Embed:
+        name = name if name else path.title()
+        res = requests.get(f'https://some-random-api.ml/img/{path}')
+        url = res.json()['link']
+        
+        embed = Embed(description=f':link: **[{name}]({url})**', color=random.choice(utils.Color.rainbow))
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        embed.set_image(url=url)
+
+        return embed
+
+    @commands.command(cls=perms.Lock, name='bird', aliases=[], usage='bird')
+    async def bird(self, ctx):
+        '''Get a random bird.\n
+        **Example:```yml\n.bird```**
+        '''
+        await ctx.send(embed=self._img(ctx, 'birb', 'Bird'))
+
+    @commands.command(cls=perms.Lock, name='cat', aliases=[], usage='cat')
+    async def cat(self, ctx):
+        '''Get a random cat.\n
+        **Example:```yml\n.cat```**
+        '''
+        await ctx.send(embed=self._img(ctx, 'cat'))
+
+    @commands.command(cls=perms.Lock, name='dog', aliases=[], usage='dog')
+    async def dog(self, ctx):
+        '''Get a random dog.\n
+        **Example:```yml\n.dog```**
+        '''
+        await ctx.send(embed=self._img(ctx, 'dog'))
+    
+    @commands.command(cls=perms.Lock, name='fox', aliases=[], usage='fox')
+    async def fox(self, ctx):
+        '''Get a random fox.\n
+        **Example:```yml\n.fox```**
+        '''
+        await ctx.send(embed=self._img(ctx, 'fox'))
+    
+    @commands.command(cls=perms.Lock, name='koala', aliases=[], usage='koala')
+    async def koala(self, ctx):
+        '''Get a random koala.\n
+        **Example:```yml\n.koala```**
+        '''
+        await ctx.send(embed=self._img(ctx, 'koala'))
+    
+    @commands.command(cls=perms.Lock, name='panda', aliases=[], usage='panda')
+    async def panda(self, ctx):
+        '''Get a random panda.\n
+        **Example:```yml\n.panda```**
+        '''
+        await ctx.send(embed=self._img(ctx, 'panda'))
+    
+    @commands.command(cls=perms.Lock, name='redpanda', aliases=[], usage='redpanda')
+    async def red_panda(self, ctx):
+        '''Get a random red panda.\n
+        **Example:```yml\n.redpanda```**
+        '''
+        await ctx.send(embed=self._img(ctx, 'red_panda', 'Red panda'))
+
     @commands.command(cls=perms.Lock, name='ping', aliases=['p'], usage='ping')
     async def ping(self, ctx):
         '''Pong!

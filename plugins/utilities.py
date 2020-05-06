@@ -104,9 +104,7 @@ class Utilities(commands.Cog):
         '''Randomly generate an integer between a lower and upper bound.\n
         **Example:```yml\n.random 0 1\n.rng 1 10```**
         '''
-        rainbow = (0xff4e4e, 0xffa446, 0xffc049, 0x2aa198, 0x55b8f8, 0xc8aaff, 0xffadca)
-
-        embed = Embed(description=f'**You got {random.randint(lower, upper)}!**', color=random.choice(rainbow))
+        embed = Embed(description=f'**You got {random.randint(lower, upper)}!**', color=random.choice(utils.Color.rainbow))
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)

@@ -2,6 +2,7 @@ from discord import Embed, File
 from discord.ext.commands import Command
 
 import config
+import utils
 
 levels = {
     'User': 'all users',
@@ -54,7 +55,7 @@ async def require(ctx):
         desc = (f'**Sorry, but you don\'t have permission to use this command.**\n\n'
         f'This command requires a permission level of **`{ctx.command.level}`**, whereas your level is only **`{level}`**. '
         f'If you think this is a mistake, please report it to my developers.')
-        embed = Embed(description=desc, color=0xff4e4e)
+        embed = Embed(description=desc, color=utils.Color.red)
         embed.add_field(name='Permission Levels', value=names)
         embed.set_footer(text=f'Pro tip! You can call {prefix}level at any time to check your perm level.', icon_url='attachment://unknown.png')
 

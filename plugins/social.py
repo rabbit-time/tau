@@ -65,13 +65,14 @@ class Social(commands.Cog):
         '''
         cur = await self.bot.con.execute('SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT 10')
         records = await cur.fetchall()
-        lb = ''
+        
+        embed = Embed(title='Leaderboard')
+        inline = False
         for i, record in enumerate(records):
             user_id, xp = record
             user = await self.bot.fetch_user(user_id)
-            lb += f'**{i+1}.** {user.name}#{user.discriminator} ー {xp} XP\n'
-
-        embed = Embed(title='Leaderboard', description=lb.strip('\n'))
+            embed.add_field(name=f'**{i+1}.** {user}', value=f'**```yml\nLevel: {level(xp)}\nXP: {xp}```**', inline=inline)
+            inline = True
 
         await ctx.send(embed=embed)
 

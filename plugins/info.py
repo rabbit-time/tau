@@ -8,10 +8,15 @@ import psutil
 import discord
 from discord import Embed, File
 from discord.ext import commands
+from discord.utils import find
 
 import config
 import perms
 import utils
+
+class Command(commands.Converter):
+    async def convert(self, ctx, arg):
+        return find(lambda cmd: cmd.name == arg or arg in cmd.aliases, ctx.bot.commands)
 
 class Info(commands.Cog):
     def __init__(self, bot):
@@ -59,43 +64,40 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, name='help', aliases=['cmd', 'h'], usage='help [command]')
-    async def help(self, ctx, cmd=None):
+    async def help(self, ctx, cmd: Command = None):
         '''Display the help message.
         When `command` is specified, more help on a command will be displayed.
         `command` can be the name of any command or any alias.\n
         **Example:```yml\n.help\n.h config```**
         '''
-        cogs = list(filter(lambda cog: not cog[0].startswith('On'), self.bot.cogs.items()))
-        cogs.sort(key=lambda cog: cog[0])
         if not cmd:
+            cogs = list(filter(lambda cog: not cog[0].startswith('On'), self.bot.cogs.items()))
+            cogs.sort(key=lambda cog: cog[0])
+            
             res = ''
             for cog in cogs:
                 cmds = cog[1].get_commands()
                 cmds.sort(key=lambda cmd: cmd.name)
-                cmds = ' '.join(f'**`{c.name}`**' for c in cmds)
-                res += f'**{cog[0]}**\n{cmds}\n\n'
+                cmds = ' '.join(f'`{c.name}`' for c in cmds)
+                res += f'{cog[0]}\n{cmds}\n\n'
 
-            desc = f'Here\'s a list of commands. For further detail, use **`help [command]`**.\n\n{res}'
+            desc = f'Here\'s a list of commands. For further detail, use **`help [command]`**.\n\n**{res}**'
             embed = Embed(description=desc)
             embed.set_footer(text='Pro tip! Parameters in angled brackets <> are required while parameters in square brackets [] are optional.', icon_url='attachment://unknown.png')
 
             await ctx.send(file=File('assets/info.png', 'unknown.png'), embed=embed)
         else:
-            for cog in cogs:
-                for c in cog[1].get_commands():
-                    if cmd == c.name or cmd in c.aliases:
-                        cmd = c
-                        prefix = self.bot.guilds_[ctx.guild.id]['prefix'] if ctx.guild else self.bot.guilds_.default['prefix']
-                        aliases = '*`Aliases: ' + ' | '.join(cmd.aliases) + '`*\n' if cmd.aliases else ''
-                        doc = cmd.help.replace(' '*8, '')
+            prefix = self.bot.guilds_[ctx.guild.id]['prefix'] if ctx.guild else self.bot.guilds_.default['prefix']
+            aliases = '*`Aliases: ' + ' | '.join(cmd.aliases) + '`*\n' if cmd.aliases else ''
+            doc = cmd.help.replace(' '*8, '')
 
-                        desc = f'**```asciidoc\n{prefix}{cmd.usage}```{aliases}**\n{doc}'
-                        if cmd.guild_only:
-                            desc = '*This command may only be used in servers* ' + desc
-                        embed = Embed(description=desc)
-                        embed.set_footer(text=f'Perm level: {cmd.level}')
-            
-                        return await ctx.send(embed=embed)
+            desc = f'**```asciidoc\n{prefix}{cmd.usage}```{aliases}**\n{doc}'
+            if cmd.guild_only:
+                desc = '*This command may only be used in servers* ' + desc
+            embed = Embed(description=desc)
+            embed.set_footer(text=f'Perm level: {cmd.level}')
+
+            return await ctx.send(embed=embed)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='level', aliases=['lvl'], usage='level [member]')
     async def level(self, ctx, *, member: discord.Member = None):

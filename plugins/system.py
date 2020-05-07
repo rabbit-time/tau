@@ -185,7 +185,7 @@ class System(commands.Cog):
                             else:
                                 raise asyncio.TimeoutError
                         else:
-                            val = 1 if not self.bot.guilds_[ctx.guild.id][key] else 0
+                            val = True if not self.bot.guilds_[ctx.guild.id][key] else False
                             await self.bot.guilds_.update(ctx.guild.id, key, val)
 
                             desc = build()

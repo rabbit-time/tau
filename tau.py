@@ -124,8 +124,11 @@ async def init():
     utils._def_role_menu, utils._def_rank, utils._def_star, utils._def_reminder,
     utils._def_rule, utils._def_modlog]
 
+    schemas = [utils.guilds_schema, utils.users_schema, utils.members_schema, utils.role_menus_schema, utils.ranks_schema,
+utils.stars_schema, utils.reminders_schema, utils.rules_schema, utils.modlog_schema, ]
+
     for table in tables:
-        schema = tables.index(table)
+        schema = schemas[tables.index(table)]
         await bot.con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
 
     pknum = [1, 1, 2, 2, 1, 1, 2, 2, 2]

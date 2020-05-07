@@ -1,12 +1,13 @@
 # Tau Copyright 2019-2020 The Apache Software Foundation
 
+import aiosqlite
 import asyncio
+import asyncpg
 import os
 import sys
 import time
 from collections.abc import Iterable
 
-import aiosqlite
 import discord
 from discord.ext import commands
 
@@ -51,14 +52,15 @@ class Cache(aobject):
         await bot.con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
         
         pknum = len(pk.split(', '))
-        cur = await bot.con.execute(f'SELECT * FROM {table}')
+        records = await bot.con.fetch(f'SELECT * FROM {table}')
+        
         cache = {}
-        records = await cur.fetchall()
         for record in records:
-            index = record[0] if pknum == 1 else record[:pknum]
-            cache[index] = {k: record[i+pknum] for i, k in enumerate(default.keys())}
-
-        await bot.con.commit()
+            pktup = tuple(pk.split(', '))
+            index = record[pk] if pknum == 1 else tuple(v for k, v in record.items() if k in pktup)
+            cache[index] = dict(record)
+            for key in pktup:
+                del cache[index][key]
 
         self.table = table
         self.pk = pk
@@ -81,11 +83,10 @@ class Cache(aobject):
         '''Deletes a record in the database and the cache.'''   
         del self._records[index]
         if isinstance(index, Iterable):
-            condition = self.pk.replace(', ', ' = ? AND ')
-            await bot.con.execute(f'DELETE FROM {self.table} WHERE {condition} = ?', index)
+            condition = ' AND '.join(f'{k} = ${i+1}' for i, k in enumerate(self.pk.split(', ')))
+            await bot.con.execute(f'DELETE FROM {self.table} WHERE {condition}', *index)
         else:
-            await bot.con.execute(f'DELETE FROM {self.table} WHERE {self.pk} = ?', (index,))
-        await bot.con.commit()
+            await bot.con.execute(f'DELETE FROM {self.table} WHERE {self.pk} = $1', index)
 
     async def insert(self, index: any):
         '''Creates a new record in the database and the cache.'''
@@ -93,10 +94,9 @@ class Cache(aobject):
 
         index = (index,) if not isinstance(index, tuple) else index
         val = index + tuple(self.default.values())
-        n = ('?, ' * (len(self.default)+len(index))).strip(', ')
+        n = ', '.join(f'${i+1}' for i in range(len(self.default)+len(index)))
         
-        await bot.con.execute(f'INSERT INTO {self.table} VALUES ({n})', tuple(val))
-        await bot.con.commit()
+        await bot.con.execute(f'INSERT INTO {self.table} VALUES ({n})', *tuple(val))
 
     async def update(self, index: any, key: any, val: any):
         '''Updates both the database and the cache. If the record does not exist, it will be created.'''
@@ -109,26 +109,60 @@ class Cache(aobject):
             val = f'\'{val}\''
 
         if isinstance(index, Iterable):
-            condition = self.pk.replace(', ', ' = ? AND ')
-            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {condition} = ?', index)
+            condition = ' AND '.join(f'{k} = ${i+1}' for i, k in enumerate(self.pk.split(', ')))
+            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {condition}', *index)
         else:
-            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = ?', (index,))
-        await bot.con.commit()
+            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = $1', index)
 
 async def init():
-    if not os.path.exists('srv'):
-        os.mkdir('srv')
-    bot.con = await aiosqlite.connect('srv/db.sqlite3')
+    bot.con = await asyncpg.connect(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
+    
+    tables = ['guilds', 'users', 'members', 'role_menus', 'ranks', 'stars', 
+    'reminders', 'rules', 'modlog']
 
-    bot.guilds_ = await Cache('guilds', 'guild_id', config.guilds_schema, config._def_guild)
-    bot.users_ = await Cache('users', 'user_id', config.users_schema, config._def_user)
-    bot.members = await Cache('members', 'user_id, guild_id', config.members_schema, config._def_member)
-    bot.rmenus = await Cache('role_menus', 'guild_id, message_id', config.role_menus_schema, config._def_role_menu)
-    bot.ranks = await Cache('ranks', 'guild_id', config.ranks_schema, config._def_rank)
-    bot.stars = await Cache('stars', 'message_id', config.stars_schema, config._def_star)
-    bot.reminders = await Cache('reminders', 'user_id, time', config.reminders_schema, config._def_reminder)
-    bot.rules = await Cache('rules', 'guild_id, index_', config.rules_schema, config._def_rule)
-    bot.modlog = await Cache('modlog', 'user_id, guild_id', config.modlog_schema, config._def_modlog)
+    defaults = [utils._def_guild, utils._def_user, utils._def_member, 
+    utils._def_role_menu, utils._def_rank, utils._def_star, utils._def_reminder,
+    utils._def_rule, utils._def_modlog]
+
+    for table in tables:
+        schema = tables.index(table)
+        await bot.con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
+
+    pknum = [1, 1, 2, 2, 1, 1, 2, 2, 2]
+
+    conn = await aiosqlite.connect('srv/db.sqlite3')
+
+    for table in tables:
+        cur = await conn.execute(f'SELECT * FROM {table}')
+        records = await cur.fetchall()
+
+        if not records:
+            continue
+
+        for i, record in enumerate(records):
+            for j, item in enumerate(record):
+                yes = pknum[tables.index(table)]
+                if j <= yes:
+                    continue
+
+                if isinstance(tuple(defaults[tables.index(table)].values())[j-yes], bool):
+                    if isinstance(records[i], tuple):
+                        records[i] = list(record)
+                    records[i][j] = True if records[i][j] == 1 else False
+
+        n = ', '.join(f'${i+1}' for i in range(len(records[0])))
+
+        await bot.con.executemany(f'INSERT INTO {table} VALUES ({n})', records)
+
+    bot.guilds_ = await Cache('guilds', 'guild_id', utils.guilds_schema, utils._def_guild)
+    bot.users_ = await Cache('users', 'user_id', utils.users_schema, utils._def_user)
+    bot.members = await Cache('members', 'user_id, guild_id', utils.members_schema, utils._def_member)
+    bot.rmenus = await Cache('role_menus', 'guild_id, message_id', utils.role_menus_schema, utils._def_role_menu)
+    bot.ranks = await Cache('ranks', 'guild_id', utils.ranks_schema, utils._def_rank)
+    bot.stars = await Cache('stars', 'message_id', utils.stars_schema, utils._def_star)
+    bot.reminders = await Cache('reminders', 'user_id, time', utils.reminders_schema, utils._def_reminder)
+    bot.rules = await Cache('rules', 'guild_id, index_', utils.rules_schema, utils._def_rule)
+    bot.modlog = await Cache('modlog', 'user_id, guild_id', utils.modlog_schema, utils._def_modlog)
 
     # Loads plugins and events
     files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file] 
@@ -136,6 +170,7 @@ async def init():
     for file in files:
         ccp.log('Loading', file)
         bot.load_extension(file)
+
     ccp.done()
 
 loop = asyncio.get_event_loop()                                                                                                                                                                                                                                       

@@ -63,15 +63,14 @@ class Social(commands.Cog):
         '''Display leaderboard.\n
         **Example:```yml\n.lb```**
         '''
-        cur = await self.bot.con.execute('SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT 10')
-        records = await cur.fetchall()
+        records = await self.bot.con.fetch('SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT 10')
         
         embed = Embed(title='Leaderboard')
         inline = False
         for i, record in enumerate(records):
-            user_id, xp = record
+            user_id, xp = record.values()
             user = await self.bot.fetch_user(user_id)
-            embed.add_field(name=f'**{i+1}.** {user}', value=f'**```yml\nLevel: {level(xp)}\nXP: {xp}```**', inline=inline)
+            embed.add_field(name=f'**{i+1}.** {escape_markdown(str(user))}', value=f'**```yml\nLevel: {level(xp)}\nXP: {xp}```**', inline=inline)
             inline = True
 
         await ctx.send(embed=embed)
@@ -128,13 +127,12 @@ class Social(commands.Cog):
             draw.text((594-w/2-xo/2, 930-h/2-yo/2), str(lvl), font=bigfont, fill=accent)
 
             # Fetch the rank of the member
-            cur = await self.bot.con.execute('SELECT user_id FROM users ORDER BY xp DESC')
-            rank = 1
-            while True:
-                uid = await cur.fetchone()
-                if uid[0] == member.id:
-                    break
-                rank += 1
+            async with self.bot.con.transaction():
+                rank = 1
+                async for record in self.bot.con.cursor('SELECT user_id FROM users ORDER BY xp DESC'):
+                    if record['user_id'] == member.id:
+                        break
+                    rank += 1
 
             # To iterate over the different texts, I decided to use a
             # list of 2-tuples where the first index is the value of

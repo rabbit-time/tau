@@ -234,3 +234,111 @@ async def before(ctx):
         for kw in list(ctx.kwargs.values()):
             if isinstance(kw, discord.Member) and not ctx.bot.users_.get(kw.id):
                 await ctx.bot.users_.insert(kw.id)
+
+# Default database values
+
+_def_guild = {
+    'prefix': '.',
+    'system_channel': 0,
+    'starboard_channel': 0,
+    'star_quantity': 3,
+    'welcome_message': 'Hi @mention, welcome to @guild!',
+    'goodbye_message': 'Bye @user!',
+    'welcome_messages': False,
+    'goodbye_messages': False,
+    'levelup_messages': False,
+    'autorole': 0,
+    'mod_role': 0,
+    'admin_role': 0,
+    'bind_role': 0
+}
+
+_def_user = {
+    'tickets': 200,
+    'xp': 0,
+    'accent': '#8bb3f8',
+    'bio': ''
+}
+
+_def_member = {
+    'xp': 0,
+    'muted': -1
+}
+
+_def_role_menu = {
+    'role_ids': ''
+}
+
+_def_rank = {
+    'role_ids': ''
+}
+
+_def_star = {
+    'star_id': 0
+}
+
+_def_reminder = {
+    'channel_id': 0,
+    'reminder': '',
+}
+
+_def_rule = {
+    'rule': ''
+}
+
+_def_modlog = {
+    'action': '',
+    'time': 0,
+    'reason': ''
+}
+
+guilds_schema = ('guild_id bigint PRIMARY KEY, '
+                 'prefix text, '
+                 'system_channel bigint, '
+                 'starboard_channel bigint, '
+                 'star_quantity smallint, '
+                 'welcome_message text, '
+                 'goodbye_message text, '
+                 'welcome_messages bool, '
+                 'goodbye_messages bool, '
+                 'levelup_messages bool, '
+                 'autorole bigint, '
+                 'mod_role bigint, '
+                 'admin_role bigint, '
+                 'bind_role bigint')
+
+users_schema = ('user_id bigint PRIMARY KEY, '
+                'tickets bigint, '
+                'xp bigint, '
+                'accent char(7), '
+                'bio text')
+    
+members_schema = ('user_id bigint, '
+                  'guild_id bigint, '
+                  'xp bigint, '
+                  'muted bigint')
+
+role_menus_schema = ('guild_id bigint, '
+                     'message_id bigint, '
+                     'role_ids text')
+
+ranks_schema = ('guild_id bigint PRIMARY KEY, '
+                'role_ids text')
+
+stars_schema = ('message_id bigint PRIMARY KEY, '
+                'star_id bigint')
+
+reminders_schema = ('user_id bigint, '
+                    'time bigint, '
+                    'channel_id bigint, '
+                    'reminder text')
+
+rules_schema = ('guild_id bigint, '
+                'index_ smallint, '
+                'rule text')
+
+modlog_schema = ('user_id bigint, '
+                 'guild_id bigint, '
+                 'action text, '
+                 'time bigint, '
+                 'reason text')

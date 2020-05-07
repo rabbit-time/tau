@@ -35,20 +35,21 @@ class OnReady(commands.Cog):
                 if guild.system_channel:
                    await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
 
-        cur = await self.bot.con.execute('SELECT user_id, guild_id, muted FROM members WHERE muted != -1')
-        records = await cur.fetchall()
-        for user_id, guild_id, muted in records:
+        records = await self.bot.con.fetch('SELECT user_id, guild_id, muted FROM members WHERE muted != -1')
+        for record in records:
+            user_id, guild_id, muted = record.values()
             self.bot.mute_tasks[user_id, guild_id] = self.bot.loop.create_task(automute(self.bot, user_id, guild_id, muted))
         
-        cur = await self.bot.con.execute('SELECT * FROM reminders')
-        records = await cur.fetchall()
-        for user_id, remind_time, channel_id, reminder in records:
+        records = await self.bot.con.fetch('SELECT * FROM reminders')
+        for record in records:
+            user_id, remind_time, channel_id, reminder = record.values()
             chan = self.bot.get_channel(channel_id)
-            member = chan.guild.get_member(user_id)
-            if chan and member:
-                self.bot.loop.create_task(utils.remind(self.bot, member, chan, reminder, remind_time))
-            else:
-                await self.bot.reminders.delete((user_id, remind_time))
+            if chan:
+                member = chan.guild.get_member(user_id)
+                if member:
+                    self.bot.loop.create_task(utils.remind(self.bot, member, chan, reminder, remind_time))
+                else:
+                    await self.bot.reminders.delete((user_id, remind_time))
 
 def setup(bot):
     bot.add_cog(OnReady(bot))

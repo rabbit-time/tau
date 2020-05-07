@@ -18,9 +18,8 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     async def _log(self, user: Union[discord.Member, discord.User], guild: discord.Guild, action: str, reason: str):
-        sql = 'INSERT INTO modlog VALUES (?, ?, ?, ?, ?)'
-        await self.bot.con.execute(sql, (user.id, guild.id, action, int(time.time()), reason))
-        await self.bot.con.commit()
+        sql = 'INSERT INTO modlog VALUES ($1, $2, $3, $4, $5)'
+        await self.bot.con.execute(sql, user.id, guild.id, action, int(time.time()), reason)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='ban', aliases=[], usage='ban <member> [reason]')
     @commands.bot_has_guild_permissions(ban_members=True)
@@ -110,6 +109,7 @@ class Moderation(commands.Cog):
             content += 's'
 
         embed = Embed(description=f'**```diff\n- {content}!```**', color=utils.Color.red)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         
         await ctx.send(embed=embed)
     
@@ -216,8 +216,8 @@ class Moderation(commands.Cog):
         Use `index` to view details on a log.\n
         **Example:```yml\n.record @Tau#4272```**
         '''
-        cur = await self.bot.con.execute('SELECT action, time, reason FROM modlog WHERE user_id = ? AND guild_id = ? ORDER BY time DESC', (member.id, ctx.guild.id))
-        records = await cur.fetchall()
+        query = 'SELECT action, time, reason FROM modlog WHERE user_id = $1 AND guild_id = $2 ORDER BY time DESC'
+        records = await self.bot.con.fetch(query, member.id, ctx.guild.id)
 
         plural = 's' if len(records) != 1 else ''
         embed = Embed(title=f'Mod record: {len(records)} result{plural}')
@@ -229,7 +229,7 @@ class Moderation(commands.Cog):
 
         if i != None:
             try:
-                action, time_, reason = records[i-1]
+                action, time_, reason = records[i-1].values()
             except IndexError:
                 return await ctx.send(f'{ctx.author.mention} Record with index `{i}` does not exist.`', delete_after=5)
 
@@ -244,7 +244,8 @@ class Moderation(commands.Cog):
         i = 1
         pages = []
         logs = []
-        for action, time_, _ in records:
+        for record in records:
+            action, time_, _ = record.values()
             align = ' ' if i < 10 else ''
             space = ' ' * (7-len(action))
             date = datetime.date.fromtimestamp(time_)

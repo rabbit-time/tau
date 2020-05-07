@@ -11,9 +11,9 @@ class OnGuildRemove(commands.Cog):
         ccp.event(f'{str(guild)} ({str(guild.owner)})', event='GUILD_REM')
 
         await self.bot.guilds_.delete(guild.id)
-        await self.bot.con.execute(f'DELETE FROM members WHERE guild_id = {guild.id}')
-        await self.bot.con.execute(f'DELETE FROM role_menus WHERE guild_id = {guild.id}')
-        await self.bot.con.execute(f'DELETE FROM ranks WHERE guild_id = {guild.id}')
+        await self.bot.con.execute('DELETE FROM members WHERE guild_id = $1', guild.id)
+        await self.bot.con.execute('DELETE FROM role_menus WHERE guild_id = $1', guild.id)
+        await self.bot.con.execute('DELETE FROM ranks WHERE guild_id = $1', guild.id)
 
         await self.bot.con.commit()
 

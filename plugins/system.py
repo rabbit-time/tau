@@ -257,7 +257,9 @@ class System(commands.Cog):
         '''
         rule = self.bot.rules.get((ctx.guild.id, index), {'rule': ''})
 
-        if not rule["rule"]:
+        print(self.bot.guilds_._records.items())
+
+        if not rule['rule']:
             return await ctx.send(f'{ctx.author.mention} Rule with index **`{index}`** could not be found.', delete_after=5)
 
         embed = Embed(title='Rules', description=f'**{index}.** {rule["rule"]}')
@@ -270,8 +272,7 @@ class System(commands.Cog):
         '''Display the rules.\n
         **Example:```yml\n.rules```**
         '''
-        cur = await self.bot.con.execute('SELECT index_, rule FROM rules WHERE guild_id = ? ORDER BY index_ ASC', (ctx.guild.id,))
-        rules = await cur.fetchall()
+        rules = await self.bot.con.fetch('SELECT index_, rule FROM rules WHERE guild_id = $1 ORDER BY index_ ASC', ctx.guild.id)
 
         if not rules:
             return await ctx.send(f'{ctx.author.mention} Rules have not been initialized.', delete_after=5)
@@ -317,7 +318,9 @@ class System(commands.Cog):
         '''Shut down the bot.\n
         **Example:```yml\n.shutdown\n.exit```**
         '''
-        await ctx.send('**`Shutting down...`**')
+        embed = Embed(description='**```diff\n- Shutting down...```**', color=utils.Color.red)
+
+        await ctx.send(embed=embed)
 
         await self.bot.con.close()
         await self.bot.close()

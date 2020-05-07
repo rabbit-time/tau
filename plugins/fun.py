@@ -12,6 +12,32 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
+    @commands.command(cls=perms.Lock, name='8ball', aliases=[], usage='8ball [question]')
+    async def _8ball(self, ctx, *, question: str = None):
+        '''Ask the Magic 8-Ball a question.\n
+        **Example:```yml\n.8ball is Tau cool?```**
+        '''
+        responses = ['It is certain.', 'It is decidedly so.', 'Without a doubt.', 
+            'Yes – definitely.', 'You may rely on it.', 'As I see it, yes.', 
+            'Most likely.', 'Outlook good.', 'Yes.', 'Signs point to yes.', 
+            'Reply hazy, try again.', 'Ask again later.', 'Better not tell you now.', 
+            'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.', 
+            'My reply is no.', 'My sources say no.', 'Outlook not so good.', 'Very doubtful.']
+
+        res = random.choice(responses)
+        i = responses.index(res)
+        if i < 10:
+            color = utils.Color.green
+        elif i < 15:
+            color = utils.Color.gold
+        else:
+            color = utils.Color.red
+
+        embed = Embed(title='Magic 8-Ball', description=f':8ball: **{res}**', color=color)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
+
     def _img(self, ctx, path: str, name: str = None) -> Embed:
         name = name if name else path.title()
         res = requests.get(f'https://some-random-api.ml/img/{path}')

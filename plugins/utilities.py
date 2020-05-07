@@ -64,6 +64,7 @@ class Utilities(commands.Cog):
         embed.add_field(name='CMYK', value=f'{c:.0%}, {m:.0%}, {y:.0%}, {k:.0%}')
         embed.add_field(name='HSL', value=f'{round(h)}°, {s:.0%}, {l:.0%}')
         embed.add_field(name='HSV', value=f'{round(h)}°, {s_:.0%}, {v:.0%}')
+        embed.add_field(name='\u200b', value='**[Color picker](https://www.google.com/search?q=color+picker)**', inline=False)
         embed.set_image(url='attachment://unknown.png')
 
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)

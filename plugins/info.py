@@ -1,7 +1,6 @@
 import asyncio
 import os
 import platform
-import re
 import time
 
 import psutil

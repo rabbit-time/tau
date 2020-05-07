@@ -1,6 +1,5 @@
 # Tau Copyright 2019-2020 The Apache Software Foundation
 
-import aiosqlite
 import asyncio
 import asyncpg
 import os
@@ -116,46 +115,6 @@ class Cache(aobject):
 
 async def init():
     bot.con = await asyncpg.connect(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
-    
-    tables = ['guilds', 'users', 'members', 'role_menus', 'ranks', 'stars', 
-    'reminders', 'rules', 'modlog']
-
-    defaults = [utils._def_guild, utils._def_user, utils._def_member, 
-    utils._def_role_menu, utils._def_rank, utils._def_star, utils._def_reminder,
-    utils._def_rule, utils._def_modlog]
-
-    schemas = [utils.guilds_schema, utils.users_schema, utils.members_schema, utils.role_menus_schema, utils.ranks_schema,
-utils.stars_schema, utils.reminders_schema, utils.rules_schema, utils.modlog_schema, ]
-
-    for table in tables:
-        schema = schemas[tables.index(table)]
-        await bot.con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
-
-    pknum = [1, 1, 2, 2, 1, 1, 2, 2, 2]
-
-    conn = await aiosqlite.connect('srv/db.sqlite3')
-
-    for table in tables:
-        cur = await conn.execute(f'SELECT * FROM {table}')
-        records = await cur.fetchall()
-
-        if not records:
-            continue
-
-        for i, record in enumerate(records):
-            for j, item in enumerate(record):
-                yes = pknum[tables.index(table)]
-                if j <= yes:
-                    continue
-
-                if isinstance(tuple(defaults[tables.index(table)].values())[j-yes], bool):
-                    if isinstance(records[i], tuple):
-                        records[i] = list(record)
-                    records[i][j] = True if records[i][j] == 1 else False
-
-        n = ', '.join(f'${i+1}' for i in range(len(records[0])))
-
-        await bot.con.executemany(f'INSERT INTO {table} VALUES ({n})', records)
 
     bot.guilds_ = await Cache('guilds', 'guild_id', utils.guilds_schema, utils._def_guild)
     bot.users_ = await Cache('users', 'user_id', utils.users_schema, utils._def_user)

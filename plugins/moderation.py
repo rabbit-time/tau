@@ -18,8 +18,9 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     async def _log(self, user: Union[discord.Member, discord.User], guild: discord.Guild, action: str, reason: str):
-        sql = 'INSERT INTO modlog VALUES ($1, $2, $3, $4, $5)'
-        await self.bot.con.execute(sql, user.id, guild.id, action, int(time.time()), reason)
+        async with self.bot.pool.acquire() as con:
+            sql = 'INSERT INTO modlog VALUES ($1, $2, $3, $4, $5)'
+            await con.execute(sql, user.id, guild.id, action, int(time.time()), reason)
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='ban', aliases=[], usage='ban <member> [reason]')
     @commands.bot_has_guild_permissions(ban_members=True)
@@ -216,8 +217,9 @@ class Moderation(commands.Cog):
         Use `index` to view details on a log.\n
         **Example:```yml\n.record @Tau#4272```**
         '''
-        query = 'SELECT action, time, reason FROM modlog WHERE user_id = $1 AND guild_id = $2 ORDER BY time DESC'
-        records = await self.bot.con.fetch(query, member.id, ctx.guild.id)
+        async with self.bot.pool.acquire() as con:
+            query = 'SELECT action, time, reason FROM modlog WHERE user_id = $1 AND guild_id = $2 ORDER BY time DESC'
+            records = await con.fetch(query, member.id, ctx.guild.id)
 
         plural = 's' if len(records) != 1 else ''
         embed = Embed(title=f'Mod record: {len(records)} result{plural}')

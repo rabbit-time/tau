@@ -186,7 +186,17 @@ class Social(commands.Cog):
 
             buffer.seek(0)
 
-        desc = f'{emoji[str(member.status)]} **{escape_markdown(member.display_name)}\n`{member}`**\n\n'
+        # decorators
+        dec = []
+        if member == ctx.guild.owner:
+            dec.append(emoji['owner'])
+
+        if member.premium_since:
+            dec.append(emoji['boost'])
+
+        dec = ' '.join(dec)
+
+        desc = f'{emoji[str(member.status)]} **{escape_markdown(member.display_name)} {dec}\n`{member}`**\n\n'
         if bio := self.bot.users_[member.id]["bio"]:
             desc += f'**```yml\n{bio}```**'
         

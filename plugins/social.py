@@ -63,7 +63,8 @@ class Social(commands.Cog):
         '''Display leaderboard.\n
         **Example:```yml\n.lb```**
         '''
-        records = await self.bot.con.fetch('SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT 10')
+        async with self.bot.pool.acquire() as con:
+            records = await con.fetch('SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT 10')
         
         embed = Embed(title='Leaderboard')
         inline = False
@@ -127,12 +128,13 @@ class Social(commands.Cog):
             draw.text((594-w/2-xo/2, 930-h/2-yo/2), str(lvl), font=bigfont, fill=accent)
 
             # Fetch the rank of the member
-            async with self.bot.con.transaction():
-                rank = 1
-                async for record in self.bot.con.cursor('SELECT user_id FROM users ORDER BY xp DESC'):
-                    if record['user_id'] == member.id:
-                        break
-                    rank += 1
+            async with self.bot.pool.acquire() as con:
+                async with con.transaction():
+                    rank = 1
+                    async for record in con.cursor('SELECT user_id FROM users ORDER BY xp DESC'):
+                        if record['user_id'] == member.id:
+                            break
+                        rank += 1
 
             # To iterate over the different texts, I decided to use a
             # list of 2-tuples where the first index is the value of

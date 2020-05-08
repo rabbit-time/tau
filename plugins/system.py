@@ -257,8 +257,6 @@ class System(commands.Cog):
         '''
         rule = self.bot.rules.get((ctx.guild.id, index), {'rule': ''})
 
-        print(self.bot.guilds_._records.items())
-
         if not rule['rule']:
             return await ctx.send(f'{ctx.author.mention} Rule with index **`{index}`** could not be found.', delete_after=5)
 
@@ -272,7 +270,8 @@ class System(commands.Cog):
         '''Display the rules.\n
         **Example:```yml\n.rules```**
         '''
-        rules = await self.bot.con.fetch('SELECT index_, rule FROM rules WHERE guild_id = $1 ORDER BY index_ ASC', ctx.guild.id)
+        async with self.bot.pool.acquire() as con:
+            rules = await con.fetch('SELECT index_, rule FROM rules WHERE guild_id = $1 ORDER BY index_ ASC', ctx.guild.id)
 
         if not rules:
             return await ctx.send(f'{ctx.author.mention} Rules have not been initialized.', delete_after=5)
@@ -322,7 +321,7 @@ class System(commands.Cog):
 
         await ctx.send(embed=embed)
 
-        await self.bot.con.close()
+        await self.bot.pool.close()
         await self.bot.close()
         os._exit(0)
 

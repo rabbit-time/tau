@@ -48,15 +48,14 @@ class aobject(object):
 
 class Cache(aobject):
     async def __init__(self, table: str, pk: str, schema: str, default: dict):
-        await bot.con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
-        
-        pknum = len(pk.split(', '))
-        records = await bot.con.fetch(f'SELECT * FROM {table}')
+        async with bot.pool.acquire() as con:
+            await con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
+            records = await con.fetch(f'SELECT * FROM {table}')
         
         cache = {}
         for record in records:
             pktup = tuple(pk.split(', '))
-            index = record[pk] if pknum == 1 else tuple(v for k, v in record.items() if k in pktup)
+            index = record[pk] if len(pk.split(', ')) == 1 else tuple(v for k, v in record.items() if k in pktup)
             cache[index] = dict(record)
             for key in pktup:
                 del cache[index][key]
@@ -81,11 +80,13 @@ class Cache(aobject):
     async def delete(self, index: any):
         '''Deletes a record in the database and the cache.'''   
         del self._records[index]
-        if isinstance(index, Iterable):
-            condition = ' AND '.join(f'{k} = ${i+1}' for i, k in enumerate(self.pk.split(', ')))
-            await bot.con.execute(f'DELETE FROM {self.table} WHERE {condition}', *index)
-        else:
-            await bot.con.execute(f'DELETE FROM {self.table} WHERE {self.pk} = $1', index)
+        
+        async with bot.pool.acquire() as con:
+            if isinstance(index, Iterable):
+                condition = ' AND '.join(f'{k} = ${i+1}' for i, k in enumerate(self.pk.split(', ')))
+                await con.execute(f'DELETE FROM {self.table} WHERE {condition}', *index)
+            else:
+                await con.execute(f'DELETE FROM {self.table} WHERE {self.pk} = $1', index)
 
     async def insert(self, index: any):
         '''Creates a new record in the database and the cache.'''
@@ -95,7 +96,8 @@ class Cache(aobject):
         val = index + tuple(self.default.values())
         n = ', '.join(f'${i+1}' for i in range(len(self.default)+len(index)))
         
-        await bot.con.execute(f'INSERT INTO {self.table} VALUES ({n})', *tuple(val))
+        async with bot.pool.acquire() as con:
+            await con.execute(f'INSERT INTO {self.table} VALUES ({n})', *tuple(val))
 
     async def update(self, index: any, key: any, val: any):
         '''Updates both the database and the cache. If the record does not exist, it will be created.'''
@@ -107,14 +109,15 @@ class Cache(aobject):
             val = val.replace('\'', '\'\'')
             val = f'\'{val}\''
 
-        if isinstance(index, Iterable):
-            condition = ' AND '.join(f'{k} = ${i+1}' for i, k in enumerate(self.pk.split(', ')))
-            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {condition}', *index)
-        else:
-            await bot.con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = $1', index)
+        async with bot.pool.acquire() as con:
+            if isinstance(index, Iterable):
+                condition = ' AND '.join(f'{k} = ${i+1}' for i, k in enumerate(self.pk.split(', ')))
+                await con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {condition}', *index)
+            else:
+                await con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = $1', index)
 
 async def init():
-    bot.con = await asyncpg.connect(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
+    bot.pool = await asyncpg.create_pool(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
 
     bot.guilds_ = await Cache('guilds', 'guild_id', utils.guilds_schema, utils._def_guild)
     bot.users_ = await Cache('users', 'user_id', utils.users_schema, utils._def_user)

@@ -38,14 +38,22 @@ class Moderation(commands.Cog):
         if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
             return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be banned.', delete_after=5)
 
+        embed = Embed(description=f'**{emoji["hammer"]} You have been banned by `{ctx.author}`.**', color=utils.Color.red)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
+
+        try:
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            pass
+
         await member.ban(reason=reason, delete_message_days=0)
 
         await self._log(member, ctx.guild, 'ban', reason if reason else '')
 
-        embed = Embed(description=f'**{emoji["hammer"]} {member} has been banned.**', color=utils.Color.red)
+        embed.description = f'**{emoji["hammer"]} {member} has been banned.**'
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        if reason:
-            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
@@ -130,14 +138,22 @@ class Moderation(commands.Cog):
         if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
             return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be kicked.', delete_after=5)
 
+        embed = Embed(description=f'**{emoji["hammer"]} You have been kicked by `{ctx.author}`.**', color=utils.Color.red)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
+        
+        try:
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            pass
+
         await member.kick(reason=reason)
 
         await self._log(member, ctx.guild, 'kick', reason if reason else '')
 
-        embed = Embed(description=f'**{emoji["hammer"]} {member} has been kicked.**', color=utils.Color.red)
+        embed.description = f'**{emoji["hammer"]} {member} has been kicked.**'
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        if reason:
-            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
@@ -193,9 +209,9 @@ class Moderation(commands.Cog):
         await self.bot.members.update((member.id, ctx.guild.id), 'muted', total)
 
         await self._log(member, ctx.guild, 'mute', reason if reason else '')
-        
-        embed = Embed(description=f'**{emoji["mute"]} {member.mention} has been muted.**')
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        embed = Embed(description=f'**{emoji["mute"]} You have been muted by `{ctx.author}`.**')
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
         if reason:
             embed.add_field(name='Reason', value=f'*{reason}*')
 
@@ -208,7 +224,15 @@ class Moderation(commands.Cog):
             embed.set_footer(text='Muted')
             embed.timestamp = datetime.datetime.utcnow()
 
-        await ctx.send(file=file, embed=embed)
+        try:
+            await member.send(file=file, embed=embed)
+        except discord.Forbidden:
+            pass
+
+        embed.description = f'**{emoji["mute"]} {member.mention} has been muted.**'
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(file=File('assets/clock.png', 'unknown.png') if file else None, embed=embed)
     
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='record', aliases=['history'], usage='record <member> [index]')
     @commands.bot_has_permissions(add_reactions=True, manage_messages=True, external_emojis=True)
@@ -330,15 +354,23 @@ class Moderation(commands.Cog):
         if mod in member.roles or admin in member.roles or member.id == ctx.guild.owner_id:
             return await ctx.send(f'{ctx.author.mention} Mods and admins cannot be banned.', delete_after=5)
 
+        embed = Embed(description=f'**{emoji["hammer"]} You have been softbanned by `{ctx.author}`.**', color=utils.Color.red)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+        if reason:
+            embed.add_field(name='Reason', value=f'*{reason}*')
+
+        try:
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            pass
+
         await member.ban(reason=reason, delete_message_days=7)
         await member.unban(reason=reason)
 
         await self._log(member, ctx.guild, 'softban', reason if reason else '')
 
-        embed = Embed(description=f'**{emoji["hammer"]} {member} has been softbanned.**', color=utils.Color.red)
+        embed.description = f'**{emoji["hammer"]} {member} has been softbanned.**'
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        if reason:
-            embed.add_field(name='Reason', value=f'*{reason}*')
 
         await ctx.send(embed=embed)
 
@@ -394,11 +426,19 @@ class Moderation(commands.Cog):
 
         await self._log(member, ctx.guild, 'unmute', reason if reason else '')
 
-        embed = Embed(description=f'**{emoji["sound"]} {member.mention} has been unmuted.**')
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        embed = Embed(description=f'**{emoji["sound"]} You have been unmuted by `{ctx.author}`.**')
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+        embed.timestamp = datetime.datetime.utcnow()
         if reason:
             embed.add_field(name='Reason', value=f'*{reason}*')
-        embed.timestamp = datetime.datetime.utcnow()
+
+        try:
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            pass
+
+        embed.description = f'**{emoji["sound"]} {member.mention} has been unmuted.**'
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)
     
@@ -418,9 +458,17 @@ class Moderation(commands.Cog):
 
         await self._log(member, ctx.guild, 'warn', reason)
 
-        embed = Embed(description=f'**{emoji["warn"]} {member.mention} has been warned.**', color=utils.Color.gold)
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        embed = Embed(description=f'**{emoji["warn"]} You have been warned by `{ctx.author}`.**', color=utils.Color.gold)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
         embed.add_field(name='Reason', value=f'*{reason}*')
+
+        try:
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            pass
+
+        embed.description = f'**{emoji["warn"]} {member.mention} has been warned.**'
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)
 

@@ -1,7 +1,11 @@
+import datetime
+
 import discord
+from discord import Embed, File
 from discord.ext import commands
 
 import ccp
+import utils
 
 class OnMemberRemove(commands.Cog):
     def __init__(self, bot):
@@ -22,9 +26,15 @@ class OnMemberRemove(commands.Cog):
             return
 
         cache = self.bot.guilds_
-        guild_id = member.guild.id
-        if cache[guild_id]['goodbye_messages'] and (chan := member.guild.get_channel(cache[guild_id]['system_channel'])):
-            await chan.send(cache[guild_id]['goodbye_message'].replace('@user', member.display_name).replace('@mention', member.mention).replace('@guild', member.guild.name))
+        guild = member.guild
+        if cache[guild.id]['goodbye_messages'] and (chan := member.guild.get_channel(cache[guild.id]['system_channel'])):
+            msg = cache[guild.id]['goodbye_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name)
+            embed = Embed(description=msg, color=utils.Color.red)
+            embed.set_author(name=member, icon_url=member.avatar_url)
+            embed.set_footer(text='Leave', icon_url='attachment://unknown.png')
+            embed.timestamp = datetime.datetime.utcnow()
+            
+            await chan.send(file=File('assets/leave.png', 'unknown.png'), embed=embed)
 
 def setup(bot):
     bot.add_cog(OnMemberRemove(bot))

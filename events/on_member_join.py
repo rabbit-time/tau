@@ -1,9 +1,11 @@
 import time
+import datetime
 
-from discord import Embed
+from discord import Embed, File
 from discord.ext import commands
 
 import ccp
+import utils
 
 class OnMemberJoin(commands.Cog):
     def __init__(self, bot):
@@ -19,7 +21,13 @@ class OnMemberJoin(commands.Cog):
         cache = self.bot.guilds_
         guild = member.guild
         if cache[guild.id]['welcome_messages'] and (chan := guild.get_channel(cache[guild.id]['system_channel'])):
-            await chan.send(cache[guild.id]['welcome_message'].replace('@user', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name))
+            msg = cache[guild.id]['welcome_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name)
+            embed = Embed(description=msg, color=utils.Color.green)
+            embed.set_author(name=member, icon_url=member.avatar_url)
+            embed.set_footer(text='Join', icon_url='attachment://unknown.png')
+            embed.timestamp = datetime.datetime.utcnow()
+            
+            await chan.send(file=File('assets/join.png', 'unknown.png'), embed=embed)
 
         if self.bot.members.get((member.id, guild.id)):
             muted = self.bot.members[member.id, guild.id]['muted']

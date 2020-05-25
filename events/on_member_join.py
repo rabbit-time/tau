@@ -31,9 +31,15 @@ class OnMemberJoin(commands.Cog):
 
         if self.bot.members.get((member.id, guild.id)):
             muted = self.bot.members[member.id, guild.id]['muted']
-            if muted > int(time.time()):
-                role = member.guild.get_role(self.bot.guilds_[guild.id]['bind_role'])
-                await member.add_roles(role)
+            if muted and muted > datetime.datetime.utcnow():
+                bind = member.guild.get_role(self.bot.guilds_[guild.id]['bind_role'])
+                if bind:
+                    await member.add_roles(bind)
+            else:
+                muted = None
+                async with self.bot.pool.acquire() as con:
+                    query = 'UPDATE members SET muted = $1 WHERE user_id = $2 AND guild_id = $3'
+                    await con.execute(query, None, member.id, guild.id)
 
         autorole = self.bot.guilds_[member.guild.id]['autorole']
         if role := guild.get_role(autorole):

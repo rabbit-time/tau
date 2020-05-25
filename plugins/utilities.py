@@ -117,21 +117,23 @@ class Utilities(commands.Cog):
         Reminders are capped at 6 months to prevent memory leaks.\n
         **Example:```yml\n.remind 2h clean room\n.remind 1h fix bugs```**
         '''
-        time_, delay = utils.parse_time(limit)
-        now = int(time.time())
+        time_, delta = utils.parse_time(limit)
+        now = datetime.datetime.utcnow()
 
         SEMIYEAR = 1555200
-        if delay > SEMIYEAR:
+        if delta.total_seconds() > SEMIYEAR:
             raise commands.BadArgument
         
-        await self.bot.reminders.update((ctx.author.id, delay+now), 'channel_id', ctx.channel.id)
-        await self.bot.reminders.update((ctx.author.id, delay+now), 'reminder', reminder)
-        self.bot.loop.create_task(utils.remind(self.bot, ctx.author, ctx.channel, reminder, delay+now))
+        timeout = now + delta
+        self.bot.loop.create_task(utils.remind(self.bot, ctx.author, ctx.channel, reminder, timeout))
+        async with self.bot.pool.acquire() as con:
+            query = 'INSERT INTO reminders VALUES ($1, $2, $3, $4)'
+            await con.execute(query, ctx.author.id, ctx.channel.id, timeout, reminder)
 
         embed = Embed(description=f'Reminder to **{reminder}** has been set for {time_}!')
-        embed.set_author(name=escape_markdown(ctx.author.display_name), icon_url=ctx.author.avatar_url)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         embed.set_footer(text=time_, icon_url='attachment://unknown.png')
-        embed.timestamp = datetime.datetime.fromtimestamp(delay+now).astimezone(tz=datetime.timezone.utc)
+        embed.timestamp = timeout
 
         await ctx.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
 

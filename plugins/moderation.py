@@ -183,30 +183,31 @@ class Moderation(commands.Cog):
 
         if not self.bot.members.get((member.id, ctx.guild.id)):
             await self.bot.members.insert((member.id, ctx.guild.id))
-        elif self.bot.members[member.id, ctx.guild.id]['muted'] != -1:
+        elif self.bot.members[member.id, ctx.guild.id]['muted']:
             return await ctx.send(f'**{member.display_name}** has already been muted.', delete_after=5)
 
         try:
-            time_, delay = utils.parse_time(limit)
+            time_, delta = utils.parse_time(limit)
         except:
-            delay = None
+            delta = None
 
-        if delay:
+        now = datetime.datetime.utcnow()
+        if delta:
             SEMIYEAR = 1555200
-            if delay > SEMIYEAR:
+            if delta.total_seconds() > SEMIYEAR:
                 raise commands.BadArgument
 
-            total = delay + int(time.time())
-            self.bot.mute_tasks[member.id, ctx.guild.id] = self.bot.loop.create_task(automute(self.bot, member.id, ctx.guild.id, total))
+            timeout = now + delta
+            self.bot.mute_tasks[member.id, ctx.guild.id] = self.bot.loop.create_task(automute(self.bot, member.id, ctx.guild.id, timeout))
         else:
-            total = 0
+            timeout = now
             if reason:
                 reason = f'{limit} {reason}'
             elif limit:
                 reason = limit
-
+        
         await member.add_roles(bind, reason=reason)
-        await self.bot.members.update((member.id, ctx.guild.id), 'muted', total)
+        await self.bot.members.update((member.id, ctx.guild.id), 'muted', str(timeout))
 
         await self._log(member, ctx.guild, 'mute', reason if reason else '')
 
@@ -215,10 +216,10 @@ class Moderation(commands.Cog):
         if reason:
             embed.add_field(name='Reason', value=f'*{reason}*')
 
-        if total != 0:
+        if timeout != now:
             file = File('assets/clock.png', 'unknown.png')
             embed.set_footer(text=time_, icon_url='attachment://unknown.png')
-            embed.timestamp = datetime.datetime.fromtimestamp(total).astimezone(tz=datetime.timezone.utc)
+            embed.timestamp = timeout
         else:
             file = None
             embed.set_footer(text='Muted')
@@ -413,18 +414,23 @@ class Moderation(commands.Cog):
         if member == ctx.author or member.bot:
             return
 
-        if not self.bot.members.get((member.id, ctx.guild.id)) or self.bot.members[member.id, ctx.guild.id]['muted'] == -1:
+        if not self.bot.members.get((member.id, ctx.guild.id)):
+            await self.bot.members.insert((member.id, ctx.guild.id))
+        elif not self.bot.members[member.id, ctx.guild.id]['muted']:
             return await ctx.send(f'**{member.display_name}** has not been muted.', delete_after=5)
 
         bind = findrole(self.bot.guilds_[ctx.guild.id]['bind_role'], ctx.guild)
         await member.remove_roles(bind)
 
-        await self.bot.members.update((member.id, ctx.guild.id), 'muted', -1)
         if task := self.bot.mute_tasks.get((member.id, ctx.guild.id)):
             task.cancel()
             del self.bot.mute_tasks[member.id, ctx.guild.id]
 
         await self._log(member, ctx.guild, 'unmute', reason if reason else '')
+        self.bot.members[member.id, ctx.guild.id]['muted'] = None
+        async with self.bot.pool.acquire() as con:
+            query = 'UPDATE members SET muted = $1 WHERE user_id = $2 AND guild_id = $3'
+            await con.execute(query, None, member.id, ctx.guild.id)
 
         embed = Embed(description=f'**{emoji["sound"]} You have been unmuted by `{ctx.author}`.**')
         embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)

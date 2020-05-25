@@ -177,45 +177,46 @@ def findrole(id, guild):
     return role
 
 def parse_time(text):
-    units = {
-        'm': 60,
-        'h': 3600,
-        'd': 86400
-    }
-
-    time_= ''
+    time_ = ''
     for char in text:
-        if char in units.keys() or char.isdigit():
+        if char in 'mhd' or char.isdigit():
             time_ += char
 
     try:
-        limit = int(time_[:-1])
-        unit = units[time_[-1]]
+        delay = int(time_[:-1])
+        unit = time_[-1]
     except:
         raise commands.BadArgument
 
-    limit *= unit
+    if unit == 'm':
+        delta = datetime.timedelta(minutes=delay)
+    if unit == 'h':
+        delta = datetime.timedelta(hours=delay)
+    if unit == 'd':
+        delta = datetime.timedelta(days=delay)
 
-    return time_, limit
+    return time_, delta
         
-async def remind(bot, user, channel, reminder, remind_time):
-    now = int(time.time())
-    delay = remind_time - now if remind_time > now else 0
-    await asyncio.sleep(delay)
+async def remind(bot, user, channel, reminder, timeout):
+    now = datetime.datetime.utcnow()
+    Δ = (timeout-now).total_seconds()
+    await asyncio.sleep(Δ)
 
     embed = Embed(description=f'Remember to **{reminder}**!')
     embed.set_author(name=escape_markdown(user.display_name), icon_url=user.avatar_url)
     embed.set_footer(text='Time\'s up!', icon_url='attachment://unknown.png')
-    embed.timestamp = datetime.datetime.utcnow()
+    embed.timestamp = now
 
     await channel.send(f'Hey {user.mention}!', file=File('assets/clock.png', 'unknown.png'), embed=embed)
 
-    await bot.reminders.delete((user.id, remind_time))
+    async with bot.pool.acquire() as con:
+        query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
+        await con.execute(query, user.id, channel.id, timeout, reminder)
 
-async def automute(bot, user_id, guild_id, unmute_time):
-    now = int(time.time())
-    delay = unmute_time - now if unmute_time > now else 0
-    await asyncio.sleep(delay)
+async def automute(bot, user_id, guild_id, timeout: datetime):
+    now = datetime.datetime.utcnow()
+    Δ = (timeout-now).total_seconds()
+    await asyncio.sleep(Δ)
 
     guild = bot.get_guild(guild_id)
     if guild:
@@ -224,8 +225,11 @@ async def automute(bot, user_id, guild_id, unmute_time):
         if member and bind:
             await member.remove_roles(bind)
 
-    await bot.members.update((user_id, guild_id), 'muted', -1)
     del bot.mute_tasks[user_id, guild_id]
+    bot.members[user_id, guild_id]['muted'] = None
+    async with bot.pool.acquire() as con:
+        query = 'UPDATE members SET muted = $1 WHERE user_id = $2 AND guild_id = $3'
+        await con.execute(query, None, user_id, guild_id)
 
 async def before(ctx):
     if not ctx.bot.users_.get(ctx.author.id):
@@ -263,7 +267,7 @@ _def_user = {
 
 _def_member = {
     'xp': 0,
-    'muted': -1
+    'muted': None
 }
 
 _def_role_menu = {
@@ -317,7 +321,7 @@ users_schema = ('user_id bigint PRIMARY KEY, '
 members_schema = ('user_id bigint, '
                   'guild_id bigint, '
                   'xp bigint, '
-                  'muted bigint')
+                  'muted timestamp')
 
 role_menus_schema = ('guild_id bigint, '
                      'message_id bigint, '
@@ -330,8 +334,8 @@ stars_schema = ('message_id bigint PRIMARY KEY, '
                 'star_id bigint')
 
 reminders_schema = ('user_id bigint, '
-                    'time bigint, '
                     'channel_id bigint, '
+                    'time timestamp, '
                     'reminder text')
 
 rules_schema = ('guild_id bigint, '

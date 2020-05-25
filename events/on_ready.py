@@ -36,19 +36,20 @@ class OnReady(commands.Cog):
                    await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
 
         async with self.bot.pool.acquire() as con:
-            records = await con.fetch('SELECT user_id, guild_id, muted FROM members WHERE muted != -1')
+            records = await con.fetch('SELECT user_id, guild_id, muted FROM members WHERE muted IS NOT NULL')
             for user_id, guild_id, muted in records:
                 self.bot.mute_tasks[user_id, guild_id] = self.bot.loop.create_task(automute(self.bot, user_id, guild_id, muted))
             
             records = await con.fetch('SELECT * FROM reminders')
-            for user_id, remind_time, channel_id, reminder in records:
+            for user_id, channel_id, timeout, reminder in records:
                 chan = self.bot.get_channel(channel_id)
                 if chan:
                     member = chan.guild.get_member(user_id)
                     if member:
-                        self.bot.loop.create_task(utils.remind(self.bot, member, chan, reminder, remind_time))
+                        self.bot.loop.create_task(utils.remind(self.bot, member, chan, reminder, timeout))
                     else:
-                        await self.bot.reminders.delete((user_id, remind_time))
+                        query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
+                        await con.execute(query, user_id, channel_id, timeout, reminder)
 
 def setup(bot):
     bot.add_cog(OnReady(bot))

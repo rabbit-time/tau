@@ -70,7 +70,7 @@ class Info(commands.Cog):
         **Example:```yml\n.help\n.h config```**
         '''
         if not cmd:
-            cogs = list(filter(lambda cog: not cog[0].startswith('On'), self.bot.cogs.items()))
+            cogs = list(filter(lambda cog: cog[1].get_commands(), self.bot.cogs.items()))
             cogs.sort(key=lambda cog: cog[0])
             
             res = ''

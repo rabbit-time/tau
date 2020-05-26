@@ -252,6 +252,7 @@ _def_guild = {
     'welcome_messages': False,
     'goodbye_messages': False,
     'levelup_messages': False,
+    'automod': False,
     'autorole': 0,
     'mod_role': 0,
     'admin_role': 0,

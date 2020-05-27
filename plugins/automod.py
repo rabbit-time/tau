@@ -33,7 +33,7 @@ class Automod(commands.Cog):
             mod = guild.get_role(self.bot.guilds_[guild.id]['mod_role'])
             admin = guild.get_role(self.bot.guilds_[guild.id]['admin_role'])
 
-            if not bind or mod in member.roles or admin in member.roles:
+            if not bind or mod in member.roles or admin in member.roles or member.id == guild.owner_id:
                 return
 
             await msg.delete()

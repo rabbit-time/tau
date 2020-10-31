@@ -19,7 +19,12 @@ import perms
 if sys.version_info[0] < 3 or sys.version_info[1] < 8: 
     raise Exception('Python 3.8.0 or higher is required')
 
-bot = commands.Bot(command_prefix=lambda bot, msg: bot.guilds_[msg.guild.id]['prefix'] if msg.guild else bot.guilds_.default['prefix'], help_command=None)
+intents = discord.Intents.default()
+intents.members = True
+intents.reactions = True
+intents.presences = True
+
+bot = commands.Bot(command_prefix=lambda bot, msg: bot.guilds_[msg.guild.id]['prefix'] if msg.guild else bot.guilds_.default['prefix'], help_command=None, intents=intents)
 
 bot.mute_tasks = {}
 bot.suppressed = {}

@@ -252,11 +252,11 @@ _def_guild = {
     'welcome_messages': False,
     'goodbye_messages': False,
     'levelup_messages': False,
-    'automod': False,
     'autorole': 0,
     'mod_role': 0,
     'admin_role': 0,
-    'bind_role': 0
+    'bind_role': 0,
+    'automod': False
 }
 
 _def_user = {
@@ -311,7 +311,8 @@ guilds_schema = ('guild_id bigint PRIMARY KEY, '
                  'autorole bigint, '
                  'mod_role bigint, '
                  'admin_role bigint, '
-                 'bind_role bigint')
+                 'bind_role bigint, '
+                 'automod bool')
 
 users_schema = ('user_id bigint PRIMARY KEY, '
                 'tickets bigint, '

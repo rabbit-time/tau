@@ -448,6 +448,62 @@ class Moderation(commands.Cog):
 
         await ctx.send(embed=embed)
     
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='unverify', usage='unverify <member>')
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def unverify(self, ctx, member: discord.Member):
+        '''Unverify a member.\n
+        **Example:```yml\n.unverify @Tau#4272```**
+        '''
+        await ctx.message.delete()
+
+        vrole = findrole(self.bot.guilds_[ctx.guild.id]['verify_role'], ctx.guild)
+        if vrole not in member.roles:
+            return await ctx.send(f'{ctx.author.mention} This member is not verified.', delete_after=5)
+
+        await member.remove_roles(vrole)
+
+        embed = Embed(description=f'**:x: You have been unverified by `{ctx.author}`.**', color=utils.Color.red)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+
+        try:
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            pass
+
+        embed.description = f'**:x: {member.mention} has been unverified.**'
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='verify', usage='verify <member>')
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def verify(self, ctx, member: discord.Member):
+        '''Verify a member.\n
+        **Example:```yml\n.verify @Tau#4272```**
+        '''
+        await ctx.message.delete()
+
+        vrole = findrole(self.bot.guilds_[ctx.guild.id]['verify_role'], ctx.guild)
+        if vrole in member.roles:
+            return await ctx.send(f'{ctx.author.mention} This member has already been verified.', delete_after=5)
+
+        await member.add_roles(vrole)
+
+        embed = Embed(description=f'**{emoji["verify"]} You have been verified by `{ctx.author}`.**', color=utils.Color.green)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon_url)
+
+        try:
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            pass
+
+        embed.description = f'**{emoji["verify"]} {member.mention} has been verified.**'
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
+
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='warn', usage='warn <member> <reason>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def warn(self, ctx, member: discord.Member, *, reason: str):

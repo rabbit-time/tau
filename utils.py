@@ -45,6 +45,7 @@ emoji = {
     'next': '<:next:706610889188573194>',
     'end': '<:end:706610923346853938>',
     'stop': '<:stop:706610934763749426>',
+    'verify': '<:verify:774740234998644777>',
     1: '<:01:683462884625481802>',
     2: '<:02:683462884650516492>',
     3: '<:03:683462884378148865>',
@@ -64,7 +65,7 @@ emoji = {
 
 class Color:
     gold = 0xfbb041
-    green = 0x2aa198
+    green = 0x57c998
     sky = 0x88b3f8
     red = 0xf94a4a
     rainbow = (red, 0xffa446, 0xffc049, green, 0x55b8f8, 0xc8aaff, 0xffadca)
@@ -256,7 +257,8 @@ _def_guild = {
     'mod_role': 0,
     'admin_role': 0,
     'bind_role': 0,
-    'automod': False
+    'automod': False,
+    'verify_role': 0
 }
 
 _def_user = {
@@ -312,7 +314,8 @@ guilds_schema = ('guild_id bigint PRIMARY KEY, '
                  'mod_role bigint, '
                  'admin_role bigint, '
                  'bind_role bigint, '
-                 'automod bool')
+                 'automod bool, '
+                 'verify_role bigint')
 
 users_schema = ('user_id bigint PRIMARY KEY, '
                 'tickets bigint, '

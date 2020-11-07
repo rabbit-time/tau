@@ -40,7 +40,7 @@ class OnRawReactionAdd(commands.Cog):
                         stars += reaction.count
 
                 embed = Embed(description=msg.content, color=0xffc20c)
-                embed.set_author(name=escape_markdown(msg.author.display_name), icon_url=msg.author.avatar_url)
+                embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
                 embed.add_field(name='Source', value=f'**[Jump!]({msg.jump_url})**')
                 if msg.attachments:
                     file = msg.attachments[0]

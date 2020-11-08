@@ -7,7 +7,6 @@ from typing import Union
 import discord
 from discord import Embed, File, Object, PermissionOverwrite
 from discord.ext import commands
-from discord.utils import escape_markdown
 
 import perms
 import utils
@@ -21,6 +20,13 @@ class Moderation(commands.Cog):
         async with self.bot.pool.acquire() as con:
             sql = 'INSERT INTO modlog VALUES ($1, $2, $3, $4, $5)'
             await con.execute(sql, user.id, guild.id, action, int(time.time()), reason)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        async with self.bot.pool.acquire() as con:
+            records = await con.fetch('SELECT user_id, guild_id, muted FROM members WHERE muted IS NOT NULL')
+            for user_id, guild_id, muted in records:
+                self.bot.mute_tasks[user_id, guild_id] = self.bot.loop.create_task(automute(self.bot, user_id, guild_id, muted))
 
     @commands.command(cls=perms.Lock, level=1, guild_only=True, name='ban', aliases=[], usage='ban <member> [reason]')
     @commands.bot_has_guild_permissions(ban_members=True)

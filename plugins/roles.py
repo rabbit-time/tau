@@ -12,6 +12,87 @@ import utils
 class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self._cd = commands.CooldownMapping.from_cooldown(10, 120.0, commands.BucketType.user)
+    
+    async def get_role(self, member, guild, payload):
+        emojis = tuple(utils.emoji.values())
+        emoji = str(payload.emoji)
+        if not self.bot.rmenus.get((guild.id, payload.message_id)) or member.bot or emoji not in emojis:
+            return
+        
+        i = tuple(utils.emoji.keys())[emojis.index(emoji)] - 1
+        role_ids = self.bot.rmenus[guild.id, payload.message_id]['role_ids'].split()
+        
+        return guild.get_role(int(role_ids[i]))
+
+    @commands.Cog.listener()
+    async def on_message(self, msg):
+        member = msg.author
+        uid = member.id
+        guild = msg.guild
+        chan = msg.channel
+
+        if member.bot or not guild:
+            return
+
+        # Rank roles 
+        if not self.bot.members.get((uid, guild.id)):
+            await self.bot.members.insert((uid, guild.id))
+
+        if self.bot.ranks.get(guild.id) and (role_ids := self.bot.ranks[guild.id]['role_ids']):
+            bucket = self._cd.get_bucket(msg)
+            limited = bucket.update_rate_limit()
+            if not limited:
+                xp = self.bot.members[uid, msg.guild.id]['xp'] + 1
+                await self.bot.members.update((uid, guild.id), 'xp', xp)
+
+                req = [0, 250, 1000, 2500, 5000, 10000]
+                role_ids = role_ids.split()
+                roles = [guild.get_role(int(id)) for id in role_ids]
+                if None in roles:
+                    return await self.bot.ranks.update(guild.id, 'role_ids', '')
+                
+                for i in range(len(roles)-1, -1, -1):
+                    if xp < req[i]:
+                        continue
+                    
+                    rank = roles.pop(i)
+                    for role in roles:
+                        if role in member.roles:
+                            await member.remove_roles(role)
+                    
+                    if xp == req[i]:
+                        desc = f'**```yml\n{member.display_name} has ranked up to {rank}!```**'
+                        embed = Embed(description=desc, color=0x2aa198)
+                        await chan.send(embed=embed)
+
+                    if rank not in member.roles:        
+                        await member.add_roles(rank)
+                        
+                    break
+    
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload):
+        if self.bot.rmenus.get((payload.guild_id, payload.message_id)):
+            await self.bot.rmenus.delete((payload.guild_id, payload.message_id))
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        member = payload.member
+        guild = member.guild
+        
+        role = self.get_role(member, guild, payload)
+        if role:
+            await member.add_roles(role)
+    
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload):
+        guild = self.bot.get_guild(payload.guild_id)
+        member = guild.get_member(payload.user_id)
+
+        role = self.get_role(member, guild, payload)
+        if role:
+            await member.remove_roles(role)
 
     @commands.command(cls=perms.Lock, level=2, guild_only=True, name='rolemenu', aliases=['rmenu'], usage='rolemenu <title> | <color> | <*roles>')
     @commands.bot_has_guild_permissions(manage_roles=True)

@@ -197,22 +197,6 @@ def parse_time(text):
         delta = datetime.timedelta(days=delay)
 
     return time_, delta
-        
-async def remind(bot, user, channel, reminder, timeout):
-    now = datetime.datetime.utcnow()
-    Δ = (timeout-now).total_seconds()
-    await asyncio.sleep(Δ)
-
-    embed = Embed(description=f'Remember to **{reminder}**!')
-    embed.set_author(name=escape_markdown(user.display_name), icon_url=user.avatar_url)
-    embed.set_footer(text='Time\'s up!', icon_url='attachment://unknown.png')
-    embed.timestamp = now
-
-    await channel.send(f'Hey {user.mention}!', file=File('assets/clock.png', 'unknown.png'), embed=embed)
-
-    async with bot.pool.acquire() as con:
-        query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
-        await con.execute(query, user.id, channel.id, timeout, reminder)
 
 async def automute(bot, user_id, guild_id, timeout: datetime):
     now = datetime.datetime.utcnow()

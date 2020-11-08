@@ -29,7 +29,6 @@ bot = commands.Bot(command_prefix=lambda bot, msg: bot.guilds_[msg.guild.id]['pr
 bot.mute_tasks = {}
 bot.suppressed = {}
 bot.start_time = time.time()
-bot.boot = True
 
 bot.add_check(perms.require, call_once=True)
 bot.add_check(lambda ctx: ctx.author not in bot.suppressed.keys() or bot.suppressed.get(ctx.author) != ctx.channel, call_once=True)

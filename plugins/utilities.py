@@ -1,3 +1,4 @@
+import asyncio
 import time
 import datetime
 import random
@@ -6,7 +7,6 @@ from typing import Union
 import discord
 from discord import Embed, File
 from discord.ext import commands
-from discord.utils import escape_markdown
 
 import perms
 import utils
@@ -14,6 +14,36 @@ import utils
 class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    async def _remind(self, user, channel, reminder, timeout):
+        now = datetime.datetime.utcnow()
+        Δ = (timeout-now).total_seconds()
+        await asyncio.sleep(Δ)
+
+        embed = Embed(description=f'Remember to **{reminder}**!')
+        embed.set_author(name=user.display_name, icon_url=user.avatar_url)
+        embed.set_footer(text='Time\'s up!', icon_url='attachment://unknown.png')
+        embed.timestamp = now
+
+        await channel.send(f'Hey {user.mention}!', file=File('assets/clock.png', 'unknown.png'), embed=embed)
+
+        async with self.bot.pool.acquire() as con:
+            query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
+            await con.execute(query, user.id, channel.id, timeout, reminder)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        async with self.bot.pool.acquire() as con:
+            records = await con.fetch('SELECT * FROM reminders')
+            for user_id, channel_id, timeout, reminder in records:
+                chan = self.bot.get_channel(channel_id)
+                if chan:
+                    member = chan.guild.get_member(user_id)
+                    if member:
+                        self.bot.loop.create_task(self._remind(member, chan, reminder, timeout))
+                    else:
+                        query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
+                        await con.execute(query, user_id, channel_id, timeout, reminder)
 
     @commands.command(cls=perms.Lock, guild_only=True, name='channel', aliases=['chan'], usage='channel <channel>')
     @commands.bot_has_permissions(external_emojis=True)
@@ -125,7 +155,7 @@ class Utilities(commands.Cog):
             raise commands.BadArgument
         
         timeout = now + delta
-        self.bot.loop.create_task(utils.remind(self.bot, ctx.author, ctx.channel, reminder, timeout))
+        self.bot.loop.create_task(self._remind(ctx.author, ctx.channel, reminder, timeout))
         async with self.bot.pool.acquire() as con:
             query = 'INSERT INTO reminders VALUES ($1, $2, $3, $4)'
             await con.execute(query, ctx.author.id, ctx.channel.id, timeout, reminder)

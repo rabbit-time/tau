@@ -57,7 +57,7 @@ class Utilities(commands.Cog):
         if chan.type == discord.ChannelType.text:
             nsfw = utils.emoji['on'] if chan.is_nsfw() else utils.emoji['off']
 
-            url = f'https://discordapp.com/channels/{ctx.guild.id}/{chan.id}/'
+            url = f'https://discord.com/channels/{ctx.guild.id}/{chan.id}/'
             desc = (f'{utils.emoji["#"]} **[{chan}]({url})**\n\n'
                     f'**`nsfw    `** {nsfw}\n'
                     f'**`category` {chan.category}**\n'

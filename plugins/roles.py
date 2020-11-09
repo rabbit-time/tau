@@ -14,7 +14,7 @@ class Roles(commands.Cog):
         self.bot = bot
         self._cd = commands.CooldownMapping.from_cooldown(10, 120.0, commands.BucketType.user)
     
-    async def get_role(self, member, guild, payload):
+    def get_role(self, member, guild, payload):
         emojis = tuple(utils.emoji.values())
         emoji = str(payload.emoji)
         if not self.bot.rmenus.get((guild.id, payload.message_id)) or member.bot or emoji not in emojis:

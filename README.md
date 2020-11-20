@@ -2,6 +2,8 @@
 
 A general purpose Discord bot and a personal passion project of mine.
 
++ **[Add it to my server!](https://discord.com/oauth2/authorize?client_id=686114265362726925&scope=bot&permissions=8)**
+
 ## Features
 
 + Server management

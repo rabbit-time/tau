@@ -1,0 +1,5 @@
+asyncpg>=0.12.0
+discord.py
+Pillow
+psutil
+requests

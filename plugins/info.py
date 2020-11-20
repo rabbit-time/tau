@@ -124,13 +124,9 @@ class Info(commands.Cog):
         process = psutil.Process(pid)
         mem = process.memory_info()[0] # Mem usage in bytes
 
-        with open('README.md', 'r') as app_info:
-            desc = app_info.readlines()
-            for line in desc:
-                if line.startswith('#'):
-                    desc.remove(line)
-
-            desc[1] = f'**```md\n# {desc[1]}```**\n'
+        with open('README.md', 'r') as readme:
+            desc = [line for line in readme.readlines()[:15] if '#' not in line and line != '\n']
+            desc[0] = f'**```md\n# {desc[0]}```**\n'
             desc = ''.join(desc).replace('+', '•')
         
         # \u3000 is an ideographic space. Learn more: https://en.wikipedia.org/wiki/Whitespace_character

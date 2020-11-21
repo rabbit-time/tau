@@ -4,7 +4,7 @@ import time
 
 LOG = '\u001b[34;1mLOG\u001b[0m'
 READY = '\u001b[32;1mREADY\u001b[0m'
-ERROR = '\u001b[31;1mERROR\u001b[0m'
+ERROR = '\u001b[31;1mERROR'
 
 def time_format():
     return time.strftime('%d.%m.%Y %H:%M:%S', time.localtime(time.time()))
@@ -17,7 +17,7 @@ def join(value):
 
 def done():
     t = time_format()
-    print(f'\u001b[37;1m{t} \u001b[1m\u001b[38;5;208m DONE\u001b[0m')
+    print(f'\u001b[37;1m{t}\u001b[1m\u001b[38;5;208m DONE\u001b[0m')
 
 def log(*value, sep='', end='\n'):
     t = time_format()
@@ -34,4 +34,4 @@ def event(*value, event='EVENT', sep='', end='\n'):
 
 def error(*value, sep='', end='\n'):
     t = time_format()
-    print(f'\u001b[37;1m{t} {ERROR} {join(value)}', sep=sep, end=end)
+    print(f'\u001b[37;1m{t} {ERROR}  {join(value)}\u001b[0m', sep=sep, end=end)

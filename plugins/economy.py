@@ -4,23 +4,21 @@ import random
 import discord
 from discord import Embed, File
 from discord.ext import commands
+from discord.ext.commands import command, guild_only
 
-import perms
 import utils
 
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, name='balance', aliases=['acc', 'bal'], usage='balance [member]')
+    @command(name='balance', aliases=['acc', 'bal'], usage='balance [member]')
     async def balance(self, ctx, *, member: discord.Member = None):
         '''Display user account balance.
         This only works with members within the guild.\n
-        **Example:```yml\n.balance\n.bal @Tau#4272\n.acc 608367259123187741```**
+        **Example:```yml\n♤balance\n♤bal @Tau#4272\n♤acc 608367259123187741```**
         '''
-        if not member:
-            member = ctx.author
-
+        member = member if member else ctx.author
         if member.bot:
             return
 
@@ -30,11 +28,12 @@ class Economy(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='give', usage='give <member> <quantity>')
+    @command(name='give', usage='give <member> <quantity>')
+    @guild_only()
     async def give(self, ctx, member: discord.Member, qty):
         '''Give credits to another user.
         `quantity` can also be '\\*' or 'all'\n
-        **Example:```yml\n.give @Tau#4272 420 \n.give 608367259123187741 69```**
+        **Example:```yml\n♤give @Tau#4272 420 \n♤give 608367259123187741 69```**
         '''
         if member.bot:
             return
@@ -52,11 +51,11 @@ class Economy(commands.Cog):
         await ctx.send(f'**{ctx.author.display_name}** gave {utils.emoji["tickets"]}**{qty}** to **{member.display_name}**!')
 
     @commands.cooldown(1, 86400.0, type=commands.BucketType.user)
-    @commands.command(cls=perms.Lock, name='credits', aliases=['daily'], usage='tickets')
+    @command(name='credits', aliases=['daily'], usage='tickets')
     async def credits(self, ctx):
         '''Collect your daily credits.
         Has a cooldown of 24 hours.\n
-        **Example:```yml\n.credits```**
+        **Example:```yml\n♤credits```**
         '''
         msgs = ['Here are your credits!', 'Gosh, you\'re just using me for money, aren\'t you?', ':money_with_wings: :money_with_wings:',
         'So, when do I get *my* credits?', 'Collecting your government benefits I see... :eyes:', 'credits for all!',
@@ -74,11 +73,6 @@ class Economy(commands.Cog):
         embed = Embed(description=desc)
 
         await ctx.send(ctx.author.mention + ' ' + random.choice(msgs), embed=embed)
-
-    @credits.error
-    async def credits_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.send('You\'ve already collected your daily credits!')
 
 def setup(bot):
     bot.add_cog(Economy(bot))

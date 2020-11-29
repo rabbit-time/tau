@@ -4,6 +4,8 @@ import discord
 from discord import Embed
 from discord.ext import commands
 
+import utils
+
 class Starboard(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -27,7 +29,7 @@ class Starboard(commands.Cog):
                     if str(reaction.emoji) == '⭐':
                         stars += reaction.count
 
-                embed = Embed(description=msg.content, color=0xffc20c)
+                embed = Embed(description=msg.content, color=utils.Color.yellow)
                 embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
                 embed.add_field(name='Source', value=f'**[Jump!]({msg.jump_url})**')
                 if msg.attachments:
@@ -80,7 +82,7 @@ class Starboard(commands.Cog):
                 if str(reaction.emoji) == '⭐':
                     stars += reaction.count
             
-            embed = Embed(description=msg.content, color=0xffc20c)
+            embed = Embed(description=msg.content, color=utils.Color.yellow)
             embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
             embed.add_field(name='Source', value=f'**[Jump!]({msg.jump_url})**')
             if msg.attachments:

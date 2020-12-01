@@ -7,7 +7,7 @@ READY = '\u001b[32;1mREADY\u001b[0m'
 ERROR = '\u001b[31;1mERROR'
 
 def time_format():
-    return time.strftime('%d.%m.%Y %H:%M:%S', time.localtime(time.time()))
+    return time.strftime('%m.%d.%Y %H:%M:%S', time.localtime(time.time()))
 
 def join(value):
     string = ''

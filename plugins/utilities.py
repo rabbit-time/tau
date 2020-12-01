@@ -5,10 +5,10 @@ import random
 from typing import Union
 
 import discord
-from discord import Embed, File
+from discord import Embed, File, AllowedMentions
 from discord.ext import commands
+from discord.ext.commands import command, guild_only, dm_only
 
-import perms
 import utils
 
 class Utilities(commands.Cog):
@@ -45,11 +45,12 @@ class Utilities(commands.Cog):
                         query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
                         await con.execute(query, user_id, channel_id, timeout, reminder)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='channel', aliases=['chan'], usage='channel <channel>')
+    @command(name='channel', aliases=['chan'], usage='channel <channel>')
     @commands.bot_has_permissions(external_emojis=True)
+    @guild_only()
     async def channel(self, ctx, *, chan: Union[discord.VoiceChannel, discord.TextChannel] = None):
         '''Display info on a channel.\n
-        **Example:```yml\n.channel general```**
+        **Example:```yml\n♤channel general```**
         '''
         chan = chan if chan else ctx.channel
 
@@ -76,10 +77,10 @@ class Utilities(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, name='color', aliases=[], usage='color <color>')
+    @command(name='color', usage='color <color>')
     async def color(self, ctx, *, color: discord.Color):
         '''Display info on a color.\n
-        **Example:```yml\n.color #8bb3f8```**
+        **Example:```yml\n♤color #8bb3f8```**
         '''
         buffer = utils.display_color(color)
 
@@ -99,12 +100,22 @@ class Utilities(commands.Cog):
 
         await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
 
-    @commands.command(cls=perms.Lock, name='emoji', aliases=[], usage='emoji <emoji>')
+    @command(name='echo', aliases=['say'], usage='echo <text>')
+    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
+    async def echo(self, ctx, *, text: str):
+        '''Echo a message.\n
+        **Example:```yml\n♤echo ECHO!\n♤say hello!```**
+        '''
+        await ctx.message.delete()
+
+        await ctx.send(text, allowed_mentions=AllowedMentions.none())
+
+    @command(name='emoji', usage='emoji <emoji>')
     @commands.bot_has_permissions(external_emojis=True)
     async def emoji(self, ctx, *, emoji: discord.Emoji):
         '''Display info on an emoji.
         Only applicable to custom emoji.\n
-        **Example:```yml\n.emoji 608367259123187741```**
+        **Example:```yml\n♤emoji 608367259123187741```**
         '''
         anime = utils.emoji['on'] if emoji.animated else utils.emoji['off']
         man = utils.emoji['on'] if emoji.managed else utils.emoji['off']
@@ -119,33 +130,118 @@ class Utilities(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, name='echo', aliases=['say'], usage='echo <text>')
-    @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
-    async def echo(self, ctx, *, text: str):
-        '''Echo a message.\n
-        **Example:```yml\n.echo ECHO!\n.say hello!```**
+    @commands.cooldown(2, 1800.0, type=commands.BucketType.user)
+    @command(name='feedback', usage='feedback <message>')
+    @dm_only()
+    async def feedback(self, ctx, *, msg: str):
+        '''Submit feedback to the developer.
+        Serious responses only.\n
+        **Example:```yml\n♤feedback This is a cool bot, but I'd like to see [...]```**
         '''
-        await ctx.message.delete()
+        now = datetime.datetime.utcnow()
+        app_info = await self.bot.application_info()
+        owner = app_info.owner
+        try:
+            embed = Embed(description=msg, color=utils.Color.sky)
+            embed.set_author(name=f'Feedback from {ctx.author}', icon_url=ctx.author.avatar_url)
+            embed.add_field(name='\u200b', value=f'**Reply with `.reply {ctx.author.id} <message>`**')
+            embed.set_image(url='attachment://unknown.png')
+            embed.set_footer(text=f'ID: {ctx.author.id}')
+            embed.timestamp = now
 
-        await ctx.send(text)
+            await owner.send(file=File('assets/bar.png', 'unknown.png'), embed=embed)
+        except:
+            files = [File('assets/reddot.png', 'unknown.png'), File('assets/redbar.png', 'unknown1.png')]
+            desc = ('**Oops... something went wrong.**\nYour feedback was unable to be sent '
+                    f'to the developer. Please try again later or send them a message directly: **`{owner}`**')
+            embed = Embed(description=desc, color=utils.Color.red)
+            embed.set_author(name='Submission failed', icon_url='attachment://unknown.png')
+            embed.set_image(url='attachment://unknown1.png')
+            embed.timestamp = now
 
-    @commands.command(cls=perms.Lock, name='random', aliases=['rng'], usage='random <lower> <upper>')
+            await ctx.send(files=files, embed=embed)
+        else:
+            files = [File('assets/bar.png', 'unknown.png'), File('assets/dot.png', 'unknown1.png')]
+            embed.clear_fields()
+            embed.description = f'**Your feedback was successfully submitted. Thank you!**'
+            
+            embed.set_author(name='Feedback submitted', icon_url='attachment://unknown1.png')
+            embed.set_footer(text='')
+            await ctx.send(files=files, embed=embed)
+    
+    @command(name='givexp', aliases=['xp'], usage='givexp <member> <amount>')
+    @commands.is_owner()
+    @guild_only()
+    async def givexp(self, ctx, member: discord.Member, xp: int):
+        '''Give XP to a member.
+        Developer use only.\n
+        **Example:```yml\n♤xp @Tau#4272 100```**
+        '''
+        if member.bot:
+            return
+
+        key = member.id, ctx.guild.id
+        if not self.bot.members.get(key):
+            await self.bot.members.insert(key)
+        
+        await self.bot.members.update(key, 'xp', xp+self.bot.members[key]['xp'])
+        listeners = self.bot.cogs['Roles'].get_listeners()
+        for name, coro in listeners:
+            if name == 'Roles':
+                await coro(ctx.message)
+                break
+    
+    @command(name='reply', usage='reply <user> <message>')
+    @commands.is_owner()
+    @dm_only()
+    async def reply(self, ctx, user_id: int, *, msg: str):
+        '''Reply to feedback.
+        Developer use only.\n
+        **Example:```yml\n♤reply Thank you!```**
+        '''
+        user = self.bot.get_user(user_id)
+        now = datetime.datetime.utcnow()
+        try:
+            embed = Embed(description=msg, color=utils.Color.sky)
+            embed.set_author(name=f'Reply from {ctx.author.name}', icon_url=ctx.author.avatar_url)
+            embed.set_image(url='attachment://unknown.png')
+            embed.timestamp = now
+
+            await user.send(file=File('assets/bar.png', 'unknown.png'), embed=embed)
+        except:
+            files = [File('assets/reddot.png', 'unknown.png'), File('assets/redbar.png', 'unknown1.png')]
+            desc = ('**Oops... something went wrong.**\nYour reply was unable to be sent '
+                    f'to the user. Please try again later or send them a message directly: **`{user}`**')
+            embed = Embed(description=desc, color=utils.Color.red)
+            embed.set_author(name='Reply failed', icon_url='attachment://unknown.png')
+            embed.set_image(url='attachment://unknown1.png')
+            embed.timestamp = now
+
+            await ctx.send(files=files, embed=embed)
+        else:
+            files = [File('assets/bar.png', 'unknown.png'), File('assets/dot.png', 'unknown1.png')]
+            embed.description = f'**Your reply was successfully sent to the user.**'
+            embed.set_author(name='Reply delivered', icon_url='attachment://unknown1.png')
+
+            await ctx.send(files=files, embed=embed)
+
+    @command(name='random', aliases=['rng'], usage='random <lower> <upper>')
     @commands.bot_has_permissions(external_emojis=True)
     async def random(self, ctx, lower: int, upper: int):
         '''Randomly generate an integer between a lower and upper bound.\n
-        **Example:```yml\n.random 0 1\n.rng 1 10```**
+        **Example:```yml\n♤random 0 1\n♤rng 1 10```**
         '''
         embed = Embed(description=f'**You got {random.randint(lower, upper)}!**', color=random.choice(utils.Color.rainbow))
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, name='remind', aliases=[], usage='remind <time> <reminder>')
+    @command(name='remind', usage='remind <time> <reminder>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def remind(self, ctx, limit, *, reminder):
         '''Set a reminder.
         Reminders are capped at 6 months to prevent memory leaks.\n
-        **Example:```yml\n.remind 2h clean room\n.remind 1h fix bugs```**
+        **Example:```yml\n♤remind 2h clean room\n♤remind 1h fix bugs```**
         '''
         time_, delta = utils.parse_time(limit)
         now = datetime.datetime.utcnow()
@@ -167,14 +263,17 @@ class Utilities(commands.Cog):
 
         await ctx.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
 
-    @commands.command(cls=perms.Lock, name='resend', aliases=['rs'], usage='resend <message>')
+    @command(name='resend', aliases=['rs'], usage='resend <message>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def resend(self, ctx, msg: discord.Message):
         '''Resend a message.
         This is useful for getting rid of the "edited" indicator.
-        To resend a message from another channel, use a message link instead of an ID.\n
-        **Example:```yml\n.resend 694890918645465138```**
+        To resend a message from another channel, use a message link instead of an ID.
+        This works safely with role menus.\n
+        **Example:```yml\n♤resend 694890918645465138```**
         '''
+        await ctx.message.delete()
+        
         embed = None
         for e in msg.embeds:
             if e.type == 'rich':
@@ -186,28 +285,38 @@ class Utilities(commands.Cog):
             file = await a.to_file()
             files.append(file)
 
+        rmenu = self.bot.rmenus.get((ctx.guild.id, msg.id))
+
         await msg.delete()
         
-        await ctx.send(content=msg.content, files=files, embed=embed)
+        new = await ctx.send(content=msg.content, files=files, embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='role', aliases=[], usage='role <role>')
+        if rmenu:
+            for i in range(len(rmenu['role_ids'].split())):
+                await new.add_reaction(utils.emoji[i+1])
+                
+            await self.bot.rmenus.update((ctx.guild.id, new.id), 'role_ids', rmenu['role_ids'])
+            await self.bot.rmenus.update((ctx.guild.id, new.id), 'limit_', rmenu['limit_'])
+            
+    @command(name='role', usage='role <role>')
+    @commands.bot_has_permissions(external_emojis=True)
+    @guild_only()
     async def role(self, ctx, *, role: discord.Role):
         '''Display info on a role.\n
-        **Example:```yml\n.role Tau\n.role 657766595321528349```**
+        **Example:```yml\n♤role Tau\n♤role 657766595321528349```**
         '''
         buffer = utils.display_color(role.color)
 
-        perms = [(perm, value) for perm, value in iter(role.permissions)]
-        perms.sort()
+        perms = sorted((perm, value) for perm, value in iter(role.permissions))
         plen = len(max(perms, key=lambda p: len(p[0]))[0])
         
         half = len(perms) // 2
-        fields = ['', '']
+        fields = [''] * 2
         for i, tup in enumerate(perms):
             perm, value = tup
             tog = utils.emoji['on'] if value else utils.emoji['off']
             align = ' ' * (plen-len(perm))
-            fields[i > half] += f'**`{perm}{align}`** {tog}\n'
+            fields[i>half] += f'**`{perm}{align}`** {tog}\n'
 
         plural = 's' if len(role.members) != 1 else ''
         mention = role.mention if not role.is_default() else '@everyone'

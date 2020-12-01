@@ -6,7 +6,7 @@ import time
 import discord
 from discord import Embed, File
 from discord.ext import commands
-from discord.utils import escape_markdown
+from discord.utils import escape_markdown, find
 from PIL import Image, ImageDraw, ImageFont
 
 # Emoji taken from a private emoji server.
@@ -17,7 +17,7 @@ emoji = {
     'tickets': '<:credits:702269510488686663>',
     'sound': '<:sound:702809258974249011>',
     'mute': '<:mute:702809258915397672>',
-    'cuffs': '<:cuffs:678393038095122461>',
+    'dot': '<:dot:782633782217539615>',
     'hammer': '<:hammer:702793803677040692>',
     'warn': '<:warn:706214120151711844>',
     'on': '<:toggleon:686105837294452736>',
@@ -66,12 +66,21 @@ emoji = {
 class Color:
     gold = 0xfbb041
     green = 0x57c998
+    yellow = 0xffc20c
     sky = 0x88b3f8
     red = 0xf94a4a
     rainbow = (red, 0xffa446, 0xffc049, green, 0x55b8f8, 0xc8aaff, 0xffadca)
 
 class RoleNotFound(Exception):
     '''Exception: Role could not be found'''
+
+def is_dm_only(cmd: commands.Command) -> bool:
+    res = find(lambda ch: ch.__qualname__.startswith('dm_only'), cmd.checks)
+    return res != None
+
+def is_guild_only(cmd: commands.Command) -> bool:
+    res = find(lambda ch: ch.__qualname__.startswith('guild_only'), cmd.checks)
+    return res != None
 
 def display_color(color: discord.Color) -> io.BytesIO:
     im = Image.new('RGB', (1200, 400), color.to_rgb())
@@ -217,7 +226,7 @@ async def automute(bot, user_id, guild_id, timeout: datetime):
         await con.execute(query, None, user_id, guild_id)
 
 async def before(ctx):
-    if not ctx.bot.users_.get(ctx.author.id):
+    if not ctx.bot.users_.get(ctx.author.id) and not ctx.author.bot:
         await ctx.bot.users_.insert(ctx.author.id)
 
     if ctx.guild:
@@ -238,16 +247,14 @@ _def_guild = {
     'goodbye_messages': False,
     'levelup_messages': False,
     'autorole': 0,
-    'mod_role': 0,
-    'admin_role': 0,
-    'bind_role': 0,
+    'mute_role': 0,
     'automod': False,
-    'verify_role': 0
+    'verify_role': 0,
+    'log_channel': 0
 }
 
 _def_user = {
     'tickets': 200,
-    'xp': 0,
     'accent': '#8bb3f8',
     'bio': ''
 }
@@ -258,11 +265,13 @@ _def_member = {
 }
 
 _def_role_menu = {
-    'role_ids': ''
+    'role_ids': [],
+    'limit_': 0
 }
 
 _def_rank = {
-    'role_ids': ''
+    'role_ids': [],
+    'levels': []
 }
 
 _def_star = {
@@ -279,8 +288,9 @@ _def_rule = {
 }
 
 _def_modlog = {
+    'url': '',
     'action': '',
-    'time': 0,
+    'time': None,
     'reason': ''
 }
 
@@ -295,15 +305,13 @@ guilds_schema = ('guild_id bigint PRIMARY KEY, '
                  'goodbye_messages bool, '
                  'levelup_messages bool, '
                  'autorole bigint, '
-                 'mod_role bigint, '
-                 'admin_role bigint, '
-                 'bind_role bigint, '
+                 'mute_role bigint, '
                  'automod bool, '
-                 'verify_role bigint')
+                 'verify_role bigint, '
+                 'log_channel bigint')
 
 users_schema = ('user_id bigint PRIMARY KEY, '
                 'tickets bigint, '
-                'xp bigint, '
                 'accent char(7), '
                 'bio text')
     
@@ -314,10 +322,12 @@ members_schema = ('user_id bigint, '
 
 role_menus_schema = ('guild_id bigint, '
                      'message_id bigint, '
-                     'role_ids text')
+                     'role_ids bigint[], '
+                     'limit_ bigint')
 
 ranks_schema = ('guild_id bigint PRIMARY KEY, '
-                'role_ids text')
+                'role_ids bigint[], '
+                'levels bigint[]')
 
 stars_schema = ('message_id bigint PRIMARY KEY, '
                 'star_id bigint')
@@ -333,6 +343,7 @@ rules_schema = ('guild_id bigint, '
 
 modlog_schema = ('user_id bigint, '
                  'guild_id bigint, '
+                 'url text, '
                  'action text, '
-                 'time bigint, '
+                 'time timestamp, '
                  'reason text')

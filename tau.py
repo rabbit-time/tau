@@ -16,7 +16,8 @@ import ccp
 import config
 import utils
 
-os.system('color')
+if os.name == 'nt':
+    os.system('color')
 
 # Checks the version of python
 if sys.version_info[0] < 3 or sys.version_info[1] < 8: 

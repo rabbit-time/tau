@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import os
 import platform
 import sys
@@ -8,19 +9,114 @@ import psutil
 import discord
 from discord import Embed, File
 from discord.ext import commands
+from discord.ext.commands import command, guild_only
 from discord.utils import find
 
 import config
-import perms
+import ccp
 import utils
 
 class System(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='config', aliases=['conf'], usage='config')
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        ccp.event(f'{str(guild)} ({str(guild.owner)})', event='GUILD_ADD')
+
+        await self.bot.guilds_.insert(guild.id)
+        if guild.system_channel:
+            await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
+    
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild):
+        ccp.event(f'{str(guild)} ({str(guild.owner)})', event='GUILD_REM')
+
+        async with self.bot.pool.acquire() as con:
+            await self.bot.guilds_.delete(guild.id)
+            await con.execute('DELETE FROM members WHERE guild_id = $1', guild.id)
+            await con.execute('DELETE FROM role_menus WHERE guild_id = $1', guild.id)
+            await con.execute('DELETE FROM ranks WHERE guild_id = $1', guild.id)
+        
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        ccp.event(f'{str(member)} has joined {str(member.guild)}', event='MEMBER_ADD')
+
+        if member.bot:
+            return
+
+        cache = self.bot.guilds_
+        guild = member.guild
+        if cache[guild.id]['welcome_messages'] and (chan := guild.get_channel(cache[guild.id]['system_channel'])):
+            msg = cache[guild.id]['welcome_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name)
+            embed = Embed(color=utils.Color.green)
+            embed.set_author(name=member, icon_url=member.avatar_url)
+            embed.set_footer(text='Join', icon_url='attachment://unknown.png')
+            embed.timestamp = datetime.datetime.utcnow()
+            
+            await chan.send(msg, file=File('assets/join.png', 'unknown.png'), embed=embed)
+
+        if self.bot.members.get((member.id, guild.id)):
+            muted = self.bot.members[member.id, guild.id]['muted']
+            if muted and muted > datetime.datetime.utcnow():
+                mute_role = member.guild.get_role(self.bot.guilds_[guild.id]['mute_role'])
+                if mute_role:
+                    await member.add_roles(mute_role)
+            else:
+                muted = None
+                async with self.bot.pool.acquire() as con:
+                    query = 'UPDATE members SET muted = $1 WHERE user_id = $2 AND guild_id = $3'
+                    await con.execute(query, None, member.id, guild.id)
+
+        autorole = self.bot.guilds_[member.guild.id]['autorole']
+        if role := guild.get_role(autorole):
+            await member.add_roles(role)
+
+        if self.bot.ranks.get(guild.id) and (role_ids := self.bot.ranks[guild.id]['role_ids']):
+            role_ids = role_ids.split()
+            if role := guild.get_role(int(role_ids[0])):
+                await member.add_roles(role)
+        
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        try:
+            await member.guild.fetch_ban(member)
+        except (discord.Forbidden, discord.NotFound):
+            pass
+        else:
+            return
+
+        ccp.event(f'{str(member)} has left {str(member.guild)}', event='MEMBER_REM')
+
+        if member.bot:
+            return
+
+        cache = self.bot.guilds_
+        guild = member.guild
+        if cache[guild.id]['goodbye_messages'] and (chan := member.guild.get_channel(cache[guild.id]['system_channel'])):
+            msg = cache[guild.id]['goodbye_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name)
+            embed = Embed(color=utils.Color.red)
+            embed.set_author(name=member, icon_url=member.avatar_url)
+            embed.set_footer(text='Leave', icon_url='attachment://unknown.png')
+            embed.timestamp = datetime.datetime.utcnow()
+            
+            await chan.send(msg, file=File('assets/leave.png', 'unknown.png'), embed=embed)
+    
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild, user):
+        ccp.event(f'{str(user)} was banned from {str(guild)}', event='MEMBER_BAN')
+
+        if user.bot:
+            return
+
+        if self.bot.members.get((user.id, guild.id)):
+            await self.bot.members.delete((user.id, guild.id))
+
+    @command(name='config', aliases=['conf'], usage='config')
+    @commands.has_guild_permissions(administrator=True)
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
+    @guild_only()
     async def config(self, ctx):
         '''Display or modify guild configuration.
         Config keys can be modified using the reaction menu.
@@ -35,7 +131,7 @@ class System(commands.Cog):
         **@guild** - The guild's name.
 
         Toggles will be immediately modified on selection.\n
-        **Example:```yml\n.config```**
+        **Example:```yml\n♤config```**
         '''
         guild_id = ctx.guild.id
         default = self.bot.guilds_.default
@@ -44,6 +140,9 @@ class System(commands.Cog):
         toggles = {}
         def build():
             for k, v in self.bot.guilds_[guild_id].items():
+                if k == 'log_channel':
+                    continue
+
                 if isinstance(default[k], bool):
                     toggles[k] = v
                 elif 'role' in k:
@@ -212,30 +311,32 @@ class System(commands.Cog):
                     pass
                 break
 
-    @commands.command(cls=perms.Lock, level=5, name='reload', aliases=['r'], usage='reload <ext>')
+    @command(name='reload', aliases=['r'], usage='reload <ext>')
+    @commands.is_owner()
     async def reload(self, ctx, path):
         '''Reload an extension.
         `ext` must be the dot path to the extension relative to the entry point of the app.\n
-        **Example:```yml\n.reload plugins.system\n.r events.on_ready```**
+        **Example:```yml\n♤reload plugins.system```**
         '''
         try:
             self.bot.reload_extension(path)
 
             desc = f'yml\n+ {path} has been reloaded'
-            color = 0x2aa198
+            color = utils.Color.green
         except (commands.ExtensionFailed, commands.ExtensionNotLoaded, commands.NoEntryPointError) as err:
             desc = f'diff\n- {err}'
-            color = 0xff4e4e
+            color = utils.Color.red
 
         embed = Embed(description=f'**```{desc}```**', color=color)
         
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, level=4, name='remove', aliases=['leave', 'rem'], usage='remove [id]')
+    @command(name='remove', aliases=['leave', 'rem'], usage='remove [id]')
+    @commands.is_owner()
     async def remove(self, ctx, id: int):
         '''Remove a server.\n
         If an ID is not given, the current server will be removed.
-        **Example:```yml\n.remove 546397670793805825\n.leave```**
+        **Example:```yml\n♤remove 546397670793805825\n♤leave```**
         '''
         guild = self.bot.get_guild(id)
         if not guild:
@@ -245,15 +346,16 @@ class System(commands.Cog):
 
         if ctx.guild != guild:
             desc = f'**```diff\n- {guild.name} has been removed```**'
-            embed = Embed(description=desc, color=0xff4e4e)
+            embed = Embed(description=desc, color=utils.Color.red)
 
             await ctx.send(embed=embed)
     
-    @commands.command(cls=perms.Lock, guild_only=True, name='rule', aliases=[], usage='rule <index>')
+    @command(name='rule', usage='rule <index>')
     @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
+    @guild_only()
     async def rule(self, ctx, index: int):
         '''Cite a rule.\n
-        **Example:```yml\n.rule 1```**
+        **Example:```yml\n♤rule 1```**
         '''
         rule = self.bot.rules.get((ctx.guild.id, index), {'rule': ''})
 
@@ -264,11 +366,12 @@ class System(commands.Cog):
 
         await ctx.send(embed=embed)
     
-    @commands.command(cls=perms.Lock, level=1, guild_only=True, name='rules', aliases=[], usage='rules')
+    @command(name='rules', usage='rules')
     @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
+    @guild_only()
     async def rules(self, ctx):
         '''Display the rules.\n
-        **Example:```yml\n.rules```**
+        **Example:```yml\n♤rules```**
         '''
         async with self.bot.pool.acquire() as con:
             rules = await con.fetch('SELECT index_, rule FROM rules WHERE guild_id = $1 ORDER BY index_ ASC', ctx.guild.id)
@@ -284,13 +387,15 @@ class System(commands.Cog):
 
         await ctx.send(embed=embed)
     
-    @commands.command(cls=perms.Lock, level=2, guild_only=True, name='setrule', aliases=[], usage='setrule <index> [rule]')
+    @command(name='setrule', usage='setrule <index> [rule]')
+    @commands.has_guild_permissions(manage_guild=True)
     @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
+    @guild_only()
     async def setrule(self, ctx, index: int, *, rule: str = ''):
         '''Set a rule.
         `index` must be a positive integer no larger than 255.
         Leave `rule` blank to reset.\n
-        **Example:```yml\n.setrule 1 Do not spam```**
+        **Example:```yml\n♤setrule 1 Do not spam```**
         '''
         if not 0 <= index < 256:
             raise commands.BadArgument
@@ -312,10 +417,11 @@ class System(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, level=5, name='shutdown', aliases=['exit', 'quit', 'kill'], usage='shutdown')
+    @command(name='shutdown', aliases=['exit', 'quit', 'kill'], usage='shutdown')
+    @commands.is_owner()
     async def shutdown(self, ctx):
         '''Shut down the bot.\n
-        **Example:```yml\n.shutdown\n.exit```**
+        **Example:```yml\n♤shutdown\n♤exit```**
         '''
         embed = Embed(description='**```diff\n- Shutting down...```**', color=utils.Color.red)
 

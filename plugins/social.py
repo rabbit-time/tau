@@ -4,24 +4,26 @@ import random
 import discord
 from discord import Embed, File
 from discord.ext import commands
+from discord.ext.commands import command, guild_only
 from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 
-import perms
+import utils
 from utils import emoji, level, levelxp
 
 class Social(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='server', aliases=['serverinfo'], usage='server')
+    @command(name='server', aliases=['serverinfo'], usage='server')
     @commands.bot_has_permissions(external_emojis=True)
+    @guild_only()
     async def server(self, ctx):
         '''Display server profile.
         If the server has a banner, it will be displayed here.
         This profile cannot be customized.\n
-        **Example:```yml\n.server```**
+        **Example:```yml\n♤server```**
         '''
         guild = ctx.guild
 
@@ -58,31 +60,42 @@ class Social(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(cls=perms.Lock, name='leaderboard', aliases=['lb'], usage='leaderboard')
+    @command(name='leaderboard', aliases=['lb'], usage='leaderboard')
+    @guild_only()
     async def leaderboard(self, ctx):
         '''Display leaderboard.\n
-        **Example:```yml\n.lb```**
+        **Example:```yml\n♤lb```**
         '''
         async with self.bot.pool.acquire() as con:
-            records = await con.fetch('SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT 10')
-        
-        embed = Embed(title='Leaderboard')
+            records = await con.fetch(f'SELECT user_id, xp FROM members WHERE guild_id = {ctx.guild.id} ORDER BY xp DESC')
+            highscores = []
+            for record in records:
+                user_id, xp = record.values()
+                member = ctx.guild.get_member(user_id)
+                if member:
+                    highscores.append((member, xp))
+                    if len(highscores) == 10:
+                        break
+
+        embed = Embed(color=utils.Color.sky)
+        embed.set_author(name='Leaderboard', icon_url='attachment://unknown.png')
         inline = False
-        for i, record in enumerate(records):
-            user_id, xp = record.values()
-            user = await self.bot.fetch_user(user_id)
-            embed.add_field(name=f'**{i+1}.** {escape_markdown(str(user))}', value=f'**```yml\nLevel: {level(xp)}\nXP: {xp}```**', inline=inline)
+        for i, score in enumerate(highscores):
+            member, xp = score
+            name = escape_markdown(str(member))
+            embed.add_field(name=f'**{i+1}.** {name}', value=f'**```yml\nLevel: {level(xp)}\nXP: {xp}```**', inline=inline)
             inline = True
 
-        await ctx.send(embed=embed)
+        await ctx.send(file=File('assets/dot.png', 'unknown.png'), embed=embed)
 
-    @commands.command(cls=perms.Lock, guild_only=True, name='profile', aliases=['card', 'info', 'user'], usage='profile [member]')
+    @command(name='profile', aliases=['card', 'info', 'user'], usage='profile [member]')
     @commands.bot_has_permissions(attach_files=True, external_emojis=True, manage_messages=True)
+    @guild_only()
     async def profile(self, ctx, *, member: discord.Member = None):
         '''Display profile card.
         The accent color and the bio features may be customized.
         This only works with members within the server.\n
-        **Example:```yml\n.profile @Tau#4272\n.profile 608367259123187741```**
+        **Example:```yml\n♤profile @Tau#4272\n♤profile 608367259123187741```**
         '''
         if not member:
             member = ctx.author
@@ -104,8 +117,8 @@ class Social(commands.Cog):
             im = template.copy()
             draw = ImageDraw.Draw(im)
 
-            xp = self.bot.users_[member.id]['xp']
-            lvl = level(self.bot.users_[member.id]['xp'])
+            xp = self.bot.members[member.id, ctx.guild.id]['xp']
+            lvl = level(xp)
             accent = self.bot.users_[member.id]['accent']
             font = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 200)
             font2 = ImageFont.truetype('assets/font/Comfortaa-Bold.ttf', 250)
@@ -131,7 +144,7 @@ class Social(commands.Cog):
             async with self.bot.pool.acquire() as con:
                 async with con.transaction():
                     rank = 1
-                    async for record in con.cursor('SELECT user_id FROM users ORDER BY xp DESC'):
+                    async for record in con.cursor('SELECT user_id FROM members ORDER BY xp DESC'):
                         if record['user_id'] == member.id:
                             break
                         rank += 1

@@ -2,35 +2,37 @@
 
 import asyncio
 import asyncpg
+import datetime
 import os
 import sys
-import time
 from collections.abc import Iterable
 
 import discord
+from discord import Game, Object, Permissions
 from discord.ext import commands
+from discord.utils import oauth_url
 
 import ccp
 import config
 import utils
-import perms
+
+os.system('color')
 
 # Checks the version of python
 if sys.version_info[0] < 3 or sys.version_info[1] < 8: 
-    raise Exception('Python 3.8.0 or higher is required')
+    ccp.error('Python 3.8.0 or higher is required.')
+    os._exit(0)
 
-intents = discord.Intents.default()
-intents.members = True
-intents.reactions = True
-intents.presences = True
+def prefix(bot, msg):
+    return bot.guilds_[msg.guild.id]['prefix'] if msg.guild else bot.guilds_.default['prefix']
 
-bot = commands.Bot(command_prefix=lambda bot, msg: bot.guilds_[msg.guild.id]['prefix'] if msg.guild else bot.guilds_.default['prefix'], help_command=None, intents=intents)
+bot = commands.Bot(command_prefix=prefix, help_command=None, intents=discord.Intents.all())
 
+bot.invites_ = {}
 bot.mute_tasks = {}
 bot.suppressed = {}
-bot.start_time = time.time()
+bot.start_time = datetime.datetime.utcnow()
 
-bot.add_check(perms.require, call_once=True)
 bot.add_check(lambda ctx: ctx.author not in bot.suppressed.keys() or bot.suppressed.get(ctx.author) != ctx.channel, call_once=True)
 
 bot.before_invoke(utils.before)
@@ -65,6 +67,7 @@ class Cache(aobject):
                 del cache[index][key]
 
         self.table = table
+        self.schema = schema
         self.pk = pk
         self._records = cache
         self.default = default.copy()
@@ -84,7 +87,6 @@ class Cache(aobject):
     async def delete(self, index: any):
         '''Deletes a record in the database and the cache.'''   
         del self._records[index]
-        
         async with bot.pool.acquire() as con:
             if isinstance(index, Iterable):
                 condition = ' AND '.join(f'{k} = ${i+1}' for i, k in enumerate(self.pk.split(', ')))
@@ -99,7 +101,6 @@ class Cache(aobject):
         index = (index,) if not isinstance(index, tuple) else index
         val = index + tuple(self.default.values())
         n = ', '.join(f'${i+1}' for i in range(len(self.default)+len(index)))
-        
         async with bot.pool.acquire() as con:
             await con.execute(f'INSERT INTO {self.table} VALUES ({n})', *tuple(val))
 
@@ -112,6 +113,10 @@ class Cache(aobject):
         if isinstance(val, str):
             val = val.replace('\'', '\'\'')
             val = f'\'{val}\''
+        elif isinstance(val, list):
+            schema = self.schema.split()
+            type = schema[schema.index(key)+1].replace(',', '')
+            val = f'ARRAY{val}' if val else f'ARRAY{val}::{type}'
 
         async with bot.pool.acquire() as con:
             if isinstance(index, Iterable):
@@ -120,8 +125,53 @@ class Cache(aobject):
             else:
                 await con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = $1', index)
 
+async def update_db():
+    '''A migration function for Tau 2.1.0
+    I know this code is disgusting but it's only temporary
+    and it gets the job done quickly and efficiently enough.
+    '''
+    async with bot.pool.acquire() as con:
+        records = await con.fetch('SELECT * FROM modlog')
+        await con.execute('DROP TABLE modlog')
+        await con.execute(f'CREATE TABLE modlog ({utils.modlog_schema})')
+        for record in records:
+            record = list(record)
+            record = record[:2] + [''] + record[2:]
+            record[-2] = datetime.datetime.fromtimestamp(record[-2])
+            await con.execute(f'INSERT INTO modlog VALUES ($1, $2, $3, $4, $5, $6)', *record)
+        
+        records = await con.fetch('SELECT * FROM ranks')
+        await con.execute('DROP TABLE ranks')
+        await con.execute(f'CREATE TABLE ranks ({utils.ranks_schema})')
+        for record in records:
+            record = list(record)
+            role_ids = [int(id) for id in record[1].split()]
+            levels = [i*5 for i in range(len(role_ids))] if len(role_ids) == 6 else [5, 10, 15, 20, 25]
+            await con.execute(f'INSERT INTO ranks VALUES ({record[0]}, ARRAY{role_ids}, ARRAY{levels})')
+        
+        records = await con.fetch('SELECT * FROM role_menus')
+        await con.execute('DROP TABLE role_menus')
+        await con.execute(f'CREATE TABLE role_menus ({utils.role_menus_schema})')
+        for record in records:
+            record = list(record)
+            role_ids = [int(id) for id in record[2].split()]
+            await con.execute(f'INSERT INTO role_menus VALUES ({record[0]}, {record[1]}, ARRAY{role_ids}, 0)')
+        
+        records = await con.fetch('SELECT user_id, xp from users')
+        await con.execute('ALTER TABLE users DROP COLUMN xp')
+        for record in records:
+            user_id, xp = list(record)
+            await con.execute(f'UPDATE members SET xp = {xp} WHERE user_id = {user_id}')
+
+        await con.execute('ALTER TABLE guilds DROP COLUMN mod_role')
+        await con.execute('ALTER TABLE guilds DROP COLUMN admin_role')
+        await con.execute('ALTER TABLE guilds RENAME COLUMN bind_role TO mute_role')
+        await con.execute('ALTER TABLE guilds ADD COLUMN log_channel bigint')
+
 async def init():
     bot.pool = await asyncpg.create_pool(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
+
+    await update_db()
 
     bot.guilds_ = await Cache('guilds', 'guild_id', utils.guilds_schema, utils._def_guild)
     bot.users_ = await Cache('users', 'user_id', utils.users_schema, utils._def_user)
@@ -134,8 +184,7 @@ async def init():
     bot.modlog = await Cache('modlog', 'user_id, guild_id', utils.modlog_schema, utils._def_modlog)
 
     # Loads plugins and events
-    files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file] 
-    files += [f'events.{file[:-3]}' for file in os.listdir('events') if '__' not in file]
+    files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file]
     for file in files:
         ccp.log('Loading', file)
         bot.load_extension(file)
@@ -145,4 +194,33 @@ async def init():
 loop = asyncio.get_event_loop()                                                                                                                                                                                                                                       
 loop.run_until_complete(init())
 
-bot.run(config.token)
+@bot.event
+async def on_ready():
+    app_info = await bot.application_info()
+    bot.owner_id = app_info.owner.id
+
+    prefix = bot.guilds_.default['prefix']
+    await bot.change_presence(activity=Game(name=f'{prefix}help'))
+    
+    ccp.ready(f'Logged in as {bot.user.name}')
+    ccp.ready(f'ID: {bot.user.id}')
+    bot.url = oauth_url(client_id=bot.user.id, permissions=Permissions(permissions=8))
+    ccp.ready(f'URL: \u001b[1m\u001b[34m{bot.url}\u001b[0m')
+
+    for guild in bot.guilds:
+        if guild.id not in bot.guilds_.keys():
+            await bot.guilds_.insert(guild.id)
+            if guild.system_channel:
+                await bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
+        
+        if guild.me.guild_permissions.manage_guild:
+            bot.invites_[guild.id] = await guild.invites()
+            if 'VANITY_URL' in guild.features:
+                vanity = await guild.vanity_invite()
+                bot.invites_[guild.id].append(vanity)
+
+try:
+    bot.run(config.token)
+except:
+    ccp.error('Failed to connect to Discord servers. Check your internet connection.')
+    os._exit(0)

@@ -12,10 +12,6 @@ class Automod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def automod_enabled(self, guild):
-        if not self.bot.guilds_[guild.id]['automod']:
-            return
-
     @commands.Cog.listener()
     async def on_message(self, msg):
         if not msg.guild:
@@ -24,38 +20,45 @@ class Automod(commands.Cog):
         member = msg.author
         guild = msg.guild
 
-        self.automod_enabled(msg.guild)
+        if not self.bot.guilds_[guild.id]['automod']:
+            return
 
         pattern = r'(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li|sg)|discordapp\.com\/invite)\/.+[a-z]'
         match = re.search(pattern, msg.content)
         if match:
-            bind = guild.get_role(self.bot.guilds_[guild.id]['bind_role'])
-            mod = guild.get_role(self.bot.guilds_[guild.id]['mod_role'])
-            admin = guild.get_role(self.bot.guilds_[guild.id]['admin_role'])
+            mute_role = guild.get_role(self.bot.guilds_[guild.id]['mute_role'])
 
-            if not bind or mod in member.roles or admin in member.roles or member.id == guild.owner_id:
+            perms = member.guild_permissions
+            if perms.kick_members or perms.ban_members:
                 return
 
             await msg.delete()
-            await member.add_roles(bind, reason='Sent an invite URL')
-
-            await self.bot.members.update((member.id, guild.id), 'muted', str(datetime.datetime.utcnow()))
             
-            embed = Embed(description=f'**{emoji["mute"]} You have been muted by `Automod`.**')
-            embed.set_author(name=guild, icon_url=guild.icon_url)
-            embed.add_field(name='Reason', value='*Sent an invite URL*')
-            embed.set_footer(text='Muted')
-            embed.timestamp = datetime.datetime.utcnow()
+            muted = self.bot.members[member.id, guild.id]['muted']
+            if not muted:
+                reason = 'Sent an invite URL'
+                await member.add_roles(mute_role, reason=reason)
 
-            try:
-                await member.send(embed=embed)
-            except discord.Forbidden:
-                pass
+                await self.bot.members.update((member.id, guild.id), 'muted', str(datetime.datetime.utcnow()))
+                
+                embed = Embed(description=f'**{emoji["mute"]} You have been muted by `Automod`.**')
+                embed.set_author(name=guild, icon_url=guild.icon_url)
+                embed.add_field(name='Reason', value=f'*{reason}*')
+                embed.set_footer(text='Muted')
+                embed.timestamp = datetime.datetime.utcnow()
 
-            embed.description = f'**{emoji["mute"]} {member.mention} has been muted.**'
-            embed.set_author(name='Automod', icon_url=self.bot.user.avatar_url)
+                try:
+                    await member.send(embed=embed)
+                except discord.Forbidden:
+                    pass
 
-            await msg.channel.send(embed=embed)
+                embed.description = f'**{emoji["mute"]} {member.mention} has been muted.**'
+                embed.set_author(name='Automod', icon_url=self.bot.user.avatar_url)
+
+                msg = await msg.channel.send(embed=embed)
+
+                await self.bot.cogs['Moderation']._log(member, guild, msg, 'mute', reason)
+                await self.bot.cogs['Logging'].on_member_mute(guild.me, member, reason)
 
 def setup(bot):
     bot.add_cog(Automod(bot))

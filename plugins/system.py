@@ -73,8 +73,7 @@ class System(commands.Cog):
             await member.add_roles(role)
 
         if self.bot.ranks.get(guild.id) and (role_ids := self.bot.ranks[guild.id]['role_ids']):
-            role_ids = role_ids.split()
-            if role := guild.get_role(int(role_ids[0])):
+            if role := guild.get_role(role_ids[0]):
                 await member.add_roles(role)
         
     @commands.Cog.listener()

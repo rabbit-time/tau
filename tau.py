@@ -126,53 +126,8 @@ class Cache(aobject):
             else:
                 await con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = $1', index)
 
-async def update_db():
-    '''A migration function for Tau 2.1.0
-    I know this code is disgusting but it's only temporary
-    and it gets the job done quickly and efficiently enough.
-    '''
-    async with bot.pool.acquire() as con:
-        records = await con.fetch('SELECT * FROM modlog')
-        await con.execute('DROP TABLE modlog')
-        await con.execute(f'CREATE TABLE modlog ({utils.modlog_schema})')
-        for record in records:
-            record = list(record)
-            record = record[:2] + [''] + record[2:]
-            record[-2] = datetime.datetime.fromtimestamp(record[-2])
-            await con.execute(f'INSERT INTO modlog VALUES ($1, $2, $3, $4, $5, $6)', *record)
-        
-        records = await con.fetch('SELECT * FROM ranks')
-        await con.execute('DROP TABLE ranks')
-        await con.execute(f'CREATE TABLE ranks ({utils.ranks_schema})')
-        for record in records:
-            record = list(record)
-            role_ids = [int(id) for id in record[1].split()]
-            levels = [i*5 for i in range(len(role_ids))] if len(role_ids) == 6 else [5, 10, 15, 20, 25]
-            await con.execute(f'INSERT INTO ranks VALUES ({record[0]}, ARRAY{role_ids}, ARRAY{levels})')
-        
-        records = await con.fetch('SELECT * FROM role_menus')
-        await con.execute('DROP TABLE role_menus')
-        await con.execute(f'CREATE TABLE role_menus ({utils.role_menus_schema})')
-        for record in records:
-            record = list(record)
-            role_ids = [int(id) for id in record[2].split()]
-            await con.execute(f'INSERT INTO role_menus VALUES ({record[0]}, {record[1]}, ARRAY{role_ids}, 0)')
-        
-        records = await con.fetch('SELECT user_id, xp from users')
-        await con.execute('ALTER TABLE users DROP COLUMN xp')
-        for record in records:
-            user_id, xp = list(record)
-            await con.execute(f'UPDATE members SET xp = {xp} WHERE user_id = {user_id}')
-
-        await con.execute('ALTER TABLE guilds DROP COLUMN mod_role')
-        await con.execute('ALTER TABLE guilds DROP COLUMN admin_role')
-        await con.execute('ALTER TABLE guilds RENAME COLUMN bind_role TO mute_role')
-        await con.execute('ALTER TABLE guilds ADD COLUMN log_channel bigint')
-
 async def init():
     bot.pool = await asyncpg.create_pool(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
-
-    await update_db()
 
     bot.guilds_ = await Cache('guilds', 'guild_id', utils.guilds_schema, utils._def_guild)
     bot.users_ = await Cache('users', 'user_id', utils.users_schema, utils._def_user)

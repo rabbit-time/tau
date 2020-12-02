@@ -161,7 +161,7 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
-        if after.author.bot:
+        if after.author.bot or before.content == after.content:
             return
 
         webhook = await self.get_webhook(before.guild)

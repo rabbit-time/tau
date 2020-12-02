@@ -165,11 +165,11 @@ class Logging(commands.Cog):
         prefix = self.bot.guilds_[msg.guild.id]['prefix']
         if not msg.content.startswith(prefix) and (msg.author not in self.bot.suppressed.keys() or self.bot.suppressed.get(msg.author) != msg.channel):
             webhook = await self.get_webhook(msg.guild)
-            if webhook:
-                embed = Embed(title=f'Message deleted in {msg.channel.mention}', color=utils.Color.red)
+            if webhook and webhook.channel != msg.channel:
+                embed = Embed(description=f'**Message deleted in {msg.channel.mention}:**', color=utils.Color.red)
                 embed.set_author(name=msg.author, icon_url=msg.author.avatar_url)
                 if msg.content:
-                    embed.description = f'> {msg.content}'
+                    embed.description += f'\n>>> {msg.content}'
 
                 if msg.attachments:
                     file = msg.attachments[0]
@@ -184,7 +184,7 @@ class Logging(commands.Cog):
             return
 
         webhook = await self.get_webhook(before.guild)
-        if webhook:
+        if webhook and webhook.channel != before.channel:
             if len(before.content) > 1024 or len(after.content) > 1024:
                 embed = Embed(title='Message edit', description=f'**Before**\n> {before.content}', color=utils.Color.gold)
                 embed.set_author(name=after.author, icon_url=after.author.avatar_url)

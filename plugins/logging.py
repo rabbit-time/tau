@@ -147,6 +147,18 @@ class Logging(commands.Cog):
                 embed.add_field(name='Invite', value=f'**[{invite.code}]({invite.url})**')
 
             await webhook.send(embed=embed)
+    
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        if member.bot:
+            return
+
+        webhook = await self.get_webhook(member.guild)
+        if webhook:
+            embed = Embed(title='Member leave', color=utils.Color.red)
+            embed.set_author(name=member, icon_url=member.avatar_url)
+
+            await webhook.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message_delete(self, msg):
@@ -154,8 +166,15 @@ class Logging(commands.Cog):
         if not msg.content.startswith(prefix) and (msg.author not in self.bot.suppressed.keys() or self.bot.suppressed.get(msg.author) != msg.channel):
             webhook = await self.get_webhook(msg.guild)
             if webhook:
-                embed = Embed(title='Message delete', description=f'> {msg.content}', color=utils.Color.red)
+                embed = Embed(title=f'Message deleted in {msg.channel.mention}', color=utils.Color.red)
                 embed.set_author(name=msg.author, icon_url=msg.author.avatar_url)
+                if msg.content:
+                    embed.description = f'> {msg.content}'
+
+                if msg.attachments:
+                    file = msg.attachments[0]
+                    if file.url.lower().endswith(('png', 'jpeg', 'jpg', 'gif', 'webp')):
+                        embed.set_image(url=file.url)
 
                 await webhook.send(embed=embed)
 

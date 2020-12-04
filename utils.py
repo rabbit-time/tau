@@ -31,8 +31,8 @@ emoji = {
     'owner': '<:owner:697338812971483187>',
     'boost': '<:boost:708098202339115119>',
     'loading': '<a:loading:688977787528544301>',
-    'coin0': '<:0_:702492300877496320>',
-    'coin1': '<:1_:702492300894535750>',
+    'coin0': '<:0_:784503048566210573>',
+    'coin1': '<:1_:784503048453095485>',
     'die1': '<:d1:703190416606101535>',
     'die2': '<:d2:703190416820011049>',
     'die3': '<:d3:703190416924606484>',
@@ -64,12 +64,15 @@ emoji = {
 }
 
 class Color:
-    gold = 0xfbb041
+    gold = 0xffc669
     green = 0x57c998
     yellow = 0xffc20c
     sky = 0x88b3f8
+    cyan = 0x68dbff
+    lilac = 0xc4a8ff
+    pinky = 0xffb0e6
     red = 0xf94a4a
-    rainbow = (red, 0xffa446, 0xffc049, green, 0x55b8f8, 0xc8aaff, 0xffadca)
+    rainbow = (red, 0xffa446, gold, green, cyan, lilac, pinky)
 
 class RoleNotFound(Exception):
     '''Exception: Role could not be found'''

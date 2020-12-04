@@ -46,6 +46,7 @@ passwd = 'passwd' # PostgreSQL password
 invite = 'https://discord.gg/invite' # Invite to server
 repo = 'https://github.com/Lumen-01/tau' # GitHub repo link
 token = 'DISCORD API TOKEN'
+tenor_api_key = 'TENOR API KEY'
 version = '2.1.0'
 ```
 

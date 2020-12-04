@@ -1,4 +1,5 @@
 import io
+import json
 import random
 
 import discord
@@ -8,13 +9,87 @@ from discord.ext.commands import command, guild_only
 from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
+import pprint
 
+import ccp
+import config
 import utils
 from utils import emoji, level, levelxp
 
 class Social(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    def get_gif(self, query: str) -> str:
+        query = query.replace(' ', '%20')
+        filters = 'contentfilter=medium&mediafilter=minimal&limit=1'
+        res = requests.get(f'https://api.tenor.com/v1/random?q={query}&key={config.tenor_api_key}&{filters}')
+        if res.status_code == 200:
+            obj = json.loads(res.content)
+            url = obj['results'][0]['media'][0]['gif']['url']
+            return url
+        
+        return ccp.error('Failed to reach Tenor servers')
+
+    @command(name='hug', usage='hug <member>')
+    @guild_only()
+    async def hug(self, ctx, member: discord.Member):
+        '''Hug someone!\n
+        **Example:```yml\n♤hug @Tau#4272```**
+        '''
+        gif = self.get_gif('anime hug cute')
+        if gif:
+            recipient = 'themselves' if ctx.author == member else member.display_name
+            embed = Embed(color=utils.Color.lilac)
+            embed.set_author(name=f'{ctx.author.display_name} hugged {recipient}!', icon_url=ctx.author.avatar_url)
+            embed.set_image(url=gif)
+            
+            await ctx.send(embed=embed)
+    
+    @command(name='kiss', usage='kiss <member>')
+    @guild_only()
+    async def kiss(self, ctx, member: discord.Member):
+        '''Kiss someone!\n
+        **Example:```yml\n♤kiss @Tau#4272```**
+        '''
+        gif = self.get_gif('anime kiss')
+        if gif:
+            recipient = 'themselves' if ctx.author == member else member.display_name
+            embed = Embed(color=utils.Color.pinky)
+            embed.set_author(name=f'{ctx.author.display_name} kissed {recipient}!', icon_url=ctx.author.avatar_url)
+            embed.set_image(url=gif)
+            
+            await ctx.send(embed=embed)
+
+    @command(name='pat', aliases=['headpat'], usage='pat <member>')
+    @guild_only()
+    async def pat(self, ctx, member: discord.Member):
+        '''Headpat someone!\n
+        **Example:```yml\n♤pat @Tau#4272```**
+        '''
+        gif = self.get_gif('anime headpat')
+        if gif:
+            recipient = 'themselves' if ctx.author == member else member.display_name
+            embed = Embed(color=utils.Color.lilac)
+            embed.set_author(name=f'{ctx.author.display_name} patted {recipient}!', icon_url=ctx.author.avatar_url)
+            embed.set_image(url=gif)
+            
+            await ctx.send(embed=embed)
+    
+    @command(name='slap', usage='slap <member>')
+    @guild_only()
+    async def slap(self, ctx, member: discord.Member):
+        '''Slap someone! (not too hard tho)\n
+        **Example:```yml\n♤slap @Tau#4272```**
+        '''
+        gif = self.get_gif('anime slap')
+        if gif:
+            recipient = 'themselves' if ctx.author == member else member.display_name
+            embed = Embed(color=utils.Color.red)
+            embed.set_author(name=f'{ctx.author.display_name} slapped {recipient}!', icon_url=ctx.author.avatar_url)
+            embed.set_image(url=gif)
+            
+            await ctx.send(embed=embed)
 
     @command(name='server', aliases=['serverinfo'], usage='server')
     @commands.bot_has_permissions(external_emojis=True)

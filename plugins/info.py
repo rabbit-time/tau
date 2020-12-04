@@ -29,8 +29,17 @@ class Info(commands.Cog):
         if not member:
             member = ctx.author
 
-        embed = Embed(description=f':link: **[Avatar]({member.avatar_url})**')
-        embed.set_author(name=member, icon_url=member.avatar_url)
+        png = member.avatar_url_as(format='png')
+        jpg = member.avatar_url_as(format='jpg')
+        webp = member.avatar_url_as(format='webp')
+        formats = [f'[`.png`]({png})', f'[`.jpg`]({jpg})', f'[`.webp`]({webp})']
+        if member.is_avatar_animated():
+            gif = member.avatar_url_as(format='gif')
+            formats.append(f'[`.gif`]({gif})')
+        
+        delim = '\u2002|\u2002'
+        embed = Embed(description=f':link: **{delim.join(formats)}**', color=utils.Color.cyan)
+        embed.set_author(name=member.display_name, icon_url=member.avatar_url)
         embed.set_image(url=member.avatar_url)
 
         await ctx.send(embed=embed)

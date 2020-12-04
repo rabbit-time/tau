@@ -423,11 +423,13 @@ class System(commands.Cog):
         **Example:```yml\n♤shutdown\n♤exit```**
         '''
         embed = Embed(description='**```diff\n- Shutting down...```**', color=utils.Color.red)
+        embed.set_image(url='attachment://unknown.png')
 
-        await ctx.send(embed=embed)
+        await ctx.send(file=File('assets/redsplash.png', 'unknown.png'), embed=embed)
 
         await self.bot.pool.close()
         await self.bot.close()
+        
         os._exit(0)
 
 def setup(bot):

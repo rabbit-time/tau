@@ -59,7 +59,7 @@ class OnCommand(commands.Cog):
                 title, noun, verb = 'Bot missing permissions', 'I', 'perform'
 
             files = [File('assets/reddot.png', 'unknown.png'), File('assets/redbar.png', 'unknown1.png')]
-            perms = ', '.join(sorted(f'**`{perm}`**' for perm in ['manage_roles', 'kick_members', 'ban_members']))
+            perms = ', '.join(sorted(f'**`{perm}`**' for perm in error.missing_perms))
             desc = f'**{noun} lack the following permissions needed to {verb} this command:**\n{perms}'
             embed = Embed(description=desc, color=utils.Color.red)
             embed.set_author(name=title, icon_url='attachment://unknown.png')

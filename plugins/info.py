@@ -116,7 +116,7 @@ class Info(commands.Cog):
                 desc = '*This command may only be used in servers* ' + desc
             elif utils.is_dm_only(cmd):
                 desc = '*This command may only be used in DMs* ' + desc
-            embed = Embed(description=desc)
+            embed = Embed(description=desc, color=utils.Color.sky)
 
             await ctx.send(embed=embed)
 

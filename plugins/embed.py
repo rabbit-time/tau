@@ -30,6 +30,41 @@ class Embed(commands.Cog):
         **Example:```yml\n♤embed```**
         '''
         await ctx.send(embed=discord.Embed())
+    
+    @command(name='addfield', usage='addfield <message> <name> <value>')
+    @commands.has_permissions(manage_messages=True)
+    async def addfield(self, ctx, msg: discord.Message, name: str, value: str):
+        '''Add a field to the embed.
+        Use quotes for the name and the value.\n
+        **Example:```yml\n♤addfield 694890918645465138 "This is the title" "This is the text"```**
+        '''
+        embed = await self.pre(ctx, msg)
+        embed.add_field(name=name, value=value, inline=False)
+
+        await msg.edit(embed=embed)
+
+    @command(name='addinlinefield', usage='addinlinefield <message> <name> <value>')
+    @commands.has_permissions(manage_messages=True)
+    async def addinlinefield(self, ctx, msg: discord.Message, name: str, value: str):
+        '''Add an inline field to the embed.
+        Use quotes for the name and the value.\n
+        **Example:```yml\n♤addinlinefield 694890918645465138 "This is the title" "This is the text"```**
+        '''
+        embed = await self.pre(ctx, msg)
+        embed.add_field(name=name, value=value)
+
+        await msg.edit(embed=embed)
+    
+    @command(name='clearfields', usage='clearfields <message>')
+    @commands.has_permissions(manage_messages=True)
+    async def clearfields(self, ctx, msg: discord.Message):
+        '''Clear the fields from an embed.\n
+        **Example:```yml\n♤clearfields 694890918645465138```**
+        '''
+        embed = await self.pre(ctx, msg)
+        embed.clear_fields()
+
+        await msg.edit(embed=embed)
 
     @command(name='setcontent', usage='setcontent <message> <text>')
     @commands.has_permissions(manage_messages=True)

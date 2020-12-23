@@ -69,7 +69,7 @@ class Roles(commands.Cog):
                         return
 
                     rank = None
-                    for i in range(0, len(roles), -1):
+                    for i in range(len(roles)-1, -1, -1):
                         if level(newxp) >= levels[i]:
                             rank = roles.pop(i)
                             break

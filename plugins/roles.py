@@ -58,28 +58,34 @@ class Roles(commands.Cog):
                 xp = self.bot.members[uid, guild.id]['xp']
                 newxp = xp + random.randint(10, 20)
                 await self.bot.members.update((uid, guild.id), 'xp', newxp)
-                if level(xp) is not level(newxp):
+                
+                # Rank roles
+                if self.bot.ranks.get(guild.id) and (role_ids := self.bot.ranks[guild.id]['role_ids']):
+                    levels = self.bot.ranks[guild.id]['levels']
+                    roles = [guild.get_role(id) for id in role_ids]
+                    if None in roles:
+                        await self.bot.ranks.update(guild.id, 'role_ids', [])
+                        await self.bot.ranks.update(guild.id, 'levels', [])
+                        return
+
+                    rank = None
+                    for i in range(0, len(roles), -1):
+                        if level(newxp) >= levels[i]:
+                            rank = roles.pop(i)
+                            break
+
+                    await member.remove_roles(roles)
+                    if rank:
+                        await member.add_roles(rank)
+
                     # Send level up message if enabled in guild config.
-                    if self.bot.guilds_[guild.id]['levelup_messages']:
-                        # Rank roles
-                        if self.bot.ranks.get(guild.id) and (role_ids := self.bot.ranks[guild.id]['role_ids']):
-                            levels = self.bot.ranks[guild.id]['levels']
-                            roles = [guild.get_role(id) for id in role_ids]
-                            if None in roles:
-                                await self.bot.ranks.update(guild.id, 'role_ids', [])
-                                await self.bot.ranks.update(guild.id, 'levels', [])
-                                return
+                    if level(xp) is not level(newxp) and self.bot.guilds_[guild.id]['levelup_messages']:
+                        if level(newxp) in levels:
+                            desc = f'**{member.display_name} has ranked up to {rank.mention}!**'
+                            embed = Embed(description=desc, color=rank.color)
+                            embed.set_author(name=member.display_name, icon_url=member.avatar_url)
 
-                            if level(newxp) in levels:
-                                rank = roles.pop(levels.index(level(newxp)))
-                                await member.remove_roles(roles)
-                                await member.add_roles(rank)
-                                
-                                desc = f'**{member.display_name} has ranked up to {rank.mention}!**'
-                                embed = Embed(description=desc, color=rank.color)
-                                embed.set_author(name=member.display_name, icon_url=member.avatar_url)
-
-                                await chan.send(embed=embed)
+                            await chan.send(embed=embed)
                         else:
                             desc = f'**```yml\n↑ {level(newxp)} ↑ {member.display_name} has leveled up!```**'
                             embed = Embed(description=desc, color=utils.Color.green)

@@ -74,7 +74,7 @@ class Roles(commands.Cog):
                             rank = roles.pop(i)
                             break
 
-                    await member.remove_roles(roles)
+                    await member.remove_roles(*roles)
                     if rank:
                         await member.add_roles(rank)
 

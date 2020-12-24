@@ -264,6 +264,7 @@ class Utilities(commands.Cog):
         await ctx.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
 
     @command(name='resend', aliases=['rs'], usage='resend <message>')
+    @commands.has_guild_permissions(manage_guild=True)
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def resend(self, ctx, msg: discord.Message):
         '''Resend a message.
@@ -284,20 +285,27 @@ class Utilities(commands.Cog):
         for a in msg.attachments:
             file = await a.to_file()
             files.append(file)
-
-        rmenu = self.bot.rmenus.get((ctx.guild.id, msg.id))
-
-        await msg.delete()
         
         new = await ctx.send(content=msg.content, files=files, embed=embed)
 
+        rmenu = self.bot.rmenus.get((msg.guild.id, msg.id))
         if rmenu:
-            for i in range(len(rmenu['role_ids'].split())):
-                await new.add_reaction(utils.emoji[i+1])
-                
-            await self.bot.rmenus.update((ctx.guild.id, new.id), 'role_ids', rmenu['role_ids'])
-            await self.bot.rmenus.update((ctx.guild.id, new.id), 'limit_', rmenu['limit_'])
-            
+            for emoji in rmenu['emojis']:
+                try:
+                    await new.add_reaction(emoji)
+                except discord.NotFound:
+                    return await new.delete()
+
+            async with self.bot.pool.acquire() as con:
+                self.bot.rmenus[ctx.guild.id, new.id] = rmenu
+                del self.bot.rmenus[msg.guild.id, msg.id]
+
+                stmt = (f'UPDATE role_menus SET guild_id = {ctx.guild.id}, message_id = {new.id} '
+                        f'WHERE guild_id = {msg.guild.id} AND message_id = {msg.id}')
+                await con.execute(stmt)
+
+        await msg.delete()
+
     @command(name='role', usage='role <role>')
     @commands.bot_has_permissions(external_emojis=True)
     @guild_only()

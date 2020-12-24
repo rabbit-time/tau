@@ -132,28 +132,8 @@ class Cache(aobject):
             else:
                 await con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = $1', index)
 
-async def migrate():
-    async with bot.pool.acquire() as con:
-        await con.execute(f'ALTER TABLE role_menus DROP COLUMN limit_')
-        await con.execute(f'ALTER TABLE role_menus ADD COLUMN emojis text[]')
-        await con.execute(f'ALTER TABLE role_menus ADD COLUMN limit_ bigint')
-        await con.execute(f'UPDATE role_menus SET limit_ = 0')
-
-        emojis = [
-            '<:01:683462884625481802>', '<:02:683462884650516492>', '<:03:683462884378148865>', '<:04:683462884755505173>',
-            '<:05:683462884340006963>', '<:06:683462884696916021>', '<:07:683462884730339509>', '<:08:683462884793385058>',
-            '<:09:683462884726145052>', '<:10:683462884709367818>', '<:11:683535077615206419>', '<:12:683535077765808128>',
-            '<:13:683535077816532992>', '<:14:683535077715869773>', '<:15:683535077828984907>'
-        ]
-        
-        records = await con.fetch('SELECT guild_id, message_id, role_ids FROM role_menus')
-        for guild_id, msg_id, role_ids in records:
-            await con.execute(f'UPDATE role_menus SET emojis = ARRAY{emojis[:len(role_ids)]} WHERE guild_id = {guild_id} AND message_id = {msg_id}')
-
 async def init():
     bot.pool = await asyncpg.create_pool(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
-
-    await migrate()
 
     bot.guilds_ = await Cache('guilds', 'guild_id', utils.guilds_schema, utils._def_guild)
     bot.users_ = await Cache('users', 'user_id', utils.users_schema, utils._def_user)

@@ -20,21 +20,17 @@ class Ranks(commands.Converter):
         except:
             raise commands.BadArgument
 
+class RoleEntries(commands.RoleConverter):
+    async def convert(self, ctx, arg):
+        if arg.startswith(':') or arg.startswith('<:') or arg.startswith('<a'):
+            return arg
+        else:
+            return await super().convert(ctx, arg)
+
 class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._cd = commands.CooldownMapping.from_cooldown(10, 120.0, commands.BucketType.user)
-    
-    def get_role(self, member, guild, payload):
-        emojis = tuple(utils.emoji.values())
-        emoji = str(payload.emoji)
-        if not self.bot.rmenus.get((guild.id, payload.message_id)) or member.bot or emoji not in emojis:
-            return
-        
-        i = tuple(utils.emoji.keys())[emojis.index(emoji)] - 1
-        role_ids = self.bot.rmenus[guild.id, payload.message_id]['role_ids']
-        
-        return guild.get_role(role_ids[i])
 
     @commands.Cog.listener()
     async def on_message(self, msg):
@@ -102,33 +98,44 @@ class Roles(commands.Cog):
     async def on_raw_reaction_add(self, payload):
         member = payload.member
         guild = member.guild
+        rmenu = self.bot.rmenus.get((guild.id, payload.message_id))
+        if rmenu:
+            emoji_id = str(payload.emoji).split(':')[-1]
+            emoji_ids = [emoji.split(':')[-1] for emoji in rmenu['emojis']]
+            if member.bot or emoji_id not in emoji_ids:
+                return
+    
+            roles = [guild.get_role(id) for id in rmenu['role_ids']]
+            role = roles[emoji_ids.index(emoji_id)]
+            if role:
+                n = 0
+                for r in roles:
+                    if r in member.roles:
+                        n += 1
 
-        role = self.get_role(member, guild, payload)
-        if role:
-            limit = self.bot.rmenus[guild.id, payload.message_id]['limit_']
-            role_ids = self.bot.rmenus[guild.id, payload.message_id]['role_ids']
-            roles = [guild.get_role(id) for id in role_ids]
-            n = 0
-            for role in roles:
-                if role in member.roles:
-                    n += 1
-
-            role = self.get_role(member, guild, payload)
-            if n < limit or limit == 0:
-                await member.add_roles(role)
-            else:
-                chan = guild.get_channel(payload.channel_id)
-                msg = await chan.fetch_message(payload.message_id)
-                await msg.remove_reaction(payload.emoji, member)
+                limit = rmenu['limit_']
+                if n < limit or limit == 0:
+                    await member.add_roles(role)
+                else:
+                    chan = guild.get_channel(payload.channel_id)
+                    msg = await chan.fetch_message(payload.message_id)
+                    await msg.remove_reaction(payload.emoji, member)
     
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         guild = self.bot.get_guild(payload.guild_id)
         member = guild.get_member(payload.user_id)
+        rmenu = self.bot.rmenus.get((guild.id, payload.message_id))
+        if rmenu:
+            emoji_id = str(payload.emoji).split(':')[-1]
+            emoji_ids = [emoji.split(':')[-1] for emoji in rmenu['emojis']]
+            if member.bot or emoji_id not in emoji_ids:
+                return
 
-        role = self.get_role(member, guild, payload)
-        if role:
-            await member.remove_roles(role)
+            roles = [guild.get_role(id) for id in rmenu['role_ids']]
+            role = roles[emoji_ids.index(emoji_id)]
+            if role:
+                await member.remove_roles(role)
 
     @command(name='addall', usage='addall <role>')
     @commands.has_guild_permissions(manage_roles=True)
@@ -169,34 +176,41 @@ class Roles(commands.Cog):
 
             await msg.edit(embed=embed)
 
-    @command(name='rolemenu', aliases=['rmenu'], usage='rolemenu <title> | <color> | <*roles>')
+    @command(name='rolemenu', aliases=['rmenu'], usage='rolemenu <title> <color> <*roles>')
     @commands.has_guild_permissions(manage_guild=True)
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
     @guild_only()
-    async def rolemenu(self, ctx, *roles: discord.Role):
+    async def rolemenu(self, ctx, title: str, color: discord.Color, *role_entries: RoleEntries):
         '''Create a role menu.
-        Role menus are powered by message reactions and can hold up to 15 roles.
-        `roles` must be a series of valid role IDs delimited by spaces.
+        Role menus are powered by message reactions and can hold up to 20 roles.
+        `roles` must be a series of valid role IDs delimited by spaces. To use role names instead,
+        wrap them in double quotes so they're counted as one argument.
         The menu can be further customized with the embed commands.\n
-        **Example:```yml\n♤rolemenu 546836599141302272```**
+        **Example:```yml\n♤rolemenu Regions #88b3f8
+        1️⃣ "north america"
+        2️⃣ "south america"
+        3️⃣ europe```**
         '''
         await ctx.message.delete()
-
-        if len(roles) > 15:
+        
+        emojis, roles = role_entries[::2], role_entries[1::2]
+        if len(roles) > 20 or any(emojis.count(e) > 1 for e in emojis):
             raise commands.BadArgument
 
-        desc = ''
-        for i, role in enumerate(roles):
-            desc += f'**{i+1}.** {str(role)}\n'
-        embed = Embed(title='Role menu', description=desc.strip('\n'))
+        desc = '\n'.join(f'{emoji} {role}' for emoji, role in zip(emojis, roles))
+        embed = Embed(title=title, description=desc, color=color)
 
         menu = await ctx.send(embed=embed)
-
-        for i, role in enumerate(roles):
-            await menu.add_reaction(utils.emoji[i+1])
+        try:
+            for emoji in emojis:
+                await menu.add_reaction(emoji)
+        except discord.NotFound:
+            await menu.delete()
+            raise commands.BadArgument
 
         await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', [role.id for role in roles])
+        await self.bot.rmenus.update((ctx.guild.id, menu.id), 'emojis', list(emojis))
 
     @command(name='rmlimit', usage='rmlimit <menu> <limit>')
     @commands.has_guild_permissions(manage_guild=True)

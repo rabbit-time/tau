@@ -52,7 +52,7 @@ class Roles(commands.Cog):
             if not limited:
                 # Add xp to user
                 xp = self.bot.members[uid, guild.id]['xp']
-                newxp = xp + random.randint(10, 20)
+                newxp = xp + random.randint(5, 15)
                 await self.bot.members.update((uid, guild.id), 'xp', newxp)
                 
                 # Rank roles

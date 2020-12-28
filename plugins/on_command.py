@@ -18,15 +18,14 @@ class OnCommand(commands.Cog):
         if msg.author.bot:
             return
 
-        guild = msg.guild if msg.guild else 'dm'
-        ccp.event(f'\u001b[1m{str(msg.author)}@{guild}\u001b[0m {repr(msg.content)[1:-1]}', event='INVOKE')
-
-        await self.bot.process_commands(msg)
+        prefix = self.bot.guilds_[msg.guild.id]['prefix'] if msg.guild else self.bot.guilds_.default['prefix']
+        if msg.content.startswith(prefix):
+            await self.bot.process_commands(msg)
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
         guild = ctx.guild if ctx.guild else 'dm'
-        ccp.event(f'\u001b[1m{str(ctx.author)}@{guild}\u001b[0m {repr(ctx.message.content)[1:-1]}', event='INVOKE')
+        ccp.event(f'\u001b[1m{ctx.author}@{guild}\u001b[0m {repr(ctx.message.content)[1:-1]}', event='INVOKE')
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

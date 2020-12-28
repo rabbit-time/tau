@@ -69,8 +69,11 @@ class Roles(commands.Cog):
                         if level(newxp) >= levels[i]:
                             rank = roles.pop(i)
                             break
+                    
+                    for role in roles:
+                        if role in member.roles:
+                            await member.remove_roles(role)
 
-                    await member.remove_roles(*roles)
                     if rank:
                         await member.add_roles(rank)
 

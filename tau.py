@@ -132,8 +132,23 @@ class Cache(aobject):
             else:
                 await con.execute(f'UPDATE {self.table} SET {key} = {val} WHERE {self.pk} = $1', index)
 
+async def fix_welcome_messages():
+    async with bot.pool.acquire() as con:
+        records = await con.fetch('SELECT guild_id, welcome_message, goodbye_message FROM guilds')
+
+        for record in records:
+            guild_id, welcome_message, goodbye_message = record.values()
+            welcome_message = welcome_message.replace('@mention', '@name').replace('@guild', '@server')
+            goodbye_message = goodbye_message.replace('@mention', '@name').replace('@guild', '@server')
+            print(welcome_message)
+            print(goodbye_message)
+            stmt = f'UPDATE guilds SET welcome_message = \'{welcome_message}\', goodbye_message = \'{goodbye_message}\' WHERE guild_id = {guild_id}'
+            await con.execute(stmt)
+
 async def init():
     bot.pool = await asyncpg.create_pool(user='tau', password=config.passwd, database='tau', host='127.0.0.1')
+
+    await fix_welcome_messages()
 
     bot.guilds_ = await Cache('guilds', 'guild_id', utils.guilds_schema, utils._def_guild)
     bot.users_ = await Cache('users', 'user_id', utils.users_schema, utils._def_user)

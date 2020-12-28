@@ -22,7 +22,7 @@ class System(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
-        ccp.event(f'{str(guild)} ({str(guild.owner)})', event='GUILD_ADD')
+        ccp.event(f'{guild} ({guild.owner})', event='GUILD_ADD')
 
         await self.bot.guilds_.insert(guild.id)
         if guild.system_channel:
@@ -30,7 +30,7 @@ class System(commands.Cog):
     
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        ccp.event(f'{str(guild)} ({str(guild.owner)})', event='GUILD_REM')
+        ccp.event(f'{guild} ({guild.owner})', event='GUILD_REM')
 
         async with self.bot.pool.acquire() as con:
             await self.bot.guilds_.delete(guild.id)
@@ -40,7 +40,7 @@ class System(commands.Cog):
         
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        ccp.event(f'{str(member)} has joined {str(member.guild)}', event='MEMBER_ADD')
+        ccp.event(f'{member} has joined {member.guild}', event='MEMBER_ADD')
 
         if member.bot:
             return
@@ -48,13 +48,13 @@ class System(commands.Cog):
         cache = self.bot.guilds_
         guild = member.guild
         if cache[guild.id]['welcome_messages'] and (chan := guild.get_channel(cache[guild.id]['system_channel'])):
-            msg = cache[guild.id]['welcome_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name)
-            embed = Embed(color=utils.Color.green)
+            msg = cache[guild.id]['welcome_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@server', guild.name)
+            embed = Embed(description=msg, color=utils.Color.green)
             embed.set_author(name=member, icon_url=member.avatar_url)
             embed.set_footer(text='Join', icon_url='attachment://unknown.png')
             embed.timestamp = datetime.datetime.utcnow()
             
-            await chan.send(msg, file=File('assets/join.png', 'unknown.png'), embed=embed)
+            await chan.send(member.mention, file=File('assets/join.png', 'unknown.png'), embed=embed)
 
         if self.bot.members.get((member.id, guild.id)):
             muted = self.bot.members[member.id, guild.id]['muted']
@@ -73,7 +73,7 @@ class System(commands.Cog):
             await member.add_roles(role)
 
         if self.bot.ranks.get(guild.id) and (role_ids := self.bot.ranks[guild.id]['role_ids']):
-            if role := guild.get_role(role_ids[0]):
+            if self.bot.ranks[guild.id]['levels'][0] == 0 and (role := guild.get_role(role_ids[0])):
                 await member.add_roles(role)
         
     @commands.Cog.listener()
@@ -85,7 +85,7 @@ class System(commands.Cog):
         else:
             return
 
-        ccp.event(f'{str(member)} has left {str(member.guild)}', event='MEMBER_REM')
+        ccp.event(f'{member} has left {member.guild}', event='MEMBER_REM')
 
         if member.bot:
             return
@@ -93,17 +93,17 @@ class System(commands.Cog):
         cache = self.bot.guilds_
         guild = member.guild
         if cache[guild.id]['goodbye_messages'] and (chan := member.guild.get_channel(cache[guild.id]['system_channel'])):
-            msg = cache[guild.id]['goodbye_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@mention', member.mention).replace('@guild', guild.name)
-            embed = Embed(color=utils.Color.red)
+            msg = cache[guild.id]['goodbye_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@server', guild.name)
+            embed = Embed(description=msg, color=utils.Color.red)
             embed.set_author(name=member, icon_url=member.avatar_url)
             embed.set_footer(text='Leave', icon_url='attachment://unknown.png')
             embed.timestamp = datetime.datetime.utcnow()
             
-            await chan.send(msg, file=File('assets/leave.png', 'unknown.png'), embed=embed)
+            await chan.send(file=File('assets/leave.png', 'unknown.png'), embed=embed)
     
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
-        ccp.event(f'{str(user)} was banned from {str(guild)}', event='MEMBER_BAN')
+        ccp.event(f'{str(user)} was banned from {guild}', event='MEMBER_BAN')
 
         if user.bot:
             return
@@ -125,9 +125,9 @@ class System(commands.Cog):
         Note that command cannot be invoked while modifying the config.
 
         **`welcome_message`** and **`goodbye_message`** are dynamic. The following directives will be replaced automatically:
-        **@user** - The user's display name.
-        **@mention** - The user's mention.
-        **@guild** - The guild's name.
+        **@name** - The user's display name.
+        **@user** - The user's name and tag (name#0000 format).
+        **@server** - The server's name.
 
         Toggles will be immediately modified on selection.\n
         **Example:```yml\n♤config```**

@@ -203,15 +203,15 @@ async def automute(bot, user_id, guild_id, timeout: datetime):
     guild = bot.get_guild(guild_id)
     if guild:
         member = guild.get_member(user_id)
-        bind = guild.get_role(bot.guilds_[guild_id]['bind_role'])
-        if member and bind:
-            await member.remove_roles(bind)
+        mute_role = guild.get_role(bot.guilds_[guild_id]['mute_role'])
+        if member and mute_role:
+            await member.remove_roles(mute_role)
 
     del bot.mute_tasks[user_id, guild_id]
     bot.members[user_id, guild_id]['muted'] = None
     async with bot.pool.acquire() as con:
-        query = 'UPDATE members SET muted = $1 WHERE user_id = $2 AND guild_id = $3'
-        await con.execute(query, None, user_id, guild_id)
+        stmt = 'UPDATE members SET muted = $1 WHERE user_id = $2 AND guild_id = $3'
+        await con.execute(stmt, None, user_id, guild_id)
 
 async def before(ctx):
     if not ctx.bot.users_.get(ctx.author.id) and not ctx.author.bot:

@@ -55,6 +55,23 @@ class Embed(commands.Cog):
 
         await msg.edit(embed=embed)
     
+    @command(name='modfield', usage='modfield <message> <index> <name> <value>')
+    @commands.has_permissions(manage_messages=True)
+    async def modfield(self, ctx, msg: discord.Message, index: int, name: str, value: str):
+        '''Modify a field in the embed.
+        Use quotes for the name and the value.\n
+        **Example:```yml\n♤modfield 694890918645465138 1 "This is the title" "This is the text"```**
+        '''
+        embed = await self.pre(ctx, msg)
+
+        if len(embed.fields) < index:
+            raise commands.BadArgument
+
+        inline = embed.fields[index-1].inline
+        embed.set_field_at(index-1, name=name, value=value, inline=inline)
+
+        await msg.edit(embed=embed)
+    
     @command(name='clearfields', usage='clearfields <message>')
     @commands.has_permissions(manage_messages=True)
     async def clearfields(self, ctx, msg: discord.Message):

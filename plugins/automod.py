@@ -6,7 +6,7 @@ from discord import Embed
 from discord.ext import commands
 
 import ccp
-from utils import automute, emoji
+from utils import Emoji
 
 class Automod(commands.Cog):
     def __init__(self, bot):
@@ -41,7 +41,7 @@ class Automod(commands.Cog):
 
                 await self.bot.members.update((member.id, guild.id), 'muted', str(datetime.datetime.utcnow()))
                 
-                embed = Embed(description=f'**{emoji["mute"]} You have been muted by `Automod`.**')
+                embed = Embed(description=f'**{Emoji.mute} You have been muted by `Automod`.**')
                 embed.set_author(name=guild, icon_url=guild.icon_url)
                 embed.add_field(name='Reason', value=f'*{reason}*')
                 embed.set_footer(text='Muted')
@@ -52,7 +52,7 @@ class Automod(commands.Cog):
                 except discord.Forbidden:
                     pass
 
-                embed.description = f'**{emoji["mute"]} {member.mention} has been muted.**'
+                embed.description = f'**{Emoji.mute} {member.mention} has been muted.**'
                 embed.set_author(name='Automod', icon_url=self.bot.user.avatar_url)
 
                 msg = await msg.channel.send(embed=embed)

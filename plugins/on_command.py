@@ -29,6 +29,12 @@ class OnCommand(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        try:
+            msg = await ctx.channel.fetch_message(ctx.message.id)
+            ref = msg.to_reference()
+        except:
+            ref = None
+        
         error = getattr(error, 'original', error)
         now = datetime.datetime.utcnow()
 
@@ -45,10 +51,10 @@ class OnCommand(commands.Cog):
             elif utils.is_dm_only(cmd):
                 desc = '*This command may only be used in DMs* ' + desc
 
-            desc = f'**```diff\n- Invalid command usage```**\n' + desc
-            embed = Embed(description=desc)
+            embed = Embed(description=desc, color=utils.Color.red)
+            embed.set_author(name='Invalid command usage', icon_url='attachment://unknown.png')
 
-            return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
         
         missing_perms = commands.MissingPermissions, commands.BotMissingPermissions
         if isinstance(error, missing_perms):
@@ -65,21 +71,21 @@ class OnCommand(commands.Cog):
             embed.set_image(url='attachment://unknown1.png')
             embed.timestamp = now
 
-            return await ctx.send(f'Hey {ctx.author.mention}!', files=files, embed=embed)
+            return await ctx.send(files=files, embed=embed, reference=ref)
         
         # guild only
         if isinstance(error, commands.NoPrivateMessage):
-            desc = f'This command is only available within servers.'
-            embed = Embed(description=desc, color=utils.Color.red)
+            embed = Embed(color=utils.Color.red)
+            embed.set_author(name='This command is only available within servers.', icon_url='attachment://unknown.png')
 
-            await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
 
         # dm only
         if isinstance(error, commands.PrivateMessageOnly):
-            desc = f'This command is only available within DMs.'
-            embed = Embed(description=desc, color=utils.Color.red)
+            embed = Embed(color=utils.Color.red)
+            embed.set_author(name='This command is only available within DMs.', icon_url='attachment://unknown.png')
 
-            await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
 
         if isinstance(error, commands.NotOwner):
             files = [File('assets/reddot.png', 'unknown.png'), File('assets/redbar.png', 'unknown1.png')]
@@ -89,7 +95,7 @@ class OnCommand(commands.Cog):
             embed.set_image(url='attachment://unknown1.png')
             embed.timestamp = now
 
-            return await ctx.send(f'Hey {ctx.author.mention}!', files=files, embed=embed)
+            return await ctx.send(files=files, embed=embed, reference=ref)
 
         if isinstance(error, commands.CommandOnCooldown):
             files = [File('assets/reddot.png', 'unknown.png'), File('assets/redbar.png', 'unknown1.png')]
@@ -99,21 +105,23 @@ class OnCommand(commands.Cog):
             embed.set_footer(text='Try again at')
             embed.timestamp = now + datetime.timedelta(seconds=error.retry_after)
 
-            return await ctx.send(f'Hey {ctx.author.mention}!', files=files, embed=embed)
+            return await ctx.send(files=files, embed=embed, reference=ref)
 
         if isinstance(error, discord.HTTPException):
             return ccp.error(f'\u001b[31;1m{error.status} {error.response.reason} (error code {error.code}) {error.text}\u001b[0m')
 
         if isinstance(error, discord.NotFound):
             embed = Embed(description='Sorry, a message with that ID could not be fetched in this channel.')
-            return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+            return await ctx.send(embed=embed, reference=ref)
 
         if isinstance(error, utils.RoleNotFound):
             desc = (f'One or more roles needed for this command could not be found. '
                     f'Please ensure that all roles set in the guild\'s config are up-to-date.\n\n'
                     f'Use **`.config`** to edit the guild configuration.')
-            embed = Embed(description=desc)
-            return await ctx.send(f'Hey {ctx.author.mention}!', embed=embed)
+            embed = Embed(description=desc, color=utils.Color.red)
+            embed.set_author(name='Role not found', icon_url='attachment://unknown.png')
+
+            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
 
         if isinstance(error, commands.CommandNotFound):
             return ccp.error(f'\u001b[1m{ctx.author}@{ctx.guild}\u001b[0m {ctx.message.content}')

@@ -1,3 +1,4 @@
+import datetime
 import io
 import json
 import random
@@ -14,11 +15,12 @@ import pprint
 import ccp
 import config
 import utils
-from utils import emoji, level, levelxp
+from utils import Emoji, level, levelxp
 
 class Social(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self._cd = commands.CooldownMapping.from_cooldown(1, 86400.0, commands.BucketType.user)
 
     def get_gif(self, query: str) -> str:
         query = query.replace(' ', '%20')
@@ -30,6 +32,57 @@ class Social(commands.Cog):
             return url
         
         return ccp.error('Failed to reach Tenor servers')
+    
+    @commands.Cog.listener()
+    async def on_message(self, msg):
+        if msg.author.bot:
+            return
+        
+        # birthday stuff
+        bday = datetime.date.fromisoformat(self.bot.users_[msg.author.id]['birthday'])
+        today = datetime.date.today()
+        if today.month == bday.month and today.day == bday.day:
+            bucket = self._cd.get_bucket(msg)
+            limited = bucket.update_rate_limit()
+            if not limited:
+                embed = Embed(color=utils.Color.pinky)
+                embed.set_author(name=f'Happy birthday, {msg.author.display_name}!', icon_url='attachment://unknown.png')
+
+                await msg.reply(file=File('assets/cake.png', 'unknown.png'), embed=embed)
+
+    @command(name='birthday', aliases=['bday'], usage='birthday <mm/dd/yyyy>')
+    async def birthday(self, ctx, date: str):
+        '''Set your birthday.
+        I will wish you happy birthday when the day comes!\n
+        **Example:```yml\n♤birthday 1/1/2000```**
+        '''
+        m, d, y = date.split('/')
+        if len(y) == 2:
+            y = f'20{y}'
+        
+        bday = datetime.date(int(y), int(m), int(d))
+
+        await self.bot.users_.update(ctx.author.id, 'birthday', str(bday))
+        
+        embed = Embed(color=utils.Color.pinky)
+        embed.set_author(name=f'Birthday has been set to {date}', icon_url='attachment://unknown.png')
+
+        await ctx.reply(file=File('assets/cake.png', 'unknown.png'), embed=embed, mention_author=False)
+
+    @command(name='boop', usage='boop <member>')
+    @guild_only()
+    async def boop(self, ctx, member: discord.Member):
+        '''Boop someone!\n
+        **Example:```yml\n♤boop @Tau#4272```**
+        '''
+        gif = self.get_gif('anime boop nose')
+        if gif:
+            recipient = 'themselves' if ctx.author == member else member.display_name
+            embed = Embed(color=utils.Color.lilac)
+            embed.set_author(name=f'{ctx.author.display_name} booped {recipient}!', icon_url=ctx.author.avatar_url)
+            embed.set_image(url=gif)
+            
+            await ctx.send(embed=embed)
 
     @command(name='hug', usage='hug <member>')
     @guild_only()
@@ -111,7 +164,7 @@ class Social(commands.Cog):
                 continue
             statuses[str(member.status)] += 1
 
-        desc = (f'**{escape_markdown(str(guild.owner))}** {emoji["owner"]}\n\n'
+        desc = (f'{guild.owner.mention} {Emoji.owner}\n\n'
         f'**Region:** {guild.region}\n'
         f'**Verification:** {guild.verification_level}\n\n')
         
@@ -121,11 +174,10 @@ class Social(commands.Cog):
 
         stats = f'**Humans:** `{guild.member_count-bots}` **Bots:** `{bots}`\n'
         for key in list(statuses.keys()):
-            stats += f'{emoji[key]} `{statuses[key]}` '
+            stats += f'{Emoji.statuses[key]} `{statuses[key]}` '
 
         embed = Embed(description=desc)
-        embed.set_author(name=guild.name, icon_url=guild.owner.avatar_url)
-        embed.set_thumbnail(url=guild.icon_url)
+        embed.set_author(name=guild.name, icon_url=guild.icon_url)
         embed.add_field(name=f'Members `{guild.member_count}`', value=stats, inline=False)
         embed.add_field(name=f'Emoji `{len(guild.emojis)}`', value=emojis, inline=False)
         
@@ -182,7 +234,7 @@ class Social(commands.Cog):
         if member.bot:
             return
 
-        message = await ctx.send(emoji['loading'])
+        message = await ctx.send(Emoji.loading)
 
         res = requests.get(str(member.avatar_url))
         with Image.open('assets/profile.png') as template, \
@@ -279,14 +331,14 @@ class Social(commands.Cog):
         # decorators
         dec = []
         if member == ctx.guild.owner:
-            dec.append(emoji['owner'])
+            dec.append(Emoji.owner)
 
         if member.premium_since:
-            dec.append(emoji['boost'])
+            dec.append(Emoji.boost)
 
         dec = ' '.join(dec)
 
-        desc = f'{emoji[str(member.status)]} **{escape_markdown(member.display_name)} {dec}\n`{member}`**\n\n'
+        desc = f'{Emoji.statuses[str(member.status)]} **{escape_markdown(member.display_name)} {dec}\n`{member}`**\n\n'
         if bio := self.bot.users_[member.id]["bio"]:
             desc += f'**```yml\n{bio}```**'
         

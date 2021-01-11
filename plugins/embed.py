@@ -8,7 +8,7 @@ class Embed(commands.Cog):
 
     async def pre(self, ctx, msg):
         await ctx.message.delete()
-        
+
         if msg.author != ctx.guild.me:
             return await ctx.send(f'{ctx.author.mention} Sorry, I can only edit my own messages!', delete_after=5)
 
@@ -85,7 +85,7 @@ class Embed(commands.Cog):
 
     @command(name='setcontent', usage='setcontent <message> <text>')
     @commands.has_permissions(manage_messages=True)
-    async def setcontent(self, ctx, msg: discord.Message, *, text):
+    async def setcontent(self, ctx, msg: discord.Message, *, text: str = None):
         '''Modify the content of the message with the embed.\n
         **Example:```yml\n♤setcontent 694890918645465138 Hi!```**
         '''
@@ -95,7 +95,7 @@ class Embed(commands.Cog):
 
     @command(name='setdesc', usage='setdesc <message> <text>')
     @commands.has_permissions(manage_messages=True)
-    async def setdesc(self, ctx, msg: discord.Message, *, text):
+    async def setdesc(self, ctx, msg: discord.Message, *, text: str = None):
         '''Modify the description of an embed.\n
         **Example:```yml\n♤setdesc 694890918645465138 Tau is the best!```**
         '''
@@ -118,7 +118,7 @@ class Embed(commands.Cog):
     
     @command(name='settitle', usage='settitle <message> <text>')
     @commands.has_permissions(manage_messages=True)
-    async def settitle(self, ctx, msg: discord.Message, *, title=''):
+    async def settitle(self, ctx, msg: discord.Message, *, title: str = ''):
         '''Modify the title of an embed.\n
         **Example:```yml\n♤settitle 694890918645465138 Mistborn```**
         '''
@@ -129,7 +129,7 @@ class Embed(commands.Cog):
     
     @command(name='setfooter', usage='setfooter <message> <text>')
     @commands.has_permissions(manage_messages=True)
-    async def setfooter(self, ctx, msg: discord.Message, *, footer=''):
+    async def setfooter(self, ctx, msg: discord.Message, *, footer: str = ''):
         '''Modify the footer text of an embed.\n
         **Example:```yml\n♤setfooter 694890918645465138 this text is tiny```**
         '''
@@ -160,7 +160,7 @@ class Embed(commands.Cog):
     
     @command(name='setauthor', usage='setauthor <message> <name>')
     @commands.has_permissions(manage_messages=True)
-    async def setauthor(self, ctx, msg: discord.Message, *, name=''):
+    async def setauthor(self, ctx, msg: discord.Message, *, name: str = ''):
         '''Modify the author name of an embed.\n
         **Example:```yml\n♤setauthor 694890918645465138 this text is tiny```**
         '''
@@ -205,7 +205,7 @@ class Embed(commands.Cog):
     
     @command(name='setimage', usage='setimage <message> <url>')
     @commands.has_permissions(manage_messages=True)
-    async def setimage(self, ctx, msg: discord.Message, url=''):
+    async def setimage(self, ctx, msg: discord.Message, url: str = ''):
         '''Modify the image of an embed.\n
         **Example:```yml\n♤setimage 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''
@@ -219,7 +219,7 @@ class Embed(commands.Cog):
 
     @command(name='setthumbnail', usage='setthumbnail <message> <url>')
     @commands.has_permissions(manage_messages=True)
-    async def setthumbnail(self, ctx, msg: discord.Message, url=''):
+    async def setthumbnail(self, ctx, msg: discord.Message, url: str = ''):
         '''Modify the thumbnail of an embed.\n
         **Example:```yml\n♤setthumbnail 694890918645465138 https://tinyurl.com/sn2aeuj```**
         '''

@@ -10,7 +10,7 @@ import discord
 from discord import Embed, File
 from discord.ext import commands
 from discord.ext.commands import command, guild_only
-from discord.utils import find
+from discord.utils import find, escape_markdown
 
 import config
 import ccp
@@ -48,7 +48,10 @@ class System(commands.Cog):
         cache = self.bot.guilds_
         guild = member.guild
         if cache[guild.id]['welcome_messages'] and (chan := guild.get_channel(cache[guild.id]['system_channel'])):
-            msg = cache[guild.id]['welcome_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@server', guild.name)
+            user = escape_markdown(str(member))
+            name = escape_markdown(member.display_name)
+            server = escape_markdown(guild.name)
+            msg = cache[guild.id]['welcome_message'].replace('@user', user).replace('@name', name).replace('@server', server)
             embed = Embed(description=msg, color=utils.Color.green)
             embed.set_author(name=member, icon_url=member.avatar_url)
             embed.set_footer(text='Join', icon_url='attachment://unknown.png')
@@ -93,7 +96,10 @@ class System(commands.Cog):
         cache = self.bot.guilds_
         guild = member.guild
         if cache[guild.id]['goodbye_messages'] and (chan := member.guild.get_channel(cache[guild.id]['system_channel'])):
-            msg = cache[guild.id]['goodbye_message'].replace('@user', str(member)).replace('@name', member.display_name).replace('@server', guild.name)
+            user = escape_markdown(str(member))
+            name = escape_markdown(member.display_name)
+            server = escape_markdown(guild.name)
+            msg = cache[guild.id]['goodbye_message'].replace('@user', user).replace('@name', name).replace('@server', server)
             embed = Embed(description=msg, color=utils.Color.red)
             embed.set_author(name=member, icon_url=member.avatar_url)
             embed.set_footer(text='Leave', icon_url='attachment://unknown.png')
@@ -103,7 +109,7 @@ class System(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
-        ccp.event(f'{str(user)} was banned from {guild}', event='MEMBER_BAN')
+        ccp.event(f'{user} was banned from {guild}', event='MEMBER_BAN')
 
         if user.bot:
             return
@@ -166,7 +172,7 @@ class System(commands.Cog):
             klen = len(max(toggles.keys(), key=len))
             conf2 = ''
             for k, v in toggles.items():
-                tog = utils.emoji['on'] if v else utils.emoji['off']
+                tog = utils.Emoji.on if v else utils.Emoji.off
                 align = ' ' * (klen-len(k))
                 pad = ' ' * (ilen-len(str(i)))
                 conf2 += f'` {i}.{pad}{k}{align}` {tog}\n'
@@ -179,11 +185,11 @@ class System(commands.Cog):
         embed.set_author(name=ctx.guild.name, icon_url='attachment://unknown.png')
         x = '❌'
         menu = await ctx.send(file=File('assets/gear.png', 'unknown.png'), embed=embed)
-        await menu.add_reaction(utils.emoji['settings'])
+        await menu.add_reaction(utils.Emoji.settings)
 
         while True:
             try:
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=90, check=lambda reaction, user: str(reaction.emoji) == utils.emoji['settings'] and reaction.message.id == menu.id and not user.bot)
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=90, check=lambda reaction, user: str(reaction.emoji) == utils.Emoji.settings and reaction.message.id == menu.id and not user.bot)
                 self.bot.suppressed[ctx.author] = menu.channel
 
                 if user != ctx.author:
@@ -312,23 +318,26 @@ class System(commands.Cog):
 
     @command(name='reload', aliases=['r'], usage='reload <ext>')
     @commands.is_owner()
-    async def reload(self, ctx, path):
+    async def reload(self, ctx, ext):
         '''Reload an extension.
         `ext` must be the dot path to the extension relative to the entry point of the app.\n
         **Example:```yml\n♤reload plugins.system```**
         '''
         try:
-            self.bot.reload_extension(path)
+            self.bot.reload_extension(f'plugins.{ext}')
 
-            desc = f'yml\n+ {path} has been reloaded'
+            desc = f'plugins.{ext} has been reloaded.'
             color = utils.Color.green
+            color_name = 'green'
         except (commands.ExtensionFailed, commands.ExtensionNotLoaded, commands.NoEntryPointError) as err:
-            desc = f'diff\n- {err}'
+            desc = err
             color = utils.Color.red
+            color_name = 'red'
 
-        embed = Embed(description=f'**```{desc}```**', color=color)
+        embed = Embed(color=color)
+        embed.set_author(name=desc, icon_url='attachment://unknown.png')
         
-        await ctx.send(embed=embed)
+        await ctx.reply(file=File(f'assets/{color_name}dot.png', 'unknown.png'), embed=embed, mention_author=False)
 
     @command(name='remove', aliases=['leave', 'rem'], usage='remove [id]')
     @commands.is_owner()
@@ -422,10 +431,12 @@ class System(commands.Cog):
         '''Shut down the bot.\n
         **Example:```yml\n♤shutdown\n♤exit```**
         '''
-        embed = Embed(description='**```diff\n- Shutting down...```**', color=utils.Color.red)
-        embed.set_image(url='attachment://unknown.png')
+        files = [File('assets/reddot.png', 'unknown.png'), File('assets/redsplash.png', 'unknown1.png')]
+        embed = Embed(color=utils.Color.red)
+        embed.set_author(name='Shutting down...', icon_url='attachment://unknown.png')
+        embed.set_image(url='attachment://unknown1.png')
 
-        await ctx.send(file=File('assets/redsplash.png', 'unknown.png'), embed=embed)
+        await ctx.reply(files=files, embed=embed, mention_author=False)
 
         await self.bot.pool.close()
         await self.bot.close()

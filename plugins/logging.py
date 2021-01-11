@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.utils import find
 
 import utils
-from utils import emoji
+from utils import Emoji
 
 class Logging(commands.Cog):
     def __init__(self, bot):
@@ -31,7 +31,7 @@ class Logging(commands.Cog):
     async def on_member_kick(self, kicker, kicked, reason):
         webhook = await self.get_webhook(kicker.guild)
         if webhook:
-            embed = Embed(title='Kick', description=f'**{emoji["hammer"]} Kicked `{kicked}`.**', color=utils.Color.red)
+            embed = Embed(title='Kick', description=f'**{Emoji.hammer} Kicked `{kicked}`.**', color=utils.Color.red)
             embed.set_author(name=kicker, icon_url=kicker.avatar_url)
             if reason:
                 embed.add_field(name='Reason', value=f'*{reason}*')
@@ -41,7 +41,7 @@ class Logging(commands.Cog):
     async def on_member_warn(self, warner, warned, reason):
         webhook = await self.get_webhook(warner.guild)
         if webhook:
-            embed = Embed(title='Warn', description=f'**{emoji["warn"]} Warned `{warned}`.**', color=utils.Color.gold)
+            embed = Embed(title='Warn', description=f'**{Emoji.warn} Warned `{warned}`.**', color=utils.Color.gold)
             embed.set_author(name=warner, icon_url=warner.avatar_url)
             embed.add_field(name='Reason', value=f'*{reason}*')
 
@@ -50,7 +50,7 @@ class Logging(commands.Cog):
     async def on_member_mute(self, muter, muted, reason):
         webhook = await self.get_webhook(muter.guild)
         if webhook:
-            embed = Embed(title='Mute', description=f'**{emoji["mute"]} Muted `{muted}`.**', color=utils.Color.red)
+            embed = Embed(title='Mute', description=f'**{Emoji.mute} Muted `{muted}`.**', color=utils.Color.red)
             embed.set_author(name=muter, icon_url=muter.avatar_url)
             if reason:
                 embed.add_field(name='Reason', value=f'*{reason}*')
@@ -60,7 +60,7 @@ class Logging(commands.Cog):
     async def on_member_unmute(self, unmuter, unmuted, reason):
         webhook = await self.get_webhook(unmuter.guild)
         if webhook:
-            embed = Embed(title='Unmute', description=f'**{emoji["sound"]} Unmuted `{unmuted}`.**', color=utils.Color.green)
+            embed = Embed(title='Unmute', description=f'**{Emoji.sound} Unmuted `{unmuted}`.**', color=utils.Color.green)
             embed.set_author(name=unmuter, icon_url=unmuter.avatar_url)
             if reason:
                 embed.add_field(name='Reason', value=f'*{reason}*')
@@ -70,7 +70,7 @@ class Logging(commands.Cog):
     async def on_member_ban(self, banner, banned, reason):
         webhook = await self.get_webhook(banner.guild)
         if webhook:
-            embed = Embed(title='Ban', description=f'**{emoji["hammer"]} Banned `{banned}`.**', color=utils.Color.red)
+            embed = Embed(title='Ban', description=f'**{Emoji.hammer} Banned `{banned}`.**', color=utils.Color.red)
             embed.set_author(name=banner, icon_url=banner.avatar_url)
             if reason:
                 embed.add_field(name='Reason', value=f'*{reason}*')
@@ -80,7 +80,7 @@ class Logging(commands.Cog):
     async def on_member_unban(self, unbanner, unbanned, reason):
         webhook = await self.get_webhook(unbanner.guild)
         if webhook:
-            embed = Embed(title='Unban', description=f'**{emoji["hammer"]} Unbanned `{unbanned}`.**', color=utils.Color.green)
+            embed = Embed(title='Unban', description=f'**{Emoji.hammer} Unbanned `{unbanned}`.**', color=utils.Color.green)
             embed.set_author(name=unbanner, icon_url=unbanner.avatar_url)
             if reason:
                 embed.add_field(name='Reason', value=f'*{reason}*')
@@ -172,11 +172,12 @@ class Logging(commands.Cog):
                     embed.description += f'\n>>> {msg.content}'
 
                 if msg.attachments:
-                    file = msg.attachments[0]
-                    if file.url.lower().endswith(('png', 'jpeg', 'jpg', 'gif', 'webp')):
-                        embed.set_image(url=file.url)
+                    attachment = msg.attachments[0]
+                    if attachment.url.lower().endswith(('png', 'jpeg', 'jpg', 'gif', 'webp')):
+                        file = await attachment.to_file(use_cached=True)
+                        embed.set_image(url=f'attachment://{file.filename}')
 
-                await webhook.send(embed=embed)
+                await webhook.send(file=file, embed=embed)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):

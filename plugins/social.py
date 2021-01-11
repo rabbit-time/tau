@@ -39,16 +39,18 @@ class Social(commands.Cog):
             return
         
         # birthday stuff
-        bday = datetime.date.fromisoformat(self.bot.users_[msg.author.id]['birthday'])
-        today = datetime.date.today()
-        if today.month == bday.month and today.day == bday.day:
-            bucket = self._cd.get_bucket(msg)
-            limited = bucket.update_rate_limit()
-            if not limited:
-                embed = Embed(color=utils.Color.pinky)
-                embed.set_author(name=f'Happy birthday, {msg.author.display_name}!', icon_url='attachment://unknown.png')
+        bday = self.bot.users_[msg.author.id]['birthday']
+        if bday:
+            bday = datetime.date.fromisoformat(bday)
+            today = datetime.date.today()
+            if today.month == bday.month and today.day == bday.day:
+                bucket = self._cd.get_bucket(msg)
+                limited = bucket.update_rate_limit()
+                if not limited:
+                    embed = Embed(color=utils.Color.pinky)
+                    embed.set_author(name=f'Happy birthday, {msg.author.display_name}!', icon_url='attachment://unknown.png')
 
-                await msg.reply(file=File('assets/cake.png', 'unknown.png'), embed=embed)
+                    await msg.reply(file=File('assets/cake.png', 'unknown.png'), embed=embed)
 
     @command(name='birthday', aliases=['bday'], usage='birthday <mm/dd/yyyy>')
     async def birthday(self, ctx, date: str):

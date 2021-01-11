@@ -124,6 +124,8 @@ class Cache(aobject):
             schema = self.schema.split()
             type = schema[schema.index(key)+1].replace(',', '')
             val = f'ARRAY{val}' if val else f'ARRAY{val}::{type}'
+        elif isinstance(val, datetime.date):
+            val = f'\'{val}\''
 
         async with bot.pool.acquire() as con:
             if isinstance(index, Iterable):

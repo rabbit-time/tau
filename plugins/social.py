@@ -38,11 +38,13 @@ class Social(commands.Cog):
         if msg.author.bot:
             return
         
+        if not self.bot.users_.get(msg.author.id):
+            return await self.bot.users_.insert(msg.author.id)
+
         # birthday stuff
         bday = self.bot.users_[msg.author.id]['birthday']
+        today = datetime.date.today()
         if bday:
-            bday = datetime.date.fromisoformat(bday)
-            today = datetime.date.today()
             if today.month == bday.month and today.day == bday.day:
                 bucket = self._cd.get_bucket(msg)
                 limited = bucket.update_rate_limit()
@@ -64,7 +66,7 @@ class Social(commands.Cog):
         
         bday = datetime.date(int(y), int(m), int(d))
 
-        await self.bot.users_.update(ctx.author.id, 'birthday', str(bday))
+        await self.bot.users_.update(ctx.author.id, 'birthday', bday)
         
         embed = Embed(color=utils.Color.pinky)
         embed.set_author(name=f'Birthday has been set to {date}', icon_url='attachment://unknown.png')

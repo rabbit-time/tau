@@ -36,7 +36,7 @@ class Info(commands.Cog):
         if member.is_avatar_animated():
             gif = member.avatar_url_as(format='gif')
             formats.append(f'[`.gif`]({gif})')
-        
+
         delim = '\u2002|\u2002'
         embed = Embed(description=f':link: **{delim.join(formats)}**', color=utils.Color.cyan)
         embed.set_author(name=member.display_name, icon_url=member.avatar_url)
@@ -99,13 +99,13 @@ class Info(commands.Cog):
 
             files = [File('assets/dot.png', 'unknown.png'), File(f'assets/bar.png', 'unknown1.png'), File('assets/info.png', 'unknown2.png')]
             if '--no-dm' in ctx.message.content or not ctx.guild:
-                await ctx.send(files=files, embed=embed)
+                await ctx.reply(files=files, embed=embed, mention_author=False)
             else:
                 try:
                     await ctx.author.send(files=files, embed=embed)
-                    await ctx.send(embed=Embed(description='**```yml\n+ Sent to your DMs```**', color=utils.Color.green))
+                    await ctx.reply(embed=Embed(description='**```yml\n+ Sent to your DMs```**', color=utils.Color.green), mention_author=False)
                 except discord.Forbidden:
-                    await ctx.send(files=files, embed=embed)
+                    await ctx.reply(files=files, embed=embed, mention_author=False)
         else:
             prefix = self.bot.guilds_[ctx.guild.id]['prefix'] if ctx.guild else self.bot.guilds_.default['prefix']
             aliases = '*`Aliases: ' + ' | '.join(cmd.aliases) + '`*\n' if cmd.aliases else ''
@@ -118,7 +118,7 @@ class Info(commands.Cog):
                 desc = '*This command may only be used in DMs* ' + desc
             embed = Embed(description=desc, color=utils.Color.sky)
 
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed, mention_author=False)
 
     @command(name='help', aliases=['h'], usage='help')
     async def help(self, ctx):
@@ -138,8 +138,8 @@ class Info(commands.Cog):
         embed.add_field(name='\u200b', value='\u3000\u3000|\u3000\u3000'.join(links))
         embed.set_image(url='attachment://unknown1.png')
 
-        await ctx.send(files=files, embed=embed)
-    
+        await ctx.reply(files=files, embed=embed, mention_author=False)
+
     @command(name='setup', usage='setup')
     @guild_only()
     async def setup(self, ctx):
@@ -161,12 +161,11 @@ class Info(commands.Cog):
             embed.add_field(name=name, value=value, inline=False)
         embed.set_image(url='attachment://unknown1.png')
 
-        await ctx.send(files=files, embed=embed)
+        await ctx.reply(files=files, embed=embed, mention_author=False)
 
     @command(name='tau', usage='tau')
     async def tau(self, ctx):
-        '''Display app info.
-        This is the introduction command.\n
+        '''Display app info.\n
         **Example:```yml\n♤tau```**
         '''
         pid = os.getpid()
@@ -175,8 +174,8 @@ class Info(commands.Cog):
 
         links = f'**[Invite]({self.bot.url})', f'[Server]({config.invite})', f'[GitHub]({config.repo})**'
         info = [
-            ('Version', config.version), ('License', 'Apache 2.0'), ('Python', platform.python_version()), 
-            ('Memory usage', f'{round(mem/1000/1000, 2)} MB'), ('discord.py', discord.__version__), 
+            ('Version', config.version), ('License', 'Apache 2.0'), ('Python', platform.python_version()),
+            ('Memory usage', f'{round(mem/1000/1000, 2)} MB'), ('discord.py', discord.__version__),
             ('Code', f'{self.bot.code} lines')
         ]
 

@@ -34,4 +34,4 @@ def event(*value, event='EVENT', sep='', end='\n'):
 
 def error(*value, sep='', end='\n'):
     t = time_format()
-    print(f'\u001b[37;1m{t} {ERROR}  {join(value)}\u001b[0m', sep=sep, end=end)
+    print(f'\u001b[37;1m{t} {ERROR} {join(value)}', sep=sep, end=end)

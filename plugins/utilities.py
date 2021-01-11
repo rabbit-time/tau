@@ -15,21 +15,28 @@ class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def _remind(self, user, channel, reminder, timeout):
+    async def _remind(self, ctx, reminder, timeout):
         now = datetime.datetime.utcnow()
         Δ = (timeout-now).total_seconds()
         await asyncio.sleep(Δ)
 
-        embed = Embed(description=f'Remember to **{reminder}**!')
-        embed.set_author(name=user.display_name, icon_url=user.avatar_url)
-        embed.set_footer(text='Time\'s up!', icon_url='attachment://unknown.png')
-        embed.timestamp = now
+        try:
+            msg = await ctx.channel.fetch_message(ctx.message.id)
+            ref = msg.to_reference()
+        except:
+            ref = None
 
-        await channel.send(f'Hey {user.mention}!', file=File('assets/clock.png', 'unknown.png'), embed=embed)
+        files = [File('assets/dot.png', 'unknown.png'), File('assets/clock.png', 'unknown1.png')]
+        embed = Embed(description=f'>>> {reminder}', color=utils.Color.sky)
+        embed.set_author(name='Reminder', icon_url='attachment://unknown.png')
+        embed.set_footer(text='Time\'s up!', icon_url='attachment://unknown1.png')
+        embed.timestamp = timeout
+
+        await ctx.channel.send(ctx.author.mention if not ref else None, files=files, embed=embed, reference=ref)
 
         async with self.bot.pool.acquire() as con:
             query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
-            await con.execute(query, user.id, channel.id, timeout, reminder)
+            await con.execute(query, ctx.author.id, ctx.channel.id, timeout, reminder)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -40,7 +47,11 @@ class Utilities(commands.Cog):
                 if chan:
                     member = chan.guild.get_member(user_id)
                     if member:
-                        self.bot.loop.create_task(self._remind(member, chan, reminder, timeout))
+                        class Object:
+                            author = member
+                            channel = chan
+                        
+                        self.bot.loop.create_task(self._remind(Object, reminder, timeout))
                     else:
                         query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
                         await con.execute(query, user_id, channel_id, timeout, reminder)
@@ -56,17 +67,17 @@ class Utilities(commands.Cog):
 
         embed = Embed(color=utils.Color.sky)
         if chan.type == discord.ChannelType.text:
-            nsfw = utils.emoji['on'] if chan.is_nsfw() else utils.emoji['off']
+            nsfw = utils.Emoji.on if chan.is_nsfw() else utils.Emoji.off
 
             url = f'https://discord.com/channels/{ctx.guild.id}/{chan.id}/'
-            desc = (f'{utils.emoji["#"]} **[{chan}]({url})**\n\n'
+            desc = (f'{utils.Emoji.hash} **[{chan}]({url})**\n\n'
                     f'**`nsfw    `** {nsfw}\n'
                     f'**`category` {chan.category}**\n'
                     f'**`position` {chan.position}**\n'
                     f'**`slowmode` {chan.slowmode_delay}**\n')
             embed.description = desc
         else:
-            desc = (f'{utils.emoji["sound"]} **{chan}**\n\n'
+            desc = (f'{utils.Emoji.sound} **{chan}**\n\n'
                     f'**`bitrate   ` {chan.bitrate}**\n'
                     f'**`category  ` {chan.category}**\n'
                     f'**`position  ` {chan.position}**\n'
@@ -75,7 +86,7 @@ class Utilities(commands.Cog):
         embed.set_footer(text=f'ID: {chan.id}, created')
         embed.timestamp = chan.created_at
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     @command(name='color', usage='color <color>')
     async def color(self, ctx, *, color: discord.Color):
@@ -89,16 +100,16 @@ class Utilities(commands.Cog):
         h, s, l = utils.rgb_to_hsl(*color.to_rgb())
         h, s_, v = utils.rgb_to_hsv(*color.to_rgb())
 
-        embed = Embed()
+        file = File(buffer, 'unknown.png')
+        embed = Embed(description='**[Color picker](https://www.google.com/search?q=color+picker)**', color=color)
         embed.set_author(name=color)
         embed.add_field(name='RGB', value=f'{r}, {g}, {b}')
         embed.add_field(name='CMYK', value=f'{c:.0%}, {m:.0%}, {y:.0%}, {k:.0%}')
         embed.add_field(name='HSL', value=f'{round(h)}°, {s:.0%}, {l:.0%}')
         embed.add_field(name='HSV', value=f'{round(h)}°, {s_:.0%}, {v:.0%}')
-        embed.add_field(name='\u200b', value='**[Color picker](https://www.google.com/search?q=color+picker)**', inline=False)
         embed.set_image(url='attachment://unknown.png')
 
-        await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
+        await ctx.send(file=file, embed=embed, reference=ctx.message.to_reference(), mention_author=False)
 
     @command(name='echo', aliases=['say'], usage='echo <text>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
@@ -117,8 +128,8 @@ class Utilities(commands.Cog):
         Only applicable to custom emoji.\n
         **Example:```yml\n♤emoji 608367259123187741```**
         '''
-        anime = utils.emoji['on'] if emoji.animated else utils.emoji['off']
-        man = utils.emoji['on'] if emoji.managed else utils.emoji['off']
+        anime = utils.Emoji.on if emoji.animated else utils.Emoji.off
+        man = utils.Emoji.on if emoji.managed else utils.Emoji.off
         info = (f'**`animated`** {anime}\n'
                 f'**`managed `** {man}')
 
@@ -128,7 +139,7 @@ class Utilities(commands.Cog):
         embed.set_footer(text=f'ID: {emoji.id}, created')
         embed.timestamp = emoji.created_at
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     @commands.cooldown(2, 1800.0, type=commands.BucketType.user)
     @command(name='feedback', usage='feedback <message>')
@@ -159,7 +170,7 @@ class Utilities(commands.Cog):
             embed.set_image(url='attachment://unknown1.png')
             embed.timestamp = now
 
-            await ctx.send(files=files, embed=embed)
+            await ctx.reply(files=files, embed=embed, mention_author=False)
         else:
             files = [File('assets/bar.png', 'unknown.png'), File('assets/dot.png', 'unknown1.png')]
             embed.clear_fields()
@@ -167,7 +178,7 @@ class Utilities(commands.Cog):
             
             embed.set_author(name='Feedback submitted', icon_url='attachment://unknown1.png')
             embed.set_footer(text='')
-            await ctx.send(files=files, embed=embed)
+            await ctx.reply(files=files, embed=embed, mention_author=False)
     
     @command(name='givexp', aliases=['xp'], usage='givexp <member> <amount>')
     @commands.is_owner()
@@ -217,13 +228,13 @@ class Utilities(commands.Cog):
             embed.set_image(url='attachment://unknown1.png')
             embed.timestamp = now
 
-            await ctx.send(files=files, embed=embed)
+            await ctx.reply(files=files, embed=embed, mention_author=False)
         else:
             files = [File('assets/bar.png', 'unknown.png'), File('assets/dot.png', 'unknown1.png')]
             embed.description = f'**Your reply was successfully sent to the user.**'
             embed.set_author(name='Reply delivered', icon_url='attachment://unknown1.png')
 
-            await ctx.send(files=files, embed=embed)
+            await ctx.reply(files=files, embed=embed, mention_author=False)
 
     @command(name='random', aliases=['rng'], usage='random <lower> <upper>')
     @commands.bot_has_permissions(external_emojis=True)
@@ -231,16 +242,14 @@ class Utilities(commands.Cog):
         '''Randomly generate an integer between a lower and upper bound.\n
         **Example:```yml\n♤random 0 1\n♤rng 1 10```**
         '''
-        embed = Embed(description=f'**You got {random.randint(lower, upper)}!**', color=random.choice(utils.Color.rainbow))
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-
-        await ctx.send(embed=embed)
+        embed = Embed(color=random.choice(utils.Color.rainbow)).set_author(name=f'You got {random.randint(lower, upper)}!')
+        await ctx.reply(embed=embed, mention_author=False)
 
     @command(name='remind', usage='remind <time> <reminder>')
     @commands.bot_has_permissions(external_emojis=True, manage_messages=True)
     async def remind(self, ctx, limit, *, reminder):
         '''Set a reminder.
-        Reminders are capped at 6 months to prevent memory leaks.\n
+        Reminders are capped at 6 months to prevent abuse.\n
         **Example:```yml\n♤remind 2h clean room\n♤remind 1h fix bugs```**
         '''
         time_, delta = utils.parse_time(limit)
@@ -251,17 +260,18 @@ class Utilities(commands.Cog):
             raise commands.BadArgument
         
         timeout = now + delta
-        self.bot.loop.create_task(self._remind(ctx.author, ctx.channel, reminder, timeout))
+        self.bot.loop.create_task(self._remind(ctx, reminder, timeout))
         async with self.bot.pool.acquire() as con:
             query = 'INSERT INTO reminders VALUES ($1, $2, $3, $4)'
             await con.execute(query, ctx.author.id, ctx.channel.id, timeout, reminder)
 
-        embed = Embed(description=f'Reminder to **{reminder}** has been set for {time_}!')
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        embed.set_footer(text=time_, icon_url='attachment://unknown.png')
+        files = [File('assets/dot.png', 'unknown.png'), File('assets/clock.png', 'unknown1.png')]
+        embed = Embed(description=f'>>> {reminder}', color=utils.Color.sky)
+        embed.set_author(name='Reminder', icon_url='attachment://unknown.png')
+        embed.set_footer(text=time_, icon_url='attachment://unknown1.png')
         embed.timestamp = timeout
 
-        await ctx.send(file=File('assets/clock.png', 'unknown.png'), embed=embed)
+        await ctx.reply(files=files, embed=embed, mention_author=False)
 
     @command(name='resend', aliases=['rs'], usage='resend <message>')
     @commands.has_guild_permissions(manage_guild=True)
@@ -322,19 +332,19 @@ class Utilities(commands.Cog):
         fields = [''] * 2
         for i, tup in enumerate(perms):
             perm, value = tup
-            tog = utils.emoji['on'] if value else utils.emoji['off']
+            tog = utils.Emoji.on if value else utils.Emoji.off
             align = ' ' * (plen-len(perm))
             fields[i>half] += f'**`{perm}{align}`** {tog}\n'
 
         plural = 's' if len(role.members) != 1 else ''
         mention = role.mention if not role.is_default() else '@everyone'
-        embed = Embed(description=f'**{mention}\n`{len(role.members)} member{plural}`**')
+        embed = Embed(description=f'**{mention}\n`{len(role.members)} member{plural}`**', color=role.color)
         embed.add_field(name='Permissions', value=fields[0])
         embed.add_field(name='\u200b', value=fields[1])
         embed.set_image(url='attachment://unknown.png')
         embed.set_footer(text=f'ID: {role.id}')
         
-        await ctx.send(file=File(buffer, 'unknown.png'), embed=embed)
+        await ctx.reply(file=File(buffer, 'unknown.png'), embed=embed, mention_author=False)
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

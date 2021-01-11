@@ -23,10 +23,10 @@ class Economy(commands.Cog):
             return
 
         bal = self.bot.users_[member.id]['tickets']
-        embed = Embed(description=f'{utils.emoji["tickets"]}**{bal}**')
-        embed.set_author(name=member.display_name, icon_url=member.avatar_url)
+        embed = Embed(color=utils.Color.sky)
+        embed.set_author(name=bal, icon_url='attachment://unknown.png')
 
-        await ctx.send(embed=embed)
+        await ctx.reply(file=File('assets/credits.png', 'unknown.png'), embed=embed, mention_author=False)
 
     @command(name='give', usage='give <member> <quantity>')
     @guild_only()
@@ -48,7 +48,10 @@ class Economy(commands.Cog):
         bal = self.bot.users_[member.id]['tickets']
         await self.bot.users_.update(member.id, 'tickets', bal+qty)
 
-        await ctx.send(f'**{ctx.author.display_name}** gave {utils.emoji["tickets"]}**{qty}** to **{member.display_name}**!')
+        embed = Embed(color=utils.Color.sky)
+        embed.set_author(name=f'Gave {qty} credits to {member.display_name}!', icon_url='attachment://unknown.png')
+
+        await ctx.reply(file=File('assets/credits.png', 'unknown.png'), embed=embed, mention_author=False)
 
     @commands.cooldown(1, 86400.0, type=commands.BucketType.user)
     @command(name='credits', aliases=['daily'], usage='tickets')
@@ -57,22 +60,17 @@ class Economy(commands.Cog):
         Has a cooldown of 24 hours.\n
         **Example:```yml\n♤credits```**
         '''
-        msgs = ['Here are your credits!', 'Gosh, you\'re just using me for money, aren\'t you?', ':money_with_wings: :money_with_wings:',
-        'So, when do I get *my* credits?', 'Collecting your government benefits I see... :eyes:', 'credits for all!',
-        '<insert unfunny joke here, i ran out>', 'Yes, I\'m the Automatic Tau Machine...',
-        'Here are your credits! Have a wonderful day!', 'Between you and me, I have an endless supply of this stuff.',
-        'Fun fact: I give double the amount of credits on Sundays!', 'Here you go!']
-
         bal = self.bot.users_[ctx.author.id]['tickets']
         amt = 20
         if datetime.datetime.today().weekday() == 6:
             amt *= 2
+
         await self.bot.users_.update(ctx.author.id, 'tickets', bal+amt)
 
-        desc = f'You have collected **{amt}** credits for a new balance of {utils.emoji["tickets"]}**{bal+amt}**!'
-        embed = Embed(description=desc)
-
-        await ctx.send(ctx.author.mention + ' ' + random.choice(msgs), embed=embed)
+        embed = Embed(color=utils.Color.sky)
+        embed.set_author(name=f'Collected {amt} credits for a new balance of {bal+amt}!', icon_url='attachment://unknown.png')
+        
+        await ctx.reply(file=File('assets/credits.png', 'unknown.png'), embed=embed, mention_author=False)
 
 def setup(bot):
     bot.add_cog(Economy(bot))

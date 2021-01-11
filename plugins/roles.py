@@ -170,7 +170,7 @@ class Roles(commands.Cog):
                 percent = i // len(members) * 100
                 bar = '█'
                 progress = bar * (percent//5)
-                space = 20 - len(progress)
+                space = ' ' * (20-len(progress))
                 embed.description = desc + f'`[{progress}{space}] {percent}% ({i}/{len(members)})`**'
                 
                 await msg.edit(embed=embed)
@@ -230,10 +230,10 @@ class Roles(commands.Cog):
         if limit < 0:
             raise commands.BadArgument
 
-        desc = f'**```yml\n+ Role limit has been set to 1```**'
-        embed = Embed(description=desc, color=utils.Color.green)
+        embed = Embed(color=utils.Color.green)
+        embed.set_author(name=f'Role limit has been set to {limit}.', icon_url='attachment://unknown.png')
 
-        msg = await ctx.send(embed=embed)
+        msg = await ctx.send(file=File('assets/greendot.png', 'unknown.png'), embed=embed)
 
         await self.bot.rmenus.update((ctx.guild.id, menu.id), 'limit_', limit)
 
@@ -246,12 +246,15 @@ class Roles(commands.Cog):
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True, manage_messages=True)
     @guild_only()
-    async def rmod(self, ctx, menu: discord.Message, *roles: discord.Role):
+    async def rmod(self, ctx, menu: discord.Message, *role_entries: RoleEntries):
         '''Modify the roles in a role menu.
         This command must be invoked in the channel containing the role menu.
         `menu` must be an ID of a message containing role menu.
         `roles` must be a list of role IDs delimited by spaces.\n
-        **Example:```yml\n♤rmod 546836599141302272 122550600863842310 608148009213100033```**
+        **Example:```yml\n♤rmod 546836599141302272
+        1️⃣ "north america"
+        2️⃣ "south america"
+        3️⃣ europe```**
         '''
         await ctx.message.delete()
 
@@ -259,17 +262,23 @@ class Roles(commands.Cog):
             return await ctx.send(f'{ctx.author.mention} Message with ID `{menu.id}` could not be found.', delete_after=5)
         
         embed = menu.embeds[0]
-        embed.description = '\n'.join(f'**{i+1}.** {role}' for i, role in enumerate(roles))
+        emojis, roles = role_entries[::2], role_entries[1::2]
+        if len(roles) > 20 or any(emojis.count(e) > 1 for e in emojis):
+            raise commands.BadArgument
+        
+        embed.description = '\n'.join(f'{emoji} {role}' for emoji, role in zip(emojis, roles))
 
         await menu.edit(embed=embed)
+        await menu.clear_reactions()
+        try:
+            for emoji in emojis:
+                await menu.add_reaction(emoji)
+        except discord.NotFound:
+            await menu.delete()
+            raise commands.BadArgument
 
-        for i in range(15):
-            if i > len(roles) - 1:
-                await menu.clear_reaction(utils.emoji[i+1])
-            else:
-                await menu.add_reaction(utils.emoji[i+1])
-        
         await self.bot.rmenus.update((ctx.guild.id, menu.id), 'role_ids', [role.id for role in roles])
+        await self.bot.rmenus.update((ctx.guild.id, menu.id), 'emojis', list(emojis))
     
     @command(name='setranks', usage='setranks <*ranks>')
     @commands.has_guild_permissions(manage_guild=True)
@@ -372,7 +381,7 @@ class Roles(commands.Cog):
             embed = Embed(description=f'**{ctx.guild} does not have ranks enabled.**', color=utils.Color.red)
             embed.set_author(name='Ranks unavailable', icon_url='attachment://unknown.png')
 
-        await ctx.send(file=file, embed=embed)
+        await ctx.reply(file=file, embed=embed, mention_author=False)
 
 def setup(bot):
     bot.add_cog(Roles(bot))

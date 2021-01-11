@@ -20,7 +20,7 @@ if os.name == 'nt':
     os.system('color')
 
 # Checks the version of python
-if sys.version_info[0] < 3 or sys.version_info[1] < 8: 
+if sys.version_info[0] < 3 or sys.version_info[1] < 8:
     ccp.error('Python 3.8.0 or higher is required.')
     os._exit(0)
 
@@ -58,7 +58,7 @@ class Cache(aobject):
         async with bot.pool.acquire() as con:
             await con.execute(f'CREATE TABLE IF NOT EXISTS {table} ({schema})')
             records = await con.fetch(f'SELECT * FROM {table}')
-        
+
         cache = {}
         for record in records:
             pktup = tuple(pk.split(', '))
@@ -78,7 +78,7 @@ class Cache(aobject):
 
     def __setitem__(self, key, val):
         self._records[key] = val
-    
+
     def __delitem__(self, key):
         del self._records[key]
 
@@ -92,7 +92,7 @@ class Cache(aobject):
         return self._records.values()
 
     async def delete(self, index: any):
-        '''Deletes a record in the database and the cache.'''   
+        '''Deletes a record in the database and the cache.'''
         del self._records[index]
         async with bot.pool.acquire() as con:
             if isinstance(index, Iterable):
@@ -115,7 +115,7 @@ class Cache(aobject):
         '''Updates both the database and the cache. If the record does not exist, it will be created.'''
         if not self._records.get(index):
             await self.insert(index)
-        
+
         self._records[index][key] = val
         if isinstance(val, str):
             val = val.replace('\'', '\'\'')
@@ -145,7 +145,7 @@ async def init():
     bot.rules = await Cache('rules', 'guild_id, index_', utils.rules_schema, utils._def_rule)
     bot.modlog = await Cache('modlog', 'user_id, guild_id', utils.modlog_schema, utils._def_modlog)
 
-    # Loads plugins and events
+    # Loads plugins
     files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file]
     for file in files:
         ccp.log('Loading', file)
@@ -153,7 +153,7 @@ async def init():
 
     ccp.done()
 
-loop = asyncio.get_event_loop()                                                                                                                                                                                                                                       
+loop = asyncio.get_event_loop()
 loop.run_until_complete(init())
 
 @bot.event
@@ -163,7 +163,7 @@ async def on_ready():
 
     prefix = bot.guilds_.default['prefix']
     await bot.change_presence(activity=Game(name=f'{prefix}help'))
-    
+
     ccp.ready(f'Logged in as {bot.user.name}')
     ccp.ready(f'ID: {bot.user.id}')
     bot.url = oauth_url(client_id=bot.user.id, permissions=Permissions(permissions=8))
@@ -174,7 +174,7 @@ async def on_ready():
             await bot.guilds_.insert(guild.id)
             if guild.system_channel:
                 await bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
-        
+
         if guild.me.guild_permissions.manage_guild:
             bot.invites_[guild.id] = await guild.invites()
             if 'VANITY_URL' in guild.features:

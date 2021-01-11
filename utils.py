@@ -12,41 +12,44 @@ from PIL import Image, ImageDraw, ImageFont
 # Emoji taken from a private emoji server.
 # These must be redefined if you fork, or
 # everything is going to break.
-emoji = {
-    'progress': '<:progress:683525894530138171>',
-    'tickets': '<:credits:702269510488686663>',
-    'sound': '<:sound:702809258974249011>',
-    'mute': '<:mute:702809258915397672>',
-    'dot': '<:dot:782633782217539615>',
-    'hammer': '<:hammer:702793803677040692>',
-    'warn': '<:warn:706214120151711844>',
-    'on': '<:toggleon:686105837294452736>',
-    'off': '<:toggleoff:686105824065880150>',
-    'settings': '<:settings:686113054001594372>',
-    'online': '<:online:659931852660015104>',
-    'idle': '<:idle:659932829508960256>',
-    'dnd': '<:dnd:659932885062516746>',
-    'streaming': '<:streaming:697272348679733288>',
-    'offline': '<:offline:659932900405411842>',
-    'owner': '<:owner:697338812971483187>',
-    'boost': '<:boost:708098202339115119>',
-    'loading': '<a:loading:688977787528544301>',
-    'coin0': '<:0_:784503048566210573>',
-    'coin1': '<:1_:784503048453095485>',
-    'die1': '<:d1:703190416606101535>',
-    'die2': '<:d2:703190416820011049>',
-    'die3': '<:d3:703190416924606484>',
-    'die4': '<:d4:703190416962355252>',
-    'die5': '<:d5:703190416987783269>',
-    'die6': '<:d6:703190416933257232>',
-    '#': '<:hash:702696629446115378>',
-    'start': '<:start:706610361960497172>',
-    'previous': '<:previous:706610510199652412>',
-    'next': '<:next:706610889188573194>',
-    'end': '<:end:706610923346853938>',
-    'stop': '<:stop:706610934763749426>',
-    'verify': '<:verify:774740234998644777>'
-}
+class Emoji:
+    credits = '<:credits:702269510488686663>'
+    sound = '<:sound:702809258974249011>'
+    mute = '<:mute:702809258915397672>'
+    hammer = '<:hammer:702793803677040692>'
+    warn = '<:warn:706214120151711844>'
+    on = '<:toggleon:686105837294452736>'
+    off = '<:toggleoff:686105824065880150>'
+    settings = '<:settings:686113054001594372>'
+    statuses = {
+        'online': '<:online:659931852660015104>',
+        'idle': '<:idle:659932829508960256>',
+        'dnd': '<:dnd:659932885062516746>',
+        'streaming': '<:streaming:697272348679733288>',
+        'offline': '<:offline:659932900405411842>'
+    }
+    owner = '<:owner:697338812971483187>'
+    boost = '<:boost:708098202339115119>'
+    loading = '<a:loading:688977787528544301>'
+    coin0 = '<:0_:784503048566210573>'
+    coin1 = '<:1_:784503048453095485>'
+    dice = (
+        '<:d1:703190416606101535>',
+        '<:d2:703190416820011049>',
+        '<:d3:703190416924606484>',
+        '<:d4:703190416962355252>',
+        '<:d5:703190416987783269>',
+        '<:d6:703190416933257232>'
+    )
+    hash = '<:hash:702696629446115378>'
+    start = '<:start:706610361960497172>'
+    previous = '<:previous:706610510199652412>'
+    next = '<:next:706610889188573194>'
+    end = '<:end:706610923346853938>'
+    stop = '<:stop:706610934763749426>'
+    trash = '<:trashcan:797688643987701820>'
+    link = '<:link:797723082134650900>'
+
 
 class Color:
     gold = 0xffc669
@@ -195,24 +198,6 @@ def parse_time(text):
 
     return time_, delta
 
-async def automute(bot, user_id, guild_id, timeout: datetime):
-    now = datetime.datetime.utcnow()
-    Δ = (timeout-now).total_seconds()
-    await asyncio.sleep(Δ)
-
-    guild = bot.get_guild(guild_id)
-    if guild:
-        member = guild.get_member(user_id)
-        mute_role = guild.get_role(bot.guilds_[guild_id]['mute_role'])
-        if member and mute_role:
-            await member.remove_roles(mute_role)
-
-    del bot.mute_tasks[user_id, guild_id]
-    bot.members[user_id, guild_id]['muted'] = None
-    async with bot.pool.acquire() as con:
-        stmt = 'UPDATE members SET muted = $1 WHERE user_id = $2 AND guild_id = $3'
-        await con.execute(stmt, None, user_id, guild_id)
-
 async def before(ctx):
     if not ctx.bot.users_.get(ctx.author.id) and not ctx.author.bot:
         await ctx.bot.users_.insert(ctx.author.id)
@@ -244,7 +229,8 @@ _def_guild = {
 _def_user = {
     'tickets': 200,
     'accent': '#8bb3f8',
-    'bio': ''
+    'bio': '',
+    'birthday': None
 }
 
 _def_member = {
@@ -302,7 +288,8 @@ guilds_schema = ('guild_id bigint PRIMARY KEY, '
 users_schema = ('user_id bigint PRIMARY KEY, '
                 'tickets bigint, '
                 'accent char(7), '
-                'bio text')
+                'bio text, '
+                'birthday date')
     
 members_schema = ('user_id bigint, '
                   'guild_id bigint, '

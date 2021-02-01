@@ -27,7 +27,7 @@ class System(commands.Cog):
         await self.bot.guilds_.insert(guild.id)
         if guild.system_channel:
             await self.bot.guilds_.update(guild.id, 'system_channel', guild.system_channel.id)
-    
+
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         ccp.event(f'{guild} ({guild.owner})', event='GUILD_REM')
@@ -37,7 +37,7 @@ class System(commands.Cog):
             await con.execute('DELETE FROM members WHERE guild_id = $1', guild.id)
             await con.execute('DELETE FROM role_menus WHERE guild_id = $1', guild.id)
             await con.execute('DELETE FROM ranks WHERE guild_id = $1', guild.id)
-        
+
     @commands.Cog.listener()
     async def on_member_join(self, member):
         ccp.event(f'{member} has joined {member.guild}', event='MEMBER_ADD')
@@ -56,7 +56,7 @@ class System(commands.Cog):
             embed.set_author(name=member, icon_url=member.avatar_url)
             embed.set_footer(text='Join', icon_url='attachment://unknown.png')
             embed.timestamp = datetime.datetime.utcnow()
-            
+
             await chan.send(member.mention, file=File('assets/join.png', 'unknown.png'), embed=embed)
 
         if self.bot.members.get((member.id, guild.id)):
@@ -78,7 +78,7 @@ class System(commands.Cog):
         if self.bot.ranks.get(guild.id) and (role_ids := self.bot.ranks[guild.id]['role_ids']):
             if self.bot.ranks[guild.id]['levels'][0] == 0 and (role := guild.get_role(role_ids[0])):
                 await member.add_roles(role)
-        
+
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         try:
@@ -104,9 +104,9 @@ class System(commands.Cog):
             embed.set_author(name=member, icon_url=member.avatar_url)
             embed.set_footer(text='Leave', icon_url='attachment://unknown.png')
             embed.timestamp = datetime.datetime.utcnow()
-            
+
             await chan.send(file=File('assets/leave.png', 'unknown.png'), embed=embed)
-    
+
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
         ccp.event(f'{user} was banned from {guild}', event='MEMBER_BAN')
@@ -140,7 +140,7 @@ class System(commands.Cog):
         '''
         guild_id = ctx.guild.id
         default = self.bot.guilds_.default
-        
+
         fields = {}
         toggles = {}
         def build():
@@ -158,7 +158,7 @@ class System(commands.Cog):
                     fields[k] = f'{str(ch)} ({ch.id})' if ch else None
                 else:
                     fields[k] = v
-        
+
             i = 1
             ilen = len(str(len(default))) + 1
             klen = len(max(fields.keys(), key=len))
@@ -178,7 +178,7 @@ class System(commands.Cog):
                 conf2 += f'` {i}.{pad}{k}{align}` {tog}\n'
                 i += 1
 
-            return f'**```groovy\n{conf}```{conf2}**'    
+            return f'**```groovy\n{conf}```{conf2}**'
 
         desc = build()
         embed = Embed(description=desc.strip('\n'))
@@ -220,7 +220,7 @@ class System(commands.Cog):
                         if not 0 < n <= len(default):
                             await ctx.send(f'{ctx.author.mention} Sorry! Your input is not valid. Response must be an integer matching a value above.', delete_after=5)
                             continue
-                        
+
                         n -= 1
                         key = tuple(fields.keys())[n] if n < len(fields) else tuple(toggles.keys())[n-len(fields)]
                         if key in fields.keys():
@@ -238,7 +238,7 @@ class System(commands.Cog):
                             if on_msg in done:
                                 msg = done.pop().result()
                                 await msg.delete()
-                                
+
                                 if msg.channel != menu.channel:
                                     embed.set_footer(text='')
                                     raise asyncio.TimeoutError
@@ -251,7 +251,7 @@ class System(commands.Cog):
                                     if not role:
                                         role_id = int(msg.content) if msg.content.isdigit() else 0
                                         role = ctx.guild.get_role(role_id)
-                                    
+
                                     if not role:
                                         await ctx.send(f'{ctx.author.mention} Sorry! A role named \'{msg.content}\' could not be found.', delete_after=5)
                                     else:
@@ -321,7 +321,7 @@ class System(commands.Cog):
     async def reload(self, ctx, ext):
         '''Reload an extension.
         `ext` must be the dot path to the extension relative to the entry point of the app.\n
-        **Example:```yml\n♤reload plugins.system```**
+        **Example:```yml\n♤reload system```**
         '''
         try:
             self.bot.reload_extension(f'plugins.{ext}')
@@ -336,7 +336,7 @@ class System(commands.Cog):
 
         embed = Embed(color=color)
         embed.set_author(name=desc, icon_url='attachment://unknown.png')
-        
+
         await ctx.reply(file=File(f'assets/{color_name}dot.png', 'unknown.png'), embed=embed, mention_author=False)
 
     @command(name='remove', aliases=['leave', 'rem'], usage='remove [id]')
@@ -357,7 +357,7 @@ class System(commands.Cog):
             embed = Embed(description=desc, color=utils.Color.red)
 
             await ctx.send(embed=embed)
-    
+
     @command(name='rule', usage='rule <index>')
     @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
     @guild_only()
@@ -373,7 +373,7 @@ class System(commands.Cog):
         embed = Embed(title='Rules', description=f'**{index}.** {rule["rule"]}')
 
         await ctx.send(embed=embed)
-    
+
     @command(name='rules', usage='rules')
     @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
     @guild_only()
@@ -394,7 +394,7 @@ class System(commands.Cog):
         embed = Embed(title='Rules', description=board)
 
         await ctx.send(embed=embed)
-    
+
     @command(name='setrule', usage='setrule <index> [rule]')
     @commands.has_guild_permissions(manage_guild=True)
     @commands.bot_has_permissions(external_emojis=True, mention_everyone=True)
@@ -440,7 +440,7 @@ class System(commands.Cog):
 
         await self.bot.pool.close()
         await self.bot.close()
-        
+
         os._exit(0)
 
 def setup(bot):

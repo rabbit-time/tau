@@ -103,7 +103,11 @@ class Info(commands.Cog):
             else:
                 try:
                     await ctx.author.send(files=files, embed=embed)
-                    await ctx.reply(embed=Embed(description='**```yml\n+ Sent to your DMs```**', color=utils.Color.green), mention_author=False)
+
+                    em = Embed(color=utils.Color.green)
+                    em.set_author(name='Sent to your DMs', icon_url='attachment://unknown.png')
+
+                    await ctx.reply(file=File('assets/greendot.png', 'unknown.png'), embed=em, mention_author=False)
                 except discord.Forbidden:
                     await ctx.reply(files=files, embed=embed, mention_author=False)
         else:

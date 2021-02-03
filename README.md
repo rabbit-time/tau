@@ -25,7 +25,7 @@ I would kindly ask that this bot isn't run as a separate instance. I am a firm b
 
 ### Initialize the database
 
-First, install the lastest version of PostgreSQL here: **[postgresql.org/downloads](https://www.postgresql.org/download/)**
+First, install the latest version of PostgreSQL here: **[postgresql.org/downloads](https://www.postgresql.org/download/)**
 
 Next, type `psql` on the command line and run the following statements:
 

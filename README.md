@@ -40,7 +40,6 @@ CREATE DATABASE tau WITH OWNER tau;
 In the project folder, create a file called `config.py` and copy the following code and fill out the values of each variable:
 
 ```py
-owner_id = 000000000000000000 # Copy your user ID and replace it
 admins = (000000000000000000, 000000000000000000) # Bot admins (perm level 4)
 passwd = 'passwd' # PostgreSQL password
 invite = 'https://discord.gg/invite' # Invite to server

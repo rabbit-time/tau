@@ -12,17 +12,17 @@ import utils
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     @command(name='8ball', usage='8ball [question]')
     async def _8ball(self, ctx, *, question: str = None):
         '''Ask the Magic 8-Ball a question.\n
         **Example:```yml\n♤8ball is Tau cool?```**
         '''
-        responses = ['It is certain.', 'It is decidedly so.', 'Without a doubt.', 
-            'Yes – definitely.', 'You may rely on it.', 'As I see it, yes.', 
-            'Most likely.', 'Outlook good.', 'Yes.', 'Signs point to yes.', 
-            'Reply hazy, try again.', 'Ask again later.', 'Better not tell you now.', 
-            'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.', 
+        responses = ['It is certain.', 'It is decidedly so.', 'Without a doubt.',
+            'Yes – definitely.', 'You may rely on it.', 'As I see it, yes.',
+            'Most likely.', 'Outlook good.', 'Yes.', 'Signs point to yes.',
+            'Reply hazy, try again.', 'Ask again later.', 'Better not tell you now.',
+            'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.',
             'My reply is no.', 'My sources say no.', 'Outlook not so good.', 'Very doubtful.']
 
         res = random.choice(responses)
@@ -43,7 +43,7 @@ class Fun(commands.Cog):
         name = name if name else path.title()
         res = requests.get(f'https://some-random-api.ml/img/{path}')
         url = res.json()['link']
-        
+
         embed = Embed(description=f'{utils.Emoji.link} **[{name}]({url})**', color=random.choice(utils.Color.rainbow))
         embed.set_image(url=url)
 
@@ -69,28 +69,28 @@ class Fun(commands.Cog):
         **Example:```yml\n♤dog```**
         '''
         await ctx.reply(embed=self._img(ctx, 'dog'), mention_author=False)
-    
+
     @command(name='fox', usage='fox')
     async def fox(self, ctx):
         '''Get a random fox.\n
         **Example:```yml\n♤fox```**
         '''
         await ctx.reply(embed=self._img(ctx, 'fox'), mention_author=False)
-    
+
     @command(name='koala', usage='koala')
     async def koala(self, ctx):
         '''Get a random koala.\n
         **Example:```yml\n♤koala```**
         '''
         await ctx.reply(embed=self._img(ctx, 'koala'), mention_author=False)
-    
+
     @command(name='panda', usage='panda')
     async def panda(self, ctx):
         '''Get a random panda.\n
         **Example:```yml\n♤panda```**
         '''
         await ctx.reply(embed=self._img(ctx, 'panda'), mention_author=False)
-    
+
     @command(name='redpanda', usage='redpanda')
     async def red_panda(self, ctx):
         '''Get a random red panda.\n
@@ -129,7 +129,7 @@ class Fun(commands.Cog):
         '''
         if not 0 < n <= 84:
             raise commands.BadArgument
-        
+
         val = random.choices(range(2), k=n)
         coin = utils.Emoji.coin0, utils.Emoji.coin1
         embed = Embed(description=f'{coin[val[0]]} **You got {["tails", "heads"][val[0]]}!**', color=utils.Color.gold)
@@ -142,9 +142,9 @@ class Fun(commands.Cog):
 
             embed.description = f'**You got:\n\n{coins}**'
             embed.add_field(name='\u200b', value=f'**Heads: {val.count(1)}\nTails: {val.count(0)}**')
-        
+
         await ctx.reply(embed=embed, mention_author=False)
-    
+
     @command(name='dice', aliases=['die', 'roll'], usage='dice [quantity=1]')
     async def dice(self, ctx, n: int = 1):
         '''Roll a die.
@@ -154,7 +154,7 @@ class Fun(commands.Cog):
         '''
         if not 0 < n <= 84:
             raise commands.BadArgument
-        
+
         val = random.choices(range(6), k=n)
         die = utils.Emoji.dice[val[0]+1]
         embed = Embed(description=f'{die} **You got {val[0]+1}!**', color=utils.Color.red)
@@ -168,7 +168,7 @@ class Fun(commands.Cog):
             embed.description = f'**You got:\n\n{dice}**'
             for i in range(6):
                 embed.add_field(name=utils.Emoji.dice[v+1], value=f'**{val.count(i)}**')
-        
+
         await ctx.reply(embed=embed, mention_author=False)
 
 def setup(bot):

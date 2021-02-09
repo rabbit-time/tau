@@ -144,7 +144,7 @@ async def init():
     bot.ranks = await Cache('ranks', 'guild_id', utils.ranks_schema, utils._def_rank)
     bot.stars = await Cache('stars', 'message_id', utils.stars_schema, utils._def_star)
     bot.reminders = await Cache('reminders', 'user_id, time', utils.reminders_schema, utils._def_reminder)
-    bot.rules = await Cache('rules', 'guild_id, index_', utils.rules_schema, utils._def_rule)
+    bot.tags = await Cache('tags', 'guild_id, name', utils.tags_schema, utils._def_tag)
     bot.modlog = await Cache('modlog', 'user_id, guild_id', utils.modlog_schema, utils._def_modlog)
 
     # Loads plugins

@@ -50,7 +50,6 @@ class Emoji:
     trash = '<:trashcan:797688643987701820>'
     link = '<:link:797723082134650900>'
 
-
 class Color:
     gold = 0xffc669
     green = 0x57c998
@@ -111,7 +110,7 @@ def cmyk_to_rgb(c: float, m: float, y: float, k: float):
     r = (1 - c) * (1 - k) * 255
     g = (1 - m) * (1 - k) * 255
     b = (1 - y) * (1 - k) * 255
-    
+
     return r, g, b
 
 def rgb_to_hsl(r: float, g: float, b: float):
@@ -135,9 +134,9 @@ def rgb_to_hsl(r: float, g: float, b: float):
             h = (b - r) / Δ + 2
         if cmax == b:
             h = (r - g) / Δ + 4
-    
+
     h *= 60
-    
+
     return h, s, l
 
 def rgb_to_hsv(r: float, g: float, b: float):
@@ -160,9 +159,9 @@ def rgb_to_hsv(r: float, g: float, b: float):
             h = (b - r) / Δ + 2
         if cmax == b:
             h = (r - g) / Δ + 4
-    
+
     h *= 60
-    
+
     return h, s, v
 
 def level(xp):
@@ -258,8 +257,9 @@ _def_reminder = {
     'reminder': '',
 }
 
-_def_rule = {
-    'rule': ''
+_def_tag = {
+    'embed': '',
+    'content': ''
 }
 
 _def_modlog = {
@@ -290,7 +290,7 @@ users_schema = ('user_id bigint PRIMARY KEY, '
                 'accent char(7), '
                 'bio text, '
                 'birthday date')
-    
+
 members_schema = ('user_id bigint, '
                   'guild_id bigint, '
                   'xp bigint, '
@@ -314,9 +314,10 @@ reminders_schema = ('user_id bigint, '
                     'time timestamp, '
                     'reminder text')
 
-rules_schema = ('guild_id bigint, '
-                'index_ smallint, '
-                'rule text')
+tags_schema = ('guild_id bigint, '
+               'name text, '
+               'embed text, '
+               'content text')
 
 modlog_schema = ('user_id bigint, '
                  'guild_id bigint, '

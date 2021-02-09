@@ -1,4 +1,5 @@
 import datetime
+import json
 import sys
 import traceback
 
@@ -38,6 +39,29 @@ class OnCommand(commands.Cog):
         error = getattr(error, 'original', error)
         now = datetime.datetime.utcnow()
 
+        # tag checking
+        if isinstance(error, commands.CommandNotFound):
+            name = ctx.message.content[len(ctx.prefix):]
+            if tag := self.bot.tags.get((ctx.guild.id, name)):
+                content = tag['content']
+                string = tag['embed']
+                embed = Embed.from_dict(json.loads(string))
+                
+                return await ctx.reply(content if content else None, embed=embed, mention_author=False)
+            else:
+                async with self.bot.pool.acquire() as con:
+                    query = f'SELECT * FROM tags WHERE name LIKE \'%{name}%\' ORDER BY name DESC'
+                    tags = await con.fetch(query)
+                
+                if not tags:
+                    return
+
+                names = [f'**`{t["name"]}`**' for t in tags]
+                embed = Embed(description='\n'.join(names), color=utils.Color.sky)
+                embed.set_author(name='Tag not found. Did you mean...', icon_url='attachment://unknown.png')
+
+                return await ctx.reply(embed=embed, file=File('assets/dot.png', 'unknown.png'))
+
         user_error = commands.MissingRequiredArgument, commands.BadArgument, commands.BadUnionArgument
         if isinstance(error, user_error):
             cmd = ctx.command
@@ -54,7 +78,7 @@ class OnCommand(commands.Cog):
             embed = Embed(description=desc, color=utils.Color.red)
             embed.set_author(name='Invalid command usage', icon_url='attachment://unknown.png')
 
-            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
+            return await ctx.reply(file=File('assets/reddot.png', 'unknown.png'), embed=embed)
         
         missing_perms = commands.MissingPermissions, commands.BotMissingPermissions
         if isinstance(error, missing_perms):
@@ -71,21 +95,21 @@ class OnCommand(commands.Cog):
             embed.set_image(url='attachment://unknown1.png')
             embed.timestamp = now
 
-            return await ctx.send(files=files, embed=embed, reference=ref)
+            return await ctx.reply(files=files, embed=embed)
         
         # guild only
         if isinstance(error, commands.NoPrivateMessage):
             embed = Embed(color=utils.Color.red)
             embed.set_author(name='This command is only available within servers.', icon_url='attachment://unknown.png')
 
-            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
+            return await ctx.reply(file=File('assets/reddot.png', 'unknown.png'), embed=embed)
 
         # dm only
         if isinstance(error, commands.PrivateMessageOnly):
             embed = Embed(color=utils.Color.red)
             embed.set_author(name='This command is only available within DMs.', icon_url='attachment://unknown.png')
 
-            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
+            return await ctx.reply(file=File('assets/reddot.png', 'unknown.png'), embed=embed)
 
         if isinstance(error, commands.NotOwner):
             files = [File('assets/reddot.png', 'unknown.png'), File('assets/redbar.png', 'unknown1.png')]
@@ -95,7 +119,7 @@ class OnCommand(commands.Cog):
             embed.set_image(url='attachment://unknown1.png')
             embed.timestamp = now
 
-            return await ctx.send(files=files, embed=embed, reference=ref)
+            return await ctx.reply(files=files, embed=embed)
 
         if isinstance(error, commands.CommandOnCooldown):
             files = [File('assets/reddot.png', 'unknown.png'), File('assets/redbar.png', 'unknown1.png')]
@@ -105,14 +129,14 @@ class OnCommand(commands.Cog):
             embed.set_footer(text='Try again at')
             embed.timestamp = now + datetime.timedelta(seconds=error.retry_after)
 
-            return await ctx.send(files=files, embed=embed, reference=ref)
+            return await ctx.reply(files=files, embed=embed)
 
         if isinstance(error, discord.HTTPException):
             return ccp.error(f'\u001b[31;1m{error.status} {error.response.reason} (error code {error.code}) {error.text}\u001b[0m')
 
         if isinstance(error, discord.NotFound):
             embed = Embed(description='Sorry, a message with that ID could not be fetched in this channel.')
-            return await ctx.send(embed=embed, reference=ref)
+            return await ctx.reply(embed=embed)
 
         if isinstance(error, utils.RoleNotFound):
             desc = (f'One or more roles needed for this command could not be found. '
@@ -121,10 +145,7 @@ class OnCommand(commands.Cog):
             embed = Embed(description=desc, color=utils.Color.red)
             embed.set_author(name='Role not found', icon_url='attachment://unknown.png')
 
-            return await ctx.send(file=File('assets/reddot.png', 'unknown.png'), embed=embed, reference=ref)
-
-        if isinstance(error, commands.CommandNotFound):
-            return ccp.error(f'\u001b[1m{ctx.author}@{ctx.guild}\u001b[0m {ctx.message.content}')
+            return await ctx.reply(file=File('assets/reddot.png', 'unknown.png'), embed=embed)
 
         if isinstance(error, commands.CheckFailure):
             return

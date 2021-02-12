@@ -177,7 +177,7 @@ class Logging(commands.Cog):
                         file = await attachment.to_file(use_cached=True)
                         embed.set_image(url=f'attachment://{file.filename}')
 
-                        await webhook.send(file=file, embed=embed)
+                await webhook.send(file=file, embed=embed)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):

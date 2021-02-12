@@ -171,6 +171,7 @@ class Logging(commands.Cog):
                 if msg.content:
                     embed.description += f'\n>>> {msg.content}'
 
+                file = None
                 if msg.attachments:
                     attachment = msg.attachments[0]
                     if attachment.url.lower().endswith(('png', 'jpeg', 'jpg', 'gif', 'webp')):

@@ -30,12 +30,6 @@ class OnCommand(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        try:
-            msg = await ctx.channel.fetch_message(ctx.message.id)
-            ref = msg.to_reference()
-        except:
-            ref = None
-        
         error = getattr(error, 'original', error)
         now = datetime.datetime.utcnow()
 

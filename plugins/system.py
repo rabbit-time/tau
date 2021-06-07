@@ -342,22 +342,14 @@ class System(commands.Cog):
 
     @command(name='remove', aliases=['leave', 'rem'], usage='remove [id]')
     @commands.is_owner()
-    async def remove(self, ctx, id: int):
+    async def remove(self, ctx, *, guild: discord.Guild):
         '''Remove a server.\n
-        If an ID is not given, the current server will be removed.
         **Example:```yml\n♤remove 546397670793805825\n♤leave```**
         '''
-        guild = self.bot.get_guild(id)
-        if not guild:
-            guild = ctx.guild
+        embed = Embed(color=utils.Color.red)
+        embed.set_author(name=f'{guild.name} has been removed', icon_url='attachment://unknown.png')
 
-        await guild.leave()
-
-        if ctx.guild != guild:
-            desc = f'**```diff\n- {guild.name} has been removed```**'
-            embed = Embed(description=desc, color=utils.Color.red)
-
-            await ctx.send(embed=embed)
+        await ctx.reply(embed=embed, file=File('assets/reddot.png', 'unknown.png'))
 
     @commands.group(name='tag', usage='tag <make|alias|delete> <name> [...]')
     async def tag(self, ctx):

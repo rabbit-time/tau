@@ -1,6 +1,7 @@
 import asyncio
 import time
 import datetime
+from inspect import signature as sig
 import random
 from typing import Union
 
@@ -37,6 +38,38 @@ class Utilities(commands.Cog):
         async with self.bot.pool.acquire() as con:
             query = 'DELETE FROM reminders WHERE user_id = $1 AND channel_id = $2 AND time = $3 AND reminder = $4'
             await con.execute(query, ctx.author.id, ctx.channel.id, timeout, reminder)
+
+    async def _emparse(self, ctx, embed: Embed, fields: tuple) -> tuple:
+        i = 0
+        content = None
+        while i < len(fields):
+            if fields[i] == 'content':
+                content = fields[i]
+                i += 2
+                continue
+            
+            # get a function callback using a string that corresponds to its name
+            embuilder = utils.EmbedBuilder(ctx)
+            method = getattr(embuilder, fields[i], None)
+            if method == None:
+                raise commands.BadArgument
+            
+            # extract the number of parameters
+            params = len(sig(method).parameters)
+            
+            # create the embed, catching any embed limit violations
+            try:
+                await method(embed, *fields[i+1:i+params])
+                if len(embed) > 6000: raise utils.EmbedException('embed', 6000)
+            except utils.EmbedException as err:
+                embed.set_author(name=err.what(), icon_url='attachment://unknown.png')
+                embed.color = utils.Color.red
+
+                await ctx.reply(embed=embed, file=File('assets/reddot.png', 'unknown.png'))
+
+            i += params
+        
+        return content
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -118,8 +151,69 @@ class Utilities(commands.Cog):
         **Example:```yml\n♤echo ECHO!\n♤say hello!```**
         '''
         await ctx.message.delete()
-
+        
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
+
+    @command(name='embed', aliases=['em'], usage='embed <*fields>')
+    @commands.bot_has_permissions(external_emojis=True)
+    async def embed(self, ctx, *fields):
+        '''Create a new embed.
+        Use double quotes any multi-word arguments.
+        Here is the following format for different embed fields:
+        **```yml
+        author <name>
+        authoricon <url>
+        authorurl <url>
+        color <color>
+        content <text>
+        desc <description>
+        field <name> <value>
+        inlinefield <name> <value>
+        modfield <index> <name> <value>
+        clearfields
+        footer <text>
+        footericon <url>
+        image <url>
+        thumbnail <url>
+        title <text>
+        ```**
+        **Example:```yml\n♤embed desc "Hi"
+        title "My Embed"
+        field "Favorite Number" "3"
+        footer "Made by a cool person"```**
+        '''
+        if not fields:
+            raise commands.BadArgument
+
+        embed = Embed()
+        content = await self._emparse(ctx, embed, fields)
+
+        await ctx.send(content, embed=embed)
+
+    @command(name='modembed', aliases=['modem'], usage='modembed <message> <*fields>')
+    @commands.bot_has_permissions(external_emojis=True)
+    async def modembed(self, ctx, msg: discord.Message, *fields):
+        '''Modify an embed.
+        Only valid for messages sent from this bot.
+        See `♤cmd embed` for more details.\n
+        **Example:```yml\n♤modembed 608367259123187741 
+        desc "Hi"
+        title "My Embed"
+        field "Favorite Number" "3"
+        footer "Made by a cool person"```**
+        '''
+        embed = None
+        for e in msg.embeds:
+            if e.type == 'rich':
+                embed = e
+                break
+
+        if not isinstance(embed, discord.Embed) or msg.author != ctx.guild.me:
+            raise commands.BadArgument
+        
+        content = await self._emparse(ctx, embed, fields)
+
+        await msg.edit(content, embed=embed)
 
     @command(name='emoji', usage='emoji <emoji>')
     @commands.bot_has_permissions(external_emojis=True)

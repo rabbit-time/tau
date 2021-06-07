@@ -197,6 +197,85 @@ def parse_time(text):
 
     return time_, delta
 
+class EmbedBuilder:
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    async def author(self, embed, name: str):
+        if len(author) > 256: EmbedException('author', 256)
+        if embed.author.icon_url != discord.Embed.Empty and not name:
+            name = u'\u200b'
+
+        embed.set_author(name=name, icon_url=embed.author.icon_url)
+
+    async def authoricon(self, embed, url: str):
+        name = embed.author.name if embed.author.name else u'\u200b'
+        embed.set_author(name=name, url=embed.author.url, icon_url=url)
+
+    async def authorurl(self, embed, url: str):
+        embed.set_author(name=embed.author.name, url=url, icon_url=embed.author.icon_url)
+
+    async def color(self, embed, color):
+        colorconverter = commands.ColorConverter()
+        embed.color = await colorconverter.convert(self.ctx, color)
+
+    async def desc(self, embed, text: str):
+        if len(text) > 2048: EmbedException('desc', 2048)
+        embed.description = text
+
+    async def field(self, embed, name: str, value: str):
+        if len(name) > 256: EmbedException('field name', 256)
+        elif len(value) > 1024: EmbedException('field value', 1024)
+
+        embed.add_field(name=name, value=value, inline=False)
+
+    async def inlinefield(self, embed, name: str, value: str):
+        if len(name) > 256: EmbedException('field name', 256)
+        elif len(value) > 1024: EmbedException('field value', 1024)
+
+        embed.add_field(name=name, value=value)
+
+    async def modfield(self, embed, index: int, name: str, value: str):
+        if len(embed.fields) < index or len(embed.fields) == 25:
+            return
+        
+        if len(name) > 256: EmbedException('field name', 256)
+        elif len(value) > 1024: EmbedException('field value', 1024)
+
+        inline = embed.fields[index-1].inline
+        embed.set_field_at(index-1, name=name, value=value, inline=inline)
+
+    async def clearfields(self, embed):
+        embed.clear_fields()
+
+    async def footer(self, embed, footer):
+        if len(footer) > 2048: EmbedException('footer', 2048)
+        if embed.footer.icon_url != discord.Embed.Empty and not footer:
+            footer = u'\u200b'
+
+        embed.set_footer(text=footer, icon_url=embed.footer.icon_url)
+
+    async def footericon(self, embed, url: str):
+        text = embed.footer.text if embed.footer.text else u'\u200b'
+        embed.set_footer(text=text, icon_url=url)
+
+    async def image(self, embed, url: str):
+        embed.set_image(url=url)
+
+    async def thumbnail(self, embed, url: str):
+        embed.set_thumbnail(url=url)
+
+    async def title(self, embed, title):
+        if len(title) > 256: EmbedException('title', 256)
+        embed.title = title
+
+class EmbedException(Exception):
+    def __init__(self, field: str, limit: int):
+        self.msg = f'Character limit of {limit} in "{field}" exceeded.'
+
+    def what(self):
+        return msg
+
 async def before(ctx):
     if not ctx.bot.users_.get(ctx.author.id) and not ctx.author.bot:
         await ctx.bot.users_.insert(ctx.author.id)

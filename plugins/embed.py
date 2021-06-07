@@ -18,7 +18,7 @@ class Embed(commands.Cog):
                 embed = e
                 break
 
-        if not isinstance(embed, discord.Embed): 
+        if not isinstance(embed, discord.Embed):
             raise commands.BadArgument
 
         return embed
@@ -29,8 +29,8 @@ class Embed(commands.Cog):
         '''Create a new embed.\n
         **Example:```yml\n♤embed```**
         '''
-        await ctx.send(embed=discord.Embed())
-    
+        await ctx.send(embed=discord.Embed(description='\u200b'))
+
     @command(name='addfield', usage='addfield <message> <name> <value>')
     @commands.has_permissions(manage_messages=True)
     async def addfield(self, ctx, msg: discord.Message, name: str, value: str):
@@ -54,7 +54,7 @@ class Embed(commands.Cog):
         embed.add_field(name=name, value=value)
 
         await msg.edit(embed=embed)
-    
+
     @command(name='modfield', usage='modfield <message> <index> <name> <value>')
     @commands.has_permissions(manage_messages=True)
     async def modfield(self, ctx, msg: discord.Message, index: int, name: str, value: str):
@@ -71,7 +71,7 @@ class Embed(commands.Cog):
         embed.set_field_at(index-1, name=name, value=value, inline=inline)
 
         await msg.edit(embed=embed)
-    
+
     @command(name='clearfields', usage='clearfields <message>')
     @commands.has_permissions(manage_messages=True)
     async def clearfields(self, ctx, msg: discord.Message):
@@ -95,7 +95,7 @@ class Embed(commands.Cog):
 
     @command(name='setdesc', usage='setdesc <message> <text>')
     @commands.has_permissions(manage_messages=True)
-    async def setdesc(self, ctx, msg: discord.Message, *, text: str = None):
+    async def setdesc(self, ctx, msg: discord.Message, *, text: str = '\u200b'):
         '''Modify the description of an embed.\n
         **Example:```yml\n♤setdesc 694890918645465138 Tau is the best!```**
         '''
@@ -115,7 +115,7 @@ class Embed(commands.Cog):
         embed.color = color
 
         await msg.edit(embed=embed)
-    
+
     @command(name='settitle', usage='settitle <message> <text>')
     @commands.has_permissions(manage_messages=True)
     async def settitle(self, ctx, msg: discord.Message, *, title: str = ''):
@@ -126,7 +126,7 @@ class Embed(commands.Cog):
         embed.title = title if len(title) <= 256 else title[:256]
 
         await msg.edit(embed=embed)
-    
+
     @command(name='setfooter', usage='setfooter <message> <text>')
     @commands.has_permissions(manage_messages=True)
     async def setfooter(self, ctx, msg: discord.Message, *, footer: str = ''):
@@ -137,11 +137,11 @@ class Embed(commands.Cog):
 
         if embed.footer.icon_url != discord.Embed.Empty and not footer:
             footer = u'\u200b'
-        
+
         embed.set_footer(text=footer, icon_url=embed.footer.icon_url)
 
         await msg.edit(embed=embed)
-    
+
     @command(name='setfootericon', usage='setfootericon <message> <url>')
     @commands.has_permissions(manage_messages=True)
     async def setfootericon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
@@ -157,7 +157,7 @@ class Embed(commands.Cog):
             await msg.edit(embed=embed)
         except:
             raise commands.BadArgument
-    
+
     @command(name='setauthor', usage='setauthor <message> <name>')
     @commands.has_permissions(manage_messages=True)
     async def setauthor(self, ctx, msg: discord.Message, *, name: str = ''):
@@ -168,11 +168,11 @@ class Embed(commands.Cog):
 
         if embed.author.icon_url != discord.Embed.Empty and not name:
             name = u'\u200b'
-        
+
         embed.set_author(name=name, icon_url=embed.author.icon_url)
 
         await msg.edit(embed=embed)
-    
+
     @command(name='setauthoricon', usage='setauthoricon <message> <url>')
     @commands.has_permissions(manage_messages=True)
     async def setauthoricon(self, ctx, msg: discord.Message, url: str = discord.Embed.Empty):
@@ -202,7 +202,7 @@ class Embed(commands.Cog):
             await msg.edit(embed=embed)
         except:
             raise commands.BadArgument
-    
+
     @command(name='setimage', usage='setimage <message> <url>')
     @commands.has_permissions(manage_messages=True)
     async def setimage(self, ctx, msg: discord.Message, url: str = ''):
@@ -230,6 +230,6 @@ class Embed(commands.Cog):
             await msg.edit(embed=embed)
         except:
             raise commands.BadArgument
-        
+
 def setup(bot):
     bot.add_cog(Embed(bot))

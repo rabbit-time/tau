@@ -32,7 +32,6 @@ bot.invites_   = {}
 bot.mute_tasks = {}
 bot.suppressed = {}
 bot.start_time = datetime.datetime.utcnow()
-bot.activity   = discord.Activity(name=f'{bot.guilds_.default["prefix"]}help', type=discord.ActivityType.listening)
 
 bot.add_check(lambda ctx: ctx.author not in bot.suppressed.keys() or bot.suppressed.get(ctx.author) != ctx.channel, call_once=True)
 
@@ -146,6 +145,8 @@ async def init():
     bot.reminders = await Cache('reminders', 'user_id, time', utils.reminders_schema, utils._def_reminder)
     bot.tags = await Cache('tags', 'guild_id, name', utils.tags_schema, utils._def_tag)
     bot.modlog = await Cache('modlog', 'user_id, guild_id', utils.modlog_schema, utils._def_modlog)
+
+    bot.activity = discord.Activity(name=f'{}help', type=discord.ActivityType.listening)
 
     # Load plugins
     for file in os.listdir('plugins'):

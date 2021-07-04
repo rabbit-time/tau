@@ -1,14 +1,14 @@
 # Tau Copyright 2019-2020 The Apache Software Foundation
 
 import asyncio
-import asyncpg
 import datetime
 import os
 import sys
 from collections.abc import Iterable
 
+import asyncpg
 import discord
-from discord import Game, Object, Permissions
+from discord import Object, Permissions
 from discord.ext import commands
 from discord.utils import oauth_url
 
@@ -28,11 +28,11 @@ def prefix(bot, msg):
     return bot.guilds_[msg.guild.id]['prefix'] if msg.guild else bot.guilds_.default['prefix']
 
 bot = commands.Bot(command_prefix=prefix, help_command=None, intents=discord.Intents.all())
-
-bot.invites_ = {}
+bot.invites_   = {}
 bot.mute_tasks = {}
 bot.suppressed = {}
 bot.start_time = datetime.datetime.utcnow()
+bot.activity   = discord.Activity(name=f'{bot.command_prefix}help', type=discord.ActivityType.listening)
 
 bot.add_check(lambda ctx: ctx.author not in bot.suppressed.keys() or bot.suppressed.get(ctx.author) != ctx.channel, call_once=True)
 
@@ -147,11 +147,11 @@ async def init():
     bot.tags = await Cache('tags', 'guild_id, name', utils.tags_schema, utils._def_tag)
     bot.modlog = await Cache('modlog', 'user_id, guild_id', utils.modlog_schema, utils._def_modlog)
 
-    # Loads plugins
-    files = [f'plugins.{file[:-3]}' for file in os.listdir('plugins') if '__' not in file]
-    for file in files:
-        ccp.log('Loading', file)
-        bot.load_extension(file)
+    # Load plugins
+    for file in os.listdir('plugins'):
+        if '__' not in file:
+            ccp.log('Loading', file)
+            bot.load_extension(f'plugins.{file[:-3]}')
 
     ccp.done()
 
@@ -160,17 +160,6 @@ loop.run_until_complete(init())
 
 @bot.event
 async def on_ready():
-    app_info = await bot.application_info()
-    bot.owner_id = app_info.owner.id
-
-    prefix = bot.guilds_.default['prefix']
-    await bot.change_presence(activity=Game(name=f'{prefix}help'))
-
-    ccp.ready(f'Logged in as {bot.user.name}')
-    ccp.ready(f'ID: {bot.user.id}')
-    bot.url = oauth_url(client_id=bot.user.id, permissions=Permissions(permissions=8))
-    ccp.ready(f'URL: \u001b[1m\u001b[34m{bot.url}\u001b[0m')
-
     for guild in bot.guilds:
         if guild.id not in bot.guilds_.keys():
             await bot.guilds_.insert(guild.id)
@@ -183,8 +172,12 @@ async def on_ready():
                 vanity = await guild.vanity_invite()
                 bot.invites_[guild.id].append(vanity)
 
-try:
-    bot.run(config.token)
-except:
-    ccp.error('Failed to connect to Discord servers. Check your internet connection.')
-    os._exit(0)
+    app_info = await bot.application_info()
+    bot.owner_id = app_info.owner.id
+
+    ccp.ready(f'Logged in as {bot.user.name}')
+    ccp.ready(f'ID: {bot.user.id}')
+    bot.url = oauth_url(client_id=bot.user.id, permissions=Permissions(permissions=8))
+    ccp.ready(f'URL: \u001b[1m\u001b[34m{bot.url}\u001b[0m')
+
+bot.run(config.token)

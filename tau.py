@@ -146,7 +146,7 @@ async def init():
     bot.tags = await Cache('tags', 'guild_id, name', utils.tags_schema, utils._def_tag)
     bot.modlog = await Cache('modlog', 'user_id, guild_id', utils.modlog_schema, utils._def_modlog)
 
-    bot.activity = discord.Activity(name=f'{}help', type=discord.ActivityType.listening)
+    bot.activity   = discord.Activity(name=f'{bot.guilds_.default["prefix"]}help', type=discord.ActivityType.listening)
 
     # Load plugins
     for file in os.listdir('plugins'):

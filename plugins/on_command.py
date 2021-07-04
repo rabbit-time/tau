@@ -26,7 +26,7 @@ class OnCommand(commands.Cog):
     @commands.Cog.listener()
     async def on_command(self, ctx):
         guild = ctx.guild if ctx.guild else 'dm'
-        ccp.event(f'\u001b[1m{ctx.author}@{guild}\u001b[0m {repr(ctx.message.content)[1:-1]}', event='INVOKE')
+        ccp.cmd(f'\u001b[1m{ctx.author}@{guild}\u001b[0m {repr(ctx.message.content)[1:-1]}')
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

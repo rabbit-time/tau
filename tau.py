@@ -32,7 +32,7 @@ bot.invites_   = {}
 bot.mute_tasks = {}
 bot.suppressed = {}
 bot.start_time = datetime.datetime.utcnow()
-bot.activity   = discord.Activity(name=f'{bot.command_prefix}help', type=discord.ActivityType.listening)
+bot.activity   = discord.Activity(name=f'{bot.guilds_.default["prefix"]}help', type=discord.ActivityType.listening)
 
 bot.add_check(lambda ctx: ctx.author not in bot.suppressed.keys() or bot.suppressed.get(ctx.author) != ctx.channel, call_once=True)
 

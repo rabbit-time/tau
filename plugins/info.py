@@ -21,7 +21,7 @@ class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @command(name='avatar', aliases=['pfp'], usage='avatar [member]')
+    @command(name='avatar', aliases=['av'], usage='avatar [member]')
     async def avatar(self, ctx, *, member: discord.Member = None):
         '''Retrieve user avatar.\n
         **Example:```yml\n♤avatar\n♤pfp @Tau#4272\n♤pfp 608367259123187741```**

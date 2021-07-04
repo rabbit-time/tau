@@ -155,6 +155,7 @@ class Utilities(commands.Cog):
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
 
     @command(name='embed', aliases=['em'], usage='embed <*fields>')
+    @commands.has_permissions(manage_messages=True)
     @commands.bot_has_permissions(external_emojis=True)
     async def embed(self, ctx, *fields):
         '''Create a new embed.
@@ -191,6 +192,7 @@ class Utilities(commands.Cog):
         await ctx.send(content, embed=embed)
 
     @command(name='modembed', aliases=['modem'], usage='modembed <message> <*fields>')
+    @commands.has_permissions(manage_messages=True)
     @commands.bot_has_permissions(external_emojis=True)
     async def modembed(self, ctx, msg: discord.Message, *fields):
         '''Modify an embed.
@@ -213,7 +215,7 @@ class Utilities(commands.Cog):
         
         content = await self._emparse(ctx, embed, fields)
 
-        await msg.edit(content, embed=embed)
+        await msg.edit(content=content, embed=embed)
 
     @command(name='emoji', usage='emoji <emoji>')
     @commands.bot_has_permissions(external_emojis=True)

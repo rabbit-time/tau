@@ -1,0 +1,5 @@
+aiohttp>=3.8.1
+asyncpg>=0.12.0
+discord.py>=2.0
+psutil
+rich>=12.4.4

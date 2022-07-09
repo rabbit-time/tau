@@ -98,7 +98,7 @@ class Tau(Bot):
         await self.wait_until_ready()
 
         self.url = oauth_url(client_id=self.user.id, permissions=discord.Permissions(permissions=8))
-        self.pool = await asyncpg.create_pool(user='tau', password=self.conf.passwd, database='tau')
+        self.pool = await asyncpg.create_pool(user='tau', password=self.conf.passwd, database='tau', host='127.0.0.1')
 
         self.guild_confs = await GuildHandler(self)
         self.members = await MemberTracker(self)

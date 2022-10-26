@@ -39,7 +39,7 @@ CREATE DATABASE tau WITH OWNER tau;
 
 In `./src`, create a file called `config.json` and add the following config:
 
-```json
+```js
 // Currently, all values are required
 {
     "name": "Tau", // The application name displayed in some commands
